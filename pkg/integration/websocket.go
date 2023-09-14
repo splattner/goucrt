@@ -13,7 +13,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-func (i *integration) wsEndpoint(w http.ResponseWriter, r *http.Request) {
+func (i *Integration) wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 
@@ -30,39 +30,34 @@ func (i *integration) wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	i.reader()
 }
 
-func (i *integration) reader() {
+func (i *Integration) reader() {
 	for {
-		messageType, p, err := i.websocket.ReadMessage()
+		_, p, err := i.websocket.ReadMessage()
 		if err != nil {
 			log.Println(err)
 			return
 		}
 
 		req := RequestMessage{}
-		var res interface{}
 
 		if json.Unmarshal(p, &req) != nil {
-			log.Println("Cannot unmarshall")
+			log.Println("Cannot unmarshall " + string(p))
 		}
 
 		// Event Message
 		if req.Kind == "event" {
-			res = i.handleEvent(&req, p)
+			i.handleEvent(&req, p)
 		}
 
 		// Request Message
 		if req.Kind == "req" {
-			res = i.handleRequest(&req, p)
-
-			if err := i.sendResponseMessage(&res, messageType); err != nil {
-				log.Println(err)
-			}
+			i.handleRequest(&req, p)
 		}
 
 	}
 }
 
-func (i *integration) sendEventMessage(res *interface{}, messageType int) error {
+func (i *Integration) sendEventMessage(res *interface{}, messageType int) error {
 	log.Println("Send Event Message")
 
 	msg, _ := json.Marshal(res)
@@ -77,7 +72,7 @@ func (i *integration) sendEventMessage(res *interface{}, messageType int) error 
 
 }
 
-func (i *integration) sendResponseMessage(res *interface{}, messageType int) error {
+func (i *Integration) sendResponseMessage(res *interface{}, messageType int) error {
 	log.Println("Send Response Message")
 
 	msg, _ := json.Marshal(res)

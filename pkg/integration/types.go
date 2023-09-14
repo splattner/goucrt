@@ -1,6 +1,8 @@
 package integration
 
-import "github.com/splattner/goucrt/pkg/integration/entities"
+import (
+	"github.com/splattner/goucrt/pkg/entities"
+)
 
 // Common
 type CommonReq struct {
@@ -46,10 +48,10 @@ type DriverMetadata struct {
 	Icon            string          `json:"icon,omitempty"`
 	Description     LanguageText    `json:"description"`
 	Developer       Developer       `json:"description,omitempty"`
-	HomePage        string          `json:"home_page,omitempty`
+	HomePage        string          `json:"home_page,omitempty"`
 	DeviceDiscovery bool            `json:"device_discovery,omitempty"`
 	SetupDataSchema SetupDataSchema `json:"setup_data_schema,omitempty"`
-	ReleaseData     string          `json:"release_date,omitempty`
+	ReleaseData     string          `json:"release_date,omitempty"`
 }
 
 // Other ?
@@ -61,7 +63,7 @@ type DriverSetupError string
 const (
 	SetupState              DriverSetupState = "SETUP"
 	WaitUserActionState                      = "WAIT_USER_ACTION"
-	RequiredUserActionState                  = "WAIT_USER_ACTION"
+	RequiredUserActionState                  = "require_user_action"
 	OkState                                  = "OK"
 	ErrorState                               = "ERROR"
 )
@@ -175,12 +177,12 @@ type UnubscribeEventMessageData struct {
 	EntityIds []string `json:"entity_ids"`
 }
 
-type GetEntityStateMessageReq struct {
+type GetEntityStatesMessageReq struct {
 	CommonReq
-	MsgData GetEntityStateMessageData `json:"msg_data,omitempty"`
+	MsgData GetEntityStatesMessageData `json:"msg_data,omitempty"`
 }
 
-type GetEntityStateMessageData struct {
+type GetEntityStatesMessageData struct {
 	DeviceId string `json:"device_id"`
 }
 
@@ -206,9 +208,14 @@ type SettingsVaulues struct {
 }
 
 // Set required data to configure the integration driver or continue the setup process.
-type SetDriverUserDataReq struct {
+type SetDriverUserDataRequest struct {
 	CommonReq
-	MsgData interface{} `json:"msg_data`
+	MsgData SetDriverUserData `json:"msg_data`
+}
+
+type SetDriverUserData struct {
+	InputValues map[string]interface{} `json:"input_values,omitempty"`
+	Confirm     bool                   `json:"confirm,omitempty"`
 }
 
 // Response
@@ -219,7 +226,7 @@ type ResponseMessage struct {
 
 type AvailableEntityData struct {
 	Filter            AvailableEntityFilter `json:"filter"`
-	AvailableEntities []entities.Entity     `json:"available_entities`
+	AvailableEntities []interface{}         `json:"available_entities"`
 }
 
 type AvailableEntityMessage struct {
@@ -244,7 +251,14 @@ type Developer struct {
 }
 
 type SetupDataSchema struct {
-	Title map[string]string `json:"title"`
+	Title    map[string]string         `json:"title"`
+	Settings []SetupDataSchemaSettings `json:"settings"`
+}
+
+type SetupDataSchemaSettings struct {
+	Id    string       `json:"id"`
+	Label LanguageText `json:"label"`
+	Field interface{}  `json:"field"`
 }
 
 type SubscribeEventMessage struct {
@@ -255,7 +269,7 @@ type UnubscribeEventMessage struct {
 	CommonResp
 }
 
-type GetEntityStateMessage struct {
+type GetEntityStatesMessage struct {
 	CommonResp
 	MsgData []entities.EntityStateData `json:"msg_data,omitempty"`
 }
@@ -283,7 +297,7 @@ type EntityRemovedEventData struct {
 
 type EntityAvailableEvent struct {
 	CommonEvent
-	MsgData entities.Entity `json:"msg_data"`
+	MsgData interface{} `json:"msg_data"`
 }
 
 type ConnectEvent struct {
@@ -304,5 +318,10 @@ type DriverSetupChangeData struct {
 	EventType          DriverSetupEventType `json:"event_type"`
 	State              DriverSetupState     `json:"state"`
 	Error              DriverSetupError     `json:"error"`
-	RequiredUserAction interface{}          `json:"required_user_action"`
+	RequiredUserAction RequiredUserAction   `json:"required_user_action,omitempty"`
+}
+
+type RequiredUserAction struct {
+	Input        SettigsPage      `json:"input,omitempty"`
+	Confirmation ConfirmationPage `json:"confirmation,omitempty"`
 }

@@ -3,12 +3,12 @@ package integration
 import (
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/splattner/goucrt/pkg/integration/entities"
 )
 
-func (i *integration) handleEvent(req *RequestMessage, p []byte) interface{} {
+func (i *Integration) handleEvent(req *RequestMessage, p []byte) interface{} {
 	log.Println("Handle Event Message")
 
 	var res interface{}
@@ -26,7 +26,7 @@ func (i *integration) handleEvent(req *RequestMessage, p []byte) interface{} {
 		connectEvent := ConnectEvent{}
 		json.Unmarshal(p, &connectEvent)
 
-		i.handleCconnectEvent(&connectEvent)
+		i.handleConnectEvent(&connectEvent)
 
 	case "disconnect":
 		log.Println("connect event")
@@ -34,7 +34,7 @@ func (i *integration) handleEvent(req *RequestMessage, p []byte) interface{} {
 		connectEvent := ConnectEvent{}
 		json.Unmarshal(p, &connectEvent)
 
-		i.handleCconnectEvent(&connectEvent)
+		i.handleConnectEvent(&connectEvent)
 
 	case "abort_driver_setup":
 		log.Println("abort_driver_setup event")
@@ -47,14 +47,14 @@ func (i *integration) handleEvent(req *RequestMessage, p []byte) interface{} {
 
 }
 
-func (i *integration) sendEntityRemoved(e entities.Entity) {
+func (i *Integration) sendEntityRemoved(e interface{}) {
 
 	var res interface{}
 
 	msg_data := EntityRemovedEventData{
-		DeviceId:   e.DeviceId,
-		EntityType: e.EntityType.Type,
-		EntityId:   e.Id,
+		DeviceId:   GetDeviceId(e),
+		EntityType: GetEntityType(e).Type,
+		EntityId:   GetEntityId(e),
 	}
 
 	res = EntityRemovedEvent{
@@ -69,7 +69,7 @@ func (i *integration) sendEntityRemoved(e entities.Entity) {
 	i.sendEventMessage(&res, websocket.TextMessage)
 }
 
-func (i *integration) sendEntityAvailable(e entities.Entity) {
+func (i *Integration) sendEntityAvailable(e interface{}) {
 
 	var res interface{}
 
@@ -85,32 +85,42 @@ func (i *integration) sendEntityAvailable(e entities.Entity) {
 	i.sendEventMessage(&res, websocket.TextMessage)
 }
 
-func (i *integration) sendDeviceStateEvent() {
+func (i *Integration) sendDeviceStateEvent() {
 
 	var res interface{}
 
+	now := time.Now()
 	res = DeviceStateEventMessage{
-		CommonEvent{Kind: "event", Msg: "device_state", Cat: "DEVICE", Ts: "//Todo"},
-		DeviceState{DeviceId: DeviceId{DeviceId: i.DeviceId}, State: i.DeviceState},
+		CommonEvent{Kind: "event", Msg: "device_state", Cat: "DEVICE", Ts: now.Format(time.UnixDate)},
+		DeviceState{DeviceId: DeviceId{DeviceId: i.DeviceId}, State: string(i.deviceState)},
 	}
 
 	i.sendEventMessage(&res, websocket.TextMessage)
 }
 
 // Emitted for all driver setup flow state changes.
-func (i *integration) sendDriverSetupChangeEvent(eventType DriverSetupEventType, state DriverSetupState, err DriverSetupError, required_user_action interface{}) {
+func (i *Integration) sendDriverSetupChangeEvent(eventType DriverSetupEventType, state DriverSetupState, err DriverSetupError, required_user_action *RequiredUserAction) {
 	var res interface{}
 
-	res = DriverSetupChangeEvent{
-		CommonEvent{Kind: "event", Msg: "driver_setup_change", Cat: "DEVICE", Ts: "//Todo"},
-		DriverSetupChangeData{EventType: eventType, State: state, Error: err, RequiredUserAction: required_user_action},
+	now := time.Now()
+
+	if required_user_action == nil {
+		res = DriverSetupChangeEvent{
+			CommonEvent{Kind: "event", Msg: "driver_setup_change", Cat: "DEVICE", Ts: now.Format(time.UnixDate)},
+			DriverSetupChangeData{EventType: eventType, State: state, Error: err},
+		}
+	} else {
+		res = DriverSetupChangeEvent{
+			CommonEvent{Kind: "event", Msg: "driver_setup_change", Cat: "DEVICE", Ts: now.Format(time.UnixDate)},
+			DriverSetupChangeData{EventType: eventType, State: state, Error: err, RequiredUserAction: *required_user_action},
+		}
 	}
 
 	i.sendEventMessage(&res, websocket.TextMessage)
 
 }
 
-func (i *integration) handleCconnectEvent(e *ConnectEvent) {
+func (i *Integration) handleConnectEvent(e *ConnectEvent) {
 
 	// Cat should be "DEVICE"
 

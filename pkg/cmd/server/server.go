@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/splattner/goucrt/pkg/client"
 	"github.com/splattner/goucrt/pkg/cmd"
 	"github.com/splattner/goucrt/pkg/integration"
 )
@@ -21,6 +22,10 @@ func NewCommand() *cobra.Command {
 
 			i, err := integration.NewIntegration()
 			cmd.CheckError(err)
+
+			myclient := client.NewClient(i)
+
+			myclient.SetupClient()
 
 			cmd.CheckError(i.Run())
 
