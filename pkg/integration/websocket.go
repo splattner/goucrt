@@ -43,8 +43,6 @@ func (i *Integration) wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	if i.Remote.websocket != nil {
 		// TODO: do we need to support more?
 		log.Println("There is already a websocket connection open, cannot open an othner one")
-		return
-
 	}
 
 	i.Remote.websocket = ws
@@ -66,7 +64,7 @@ func (i *Integration) wsReader() {
 	})
 
 	defer func() {
-		log.Println("Closing Websocket")
+		log.Println("Closing Websocket, not able to read message anymore")
 		i.Remote.websocket.Close()
 
 		i.Remote.websocket = nil
@@ -77,7 +75,6 @@ func (i *Integration) wsReader() {
 		_, p, err := i.Remote.websocket.ReadMessage()
 		if err != nil {
 			log.Println(err)
-
 			return
 		}
 
@@ -104,7 +101,7 @@ func (i *Integration) wsWriter() {
 	ticker := time.NewTicker(pingPeriod)
 
 	defer func() {
-		log.Println("Closing Websocket")
+		log.Println("Closing Websocket, no response in time to Ping message")
 		ticker.Stop()
 		i.Remote.websocket.Close()
 
@@ -115,10 +112,12 @@ func (i *Integration) wsWriter() {
 	for {
 		select {
 		case <-ticker.C:
-			i.Remote.websocket.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := i.Remote.websocket.WriteMessage(websocket.PingMessage, nil); err != nil {
-				log.Println("Could not send Ping message")
-				return
+			if i.Remote.websocket != nil && i.Remote.connected {
+				i.Remote.websocket.SetWriteDeadline(time.Now().Add(writeWait))
+				if err := i.Remote.websocket.WriteMessage(websocket.PingMessage, nil); err != nil {
+					log.Println("Could not send Ping message")
+					return
+				}
 			}
 		}
 	}
