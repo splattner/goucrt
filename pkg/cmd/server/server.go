@@ -10,6 +10,10 @@ import (
 	"github.com/splattner/goucrt/pkg/integration"
 )
 
+var (
+	listenPort int
+)
+
 func NewCommand() *cobra.Command {
 
 	var command = &cobra.Command{
@@ -20,7 +24,11 @@ func NewCommand() *cobra.Command {
 			log.SetOutput(os.Stdout)
 			log.Println("Integration run")
 
-			i, err := integration.NewIntegration()
+			var config = make(integration.Config)
+
+			config["listenport"] = listenPort
+
+			i, err := integration.NewIntegration(config)
 			cmd.CheckError(err)
 
 			myclient := client.NewClient(i)
@@ -31,6 +39,8 @@ func NewCommand() *cobra.Command {
 
 		},
 	}
+
+	command.PersistentFlags().IntVarP(&listenPort, "listenport", "l", 8080, "the port this integration is listening for websocket connection from the remote")
 
 	return command
 }

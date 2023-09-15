@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/websocket"
+	"github.com/grandcat/zeroconf"
 	"github.com/splattner/goucrt/pkg/entities"
 )
 
@@ -18,8 +18,7 @@ type Integration struct {
 
 	deviceState DState
 
-	listenPort int
-	websocket  *websocket.Conn
+	config Config
 
 	Remote remote
 
@@ -34,15 +33,21 @@ type Integration struct {
 
 	SubscribedEntities []string
 
-	handleSetupFunction func()
+	handleSetupFunction      func()
+	handleConnectionFunction func(*ConnectEvent)
 
 	SetupState DriverSetupState
+
+	mdns *zeroconf.Server
 }
 
-func NewIntegration() (*Integration, error) {
+func NewIntegration(config Config) (*Integration, error) {
 
 	metadata := DriverMetadata{
-		DriverId: "myintegraiton",
+		DriverId: "myintegration",
+		Developer: Developer{
+			Name: "Sebastian Plattner",
+		},
 		Name: LanguageText{
 			En: "My UCRT Integration",
 			De: "Meine UCRT Integration",
@@ -51,10 +56,11 @@ func NewIntegration() (*Integration, error) {
 	}
 
 	i := Integration{
-		listenPort:  8080,
+		config:      config,
 		Metadata:    metadata,
 		deviceState: DisconnectedDeviceState,
 		DeviceId:    "", // I think device_id is not yet implemented in Remote TV, used for multi-device integration
+
 	}
 
 	return &i, nil
@@ -65,7 +71,10 @@ func (i *Integration) Run() error {
 
 	http.HandleFunc("/ws", i.wsEndpoint)
 
-	listenAddress := fmt.Sprintf(":%d", i.listenPort)
+	listenAddress := fmt.Sprintf(":%d", i.config["listenport"].(int))
+
+	// MDNS
+	i.startAdvertising()
 
 	log.Fatal(http.ListenAndServe(listenAddress, nil))
 
@@ -77,8 +86,6 @@ func (i *Integration) AddEntity(e interface{}) error {
 	log.Println("Add a new entity to the integration")
 
 	// Search if entity is already added
-	log.Println("Entity type: " + fmt.Sprintf("%T", e))
-
 	_, _, err := i.GetEntityById(GetEntityId(e))
 	if err != nil {
 		// Entity not found, so add id
@@ -110,10 +117,7 @@ func (i *Integration) RemoveEntity(entity interface{}) error {
 }
 
 func (i *Integration) GetEntityById(id string) (interface{}, int, error) {
-	log.Println("Get Entity by id: " + id)
-
 	for i, entity := range i.Entities {
-		log.Println(entity)
 		entity_id := GetEntityId(entity)
 		log.Println(entity_id)
 
@@ -142,6 +146,11 @@ func (i *Integration) GetEntitiesByType(entityType entities.EntityType) []interf
 // Set the function which is called when the setup_driver request was sent by the remote
 func (i *Integration) SetHandleSetupFunction(f func()) {
 	i.handleSetupFunction = f
+}
+
+// Set the function which is called when the connect/disconnect request was sent by the remote
+func (i *Integration) SetHandleConnectionFunction(f func(*ConnectEvent)) {
+	i.handleConnectionFunction = f
 }
 
 func (i *Integration) SetDriverSetupState(event_Type DriverSetupEventType, state DriverSetupState, err DriverSetupError, requiredUserAction *RequiredUserAction) {

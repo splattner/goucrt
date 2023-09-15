@@ -1,6 +1,8 @@
 package entities
 
-import "log"
+import (
+	"log"
+)
 
 type ButtonEntityState string
 type ButtonEntityFeatures string
@@ -38,6 +40,7 @@ func NewButtonEntity(id string, name LanguageText, area string) *ButtonEntity {
 	buttonEntity.EntityType.Type = "button"
 
 	buttonEntity.Commands = make(map[string]func(ButtonEntity))
+	buttonEntity.Attributes = make(map[string]interface{})
 
 	// PressButtonEntityyFeatures is always present even if not specified
 	// https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/entity_button.md
@@ -57,11 +60,11 @@ func (e *ButtonEntity) AddCommand(command ButtonEntityCommand, function func(But
 	e.Commands[string(command)] = function
 }
 
-func (e *ButtonEntity) HandleCommand(req *EntityCommandReq) {
+func (e *ButtonEntity) HandleCommand(cmd_id string, params interface{}) {
 	log.Println("Handle Command in Button Entity")
 
-	if e.Commands[req.MsgData.CmdId] != nil {
-		e.Commands[req.MsgData.CmdId](*e)
+	if e.Commands[cmd_id] != nil {
+		e.Commands[cmd_id](*e)
 	}
 
 }

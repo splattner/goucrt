@@ -119,6 +119,7 @@ func NewMediaPlayerEntity(id string, name LanguageText, area string) *MediaPlaye
 	mediaPlayerEntity.EntityType.Type = "light"
 
 	mediaPlayerEntity.Commands = make(map[string]func(MediaPlayerEntity))
+	mediaPlayerEntity.Attributes = make(map[string]interface{})
 
 	return &mediaPlayerEntity
 }
@@ -226,8 +227,8 @@ func (e *MediaPlayerEntity) AddCommand(command MediaPlayerEntityCommand, functio
 
 }
 
-func (e *MediaPlayerEntity) HandleCommand(req *EntityCommandReq) {
-	if e.Commands[req.MsgData.CmdId] != nil {
-		e.Commands[req.MsgData.CmdId](*e)
+func (e *MediaPlayerEntity) HandleCommand(cmd_id string, params interface{}) {
+	if e.Commands[cmd_id] != nil {
+		e.Commands[cmd_id](*e)
 	}
 }

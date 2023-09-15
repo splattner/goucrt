@@ -40,6 +40,7 @@ func NewSwitchEntity(id string, name LanguageText, area string) *SwitchsEntity {
 	switchEntity.EntityType.Type = "switch"
 
 	switchEntity.Commands = make(map[string]func(SwitchsEntity))
+	switchEntity.Attributes = make(map[string]interface{})
 
 	return &switchEntity
 }
@@ -61,8 +62,8 @@ func (e *SwitchsEntity) AddCommand(command LightEntityCommand, function func(Swi
 
 }
 
-func (e *SwitchsEntity) HandleCommand(req *EntityCommandReq) {
-	if e.Commands[req.MsgData.CmdId] != nil {
-		e.Commands[req.MsgData.CmdId](*e)
+func (e *SwitchsEntity) HandleCommand(cmd_id string, params interface{}) {
+	if e.Commands[cmd_id] != nil {
+		e.Commands[cmd_id](*e)
 	}
 }

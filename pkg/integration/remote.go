@@ -1,9 +1,15 @@
 package integration
 
-import "log"
+import (
+	"log"
+
+	"github.com/gorilla/websocket"
+)
 
 type remote struct {
-	standby bool
+	standby   bool
+	connected bool
+	websocket *websocket.Conn
 }
 
 func (r *remote) EnterStandBy() {
@@ -18,5 +24,4 @@ func (r *remote) ExitStandBy() {
 	log.Println("Remote exited standby mode")
 
 	r.standby = false
-
 }

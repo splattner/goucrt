@@ -54,6 +54,7 @@ func NewCoverEntity(id string, name LanguageText, area string) *CoverEntity {
 	coverEntity.EntityType.Type = "cover"
 
 	coverEntity.Commands = make(map[string]func(CoverEntity))
+	coverEntity.Attributes = make(map[string]interface{})
 
 	return &coverEntity
 }
@@ -89,8 +90,8 @@ func (e *CoverEntity) AddCommand(command CoverEntityCommand, function func(Cover
 
 }
 
-func (e *CoverEntity) HandleCommand(req *EntityCommandReq) {
-	if e.Commands[req.MsgData.CmdId] != nil {
-		e.Commands[req.MsgData.CmdId](*e)
+func (e *CoverEntity) HandleCommand(cmd_id string, params interface{}) {
+	if e.Commands[cmd_id] != nil {
+		e.Commands[cmd_id](*e)
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"k8s.io/utils/strings/slices"
 )
 
 func (i *Integration) handleEvent(req *RequestMessage, p []byte) interface{} {
@@ -39,6 +40,11 @@ func (i *Integration) handleEvent(req *RequestMessage, p []byte) interface{} {
 	case "abort_driver_setup":
 		log.Println("abort_driver_setup event")
 
+		abortDriverSetupEvent := AbortDriverSetupEvent{}
+		json.Unmarshal(p, &abortDriverSetupEvent)
+
+		i.handleAbortDriverSetupEvent(&abortDriverSetupEvent)
+
 	default:
 		log.Println("mesage not know: " + req.Msg)
 	}
@@ -50,6 +56,7 @@ func (i *Integration) handleEvent(req *RequestMessage, p []byte) interface{} {
 func (i *Integration) sendEntityRemoved(e interface{}) {
 
 	var res interface{}
+	now := time.Now()
 
 	msg_data := EntityRemovedEventData{
 		DeviceId:   GetDeviceId(e),
@@ -62,6 +69,7 @@ func (i *Integration) sendEntityRemoved(e interface{}) {
 			Kind: "event",
 			Msg:  "entity_removed",
 			Cat:  "ENTITY",
+			Ts:   now.Format(time.RFC3339),
 		},
 		msg_data,
 	}
@@ -72,12 +80,14 @@ func (i *Integration) sendEntityRemoved(e interface{}) {
 func (i *Integration) sendEntityAvailable(e interface{}) {
 
 	var res interface{}
+	now := time.Now()
 
 	res = EntityAvailableEvent{
 		CommonEvent{
 			Kind: "event",
 			Msg:  "entity_available",
 			Cat:  "ENTITY",
+			Ts:   now.Format(time.RFC3339),
 		},
 		e,
 	}
@@ -91,7 +101,7 @@ func (i *Integration) sendDeviceStateEvent() {
 
 	now := time.Now()
 	res = DeviceStateEventMessage{
-		CommonEvent{Kind: "event", Msg: "device_state", Cat: "DEVICE", Ts: now.Format(time.UnixDate)},
+		CommonEvent{Kind: "event", Msg: "device_state", Cat: "DEVICE", Ts: now.Format(time.RFC3339)},
 		DeviceState{DeviceId: DeviceId{DeviceId: i.DeviceId}, State: string(i.deviceState)},
 	}
 
@@ -106,12 +116,12 @@ func (i *Integration) sendDriverSetupChangeEvent(eventType DriverSetupEventType,
 
 	if required_user_action == nil {
 		res = DriverSetupChangeEvent{
-			CommonEvent{Kind: "event", Msg: "driver_setup_change", Cat: "DEVICE", Ts: now.Format(time.UnixDate)},
+			CommonEvent{Kind: "event", Msg: "driver_setup_change", Cat: "DEVICE", Ts: now.Format(time.RFC3339)},
 			DriverSetupChangeData{EventType: eventType, State: state, Error: err},
 		}
 	} else {
 		res = DriverSetupChangeEvent{
-			CommonEvent{Kind: "event", Msg: "driver_setup_change", Cat: "DEVICE", Ts: now.Format(time.UnixDate)},
+			CommonEvent{Kind: "event", Msg: "driver_setup_change", Cat: "DEVICE", Ts: now.Format(time.RFC3339)},
 			DriverSetupChangeData{EventType: eventType, State: state, Error: err, RequiredUserAction: *required_user_action},
 		}
 	}
@@ -126,14 +136,61 @@ func (i *Integration) handleConnectEvent(e *ConnectEvent) {
 
 	switch e.Msg {
 	case "connect":
-		log.Println("connect")
+		// Call the handler of the client
+		if i.handleConnectionFunction != nil {
+			i.handleConnectionFunction(e)
+		}
 
 	case "disconnect":
-		log.Println("disconnect")
+		// Call the handler of the client
+		if i.handleConnectionFunction != nil {
+			i.handleConnectionFunction(e)
+		}
+	}
 
-	default:
-		log.Println("Unknown connect message")
+}
 
+// If the user aborts the setup process, the Remote Two sends this event.
+// Further messages from the integration from the setup process will be ignored afterwards.
+func (i *Integration) handleAbortDriverSetupEvent(e *AbortDriverSetupEvent) {
+	log.Println("Abort Driver Setup")
+	// TODO: implement something?
+}
+
+// Emitted when an attribute of an entity changes, e.g. is switched off.
+// Either after an entity_command or if the entity is updated manually through a user or an external system.
+// This keeps the Remote Two in sync with the real state of the entity without the need of constant polling.
+func (i *Integration) sendEntityChangeEvent(e interface{}) {
+
+	entity_id := GetEntityId(e)
+
+	// Only send the event when remote is subscribed to
+	if slices.Contains(i.SubscribedEntities, entity_id) {
+
+		var res interface{}
+		now := time.Now()
+
+		device_id := GetDeviceId(e)
+
+		entity_type := GetEntityType(e)
+		attributes := GetEntityAttributes(e)
+
+		res = EntityChangeEvent{
+			CommonEvent{
+				Kind: "event",
+				Msg:  "entity_change",
+				Cat:  "ENTITY",
+				Ts:   now.Format(time.RFC3339),
+			},
+			EntityChangeData{
+				DeviceId:   device_id,
+				EntityId:   entity_id,
+				EntityType: entity_type.Type,
+				Attributes: attributes,
+			},
+		}
+
+		i.sendEventMessage(&res, websocket.TextMessage)
 	}
 
 }

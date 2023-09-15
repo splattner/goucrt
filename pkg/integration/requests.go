@@ -12,11 +12,12 @@ import (
 // Handle the request Message from Remote Two
 func (i *Integration) handleRequest(req *RequestMessage, p []byte) interface{} {
 	log.Println("Handle Request Message: " + req.Msg)
+	log.Println("Full Message: " + string(p))
 
 	var res interface{}
 
 	switch req.Msg {
-	case "auth_required":
+	case "auth":
 		authRequiredReq := AuthRequestMessage{}
 		json.Unmarshal(p, &authRequiredReq)
 
@@ -33,7 +34,7 @@ func (i *Integration) handleRequest(req *RequestMessage, p []byte) interface{} {
 		driverMetadataReq := DriverMetadataReq{}
 		json.Unmarshal(p, &driverMetadataReq)
 
-		res = i.getDriverMetadata(&driverMetadataReq)
+		res = i.handleGetDriverMetadataRequest(&driverMetadataReq)
 
 	case "get_device_state":
 		deviceStateMessageReq := DeviceStateMessageReq{}
@@ -61,7 +62,7 @@ func (i *Integration) handleRequest(req *RequestMessage, p []byte) interface{} {
 		entityStatesReq := GetEntityStatesMessageReq{}
 		json.Unmarshal(p, &entityStatesReq)
 
-		res = i.getEntityStates(&entityStatesReq)
+		res = i.handleGetEntityStatesRequest(&entityStatesReq)
 
 	case "entity_command":
 		entityCommandReq := EntityCommandReq{}
@@ -79,7 +80,7 @@ func (i *Integration) handleRequest(req *RequestMessage, p []byte) interface{} {
 		setUserData := SetDriverUserDataRequest{}
 		json.Unmarshal(p, &setUserData)
 
-		res = i.handleSetUserDataRequest(&setUserData)
+		res = i.handleSetDriverUserDataRequest(&setUserData)
 
 	default:
 		log.Println("mesage not know")
@@ -97,6 +98,8 @@ func (i *Integration) handleRequest(req *RequestMessage, p []byte) interface{} {
 // Called by the Remote Two when it needs to synchronize the device state,
 // e.g. after waking up from standby, or if it doesn't receive regular device_state events.
 func (i *Integration) handleGetDeviceStateRequest(req *DeviceStateMessageReq) {
+
+	// The response is a event Message and not a response
 	i.sendDeviceStateEvent()
 }
 
@@ -126,7 +129,7 @@ func (i *Integration) handleGetDriverVersionRequest(req *DriverVersionReq) *Resp
 }
 
 // The metadata is used to setup the driver in the remote / web-configurator and start the setup flow.
-func (i *Integration) getDriverMetadata(req *DriverMetadataReq) *DriverMetadataReponse {
+func (i *Integration) handleGetDriverMetadataRequest(req *DriverMetadataReq) *DriverMetadataReponse {
 
 	res := DriverMetadataReponse{
 		CommonResp{
@@ -146,14 +149,31 @@ func (i *Integration) getDriverMetadata(req *DriverMetadataReq) *DriverMetadataR
 // With the optional filter, only entities of a given type can be requested.
 func (i *Integration) handleGetAvailableEntitiesRequest(req *AvailableEntityMessageReq) *AvailableEntityMessage {
 
-	// TODO: get filtered entities
+	var entities []interface{}
 
-	res := AvailableEntityMessage{
-		CommonResp{Kind: "resp", Id: req.Id, Msg: "available_entities", Code: 200},
-		AvailableEntityData{
-			Filter:            req.MsgData.Filter,
-			AvailableEntities: i.Entities,
-		},
+	var res AvailableEntityMessage
+
+	for _, e := range i.Entities {
+		if req.MsgData.Filter.EntityType.Type == "" || GetEntityType(e).Type == req.MsgData.Filter.EntityType.Type {
+			entities = append(entities, e)
+		}
+	}
+
+	if req.MsgData.Filter.EntityType.Type == "" {
+		res = AvailableEntityMessage{
+			CommonResp{Kind: "resp", Id: req.Id, Msg: "available_entities", Code: 200},
+			AvailableEntityData{
+				AvailableEntities: entities,
+			},
+		}
+	} else {
+		res = AvailableEntityMessage{
+			CommonResp{Kind: "resp", Id: req.Id, Msg: "available_entities", Code: 200},
+			AvailableEntityData{
+				Filter:            req.MsgData.Filter,
+				AvailableEntities: entities,
+			},
+		}
 	}
 
 	return &res
@@ -188,15 +208,16 @@ func (i *Integration) handleSubscribeEventRequest(req *SubscribeEventMessageReq)
 
 	// Add entities to SubscribedEntities if not already in there
 	for _, e := range i.Entities {
-		if req.MsgData.EntityIds == nil || slices.Contains(req.MsgData.EntityIds, e.(entities.Entity).Id) {
-			if !slices.Contains(i.SubscribedEntities, e.(entities.Entity).Id) {
-				i.SubscribedEntities = append(i.SubscribedEntities, e.(entities.Entity).Id)
+		entity_id := GetEntityId(e)
+		if req.MsgData.EntityIds == nil || slices.Contains(req.MsgData.EntityIds, entity_id) {
+			if !slices.Contains(i.SubscribedEntities, entity_id) {
+				i.SubscribedEntities = append(i.SubscribedEntities, entity_id)
 			}
 		}
 	}
 
 	res := SubscribeEventMessage{
-		CommonResp{Kind: "resp", Id: req.Id, Msg: req.Msg, Code: 200},
+		CommonResp{Kind: "resp", Id: req.Id, Msg: "result", Code: 200},
 	}
 
 	return &res
@@ -217,20 +238,31 @@ func (i *Integration) handleUnsubscribeEventsRequest(req *UnubscribeEventMessage
 	}
 
 	res := UnubscribeEventMessage{
-		CommonResp{Kind: "resp", Id: req.Id, Msg: req.Msg, Code: 200},
+		CommonResp{Kind: "resp", Id: req.Id, Msg: "result", Code: 200},
 	}
 
 	return &res
 }
 
 // Called by the Remote Two when it needs to synchronize the dynamic entity attributes, e.g. after connection setup or waking up from standby.
-func (i *Integration) getEntityStates(req *GetEntityStatesMessageReq) *GetEntityStatesMessage {
+func (i *Integration) handleGetEntityStatesRequest(req *GetEntityStatesMessageReq) *GetEntityStatesMessage {
 
 	var entityStates []entities.EntityStateData
 
 	for _, e := range i.Entities {
-		entity := e.(entities.Entity)
-		entityStates = append(entityStates, *entity.GetEntityState())
+
+		entity_id := GetEntityId(e)
+		device_id := GetDeviceId(e)
+		entity_type := GetEntityType(e)
+		attributes := GetEntityAttributes(e)
+
+		entity_state := entities.EntityStateData{
+			EntityId:   entity_id,
+			DeviceId:   device_id,
+			EntityType: entity_type,
+			Attributes: attributes,
+		}
+		entityStates = append(entityStates, entity_state)
 	}
 
 	res := GetEntityStatesMessage{
@@ -264,7 +296,7 @@ func (i *Integration) handleEntityCommandRequest(req *EntityCommandReq) *EntityC
 
 }
 
-func (i *Integration) handleSetUserDataRequest(req *SetDriverUserDataRequest) *EntityCommandResponse {
+func (i *Integration) handleSetDriverUserDataRequest(req *SetDriverUserDataRequest) *EntityCommandResponse {
 
 	if req.MsgData.InputValues != nil {
 		i.UserInputValues = req.MsgData.InputValues

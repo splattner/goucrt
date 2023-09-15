@@ -28,5 +28,7 @@ func NewSensorEntity(id string, name LanguageText, area string) *SensorEntity {
 
 	sensorEntity.EntityType.Type = "sensor"
 
+	sensorEntity.Attributes = make(map[string]interface{})
+
 	return &sensorEntity
 }

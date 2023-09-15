@@ -47,6 +47,7 @@ func NewLightEntity(id string, name LanguageText, area string) *LightEntity {
 	lightEntity.EntityType.Type = "light"
 
 	lightEntity.Commands = make(map[string]func(LightEntity))
+	lightEntity.Attributes = make(map[string]interface{})
 
 	return &lightEntity
 }
@@ -75,8 +76,8 @@ func (e *LightEntity) AddCommand(command LightEntityCommand, function func(Light
 
 }
 
-func (e *LightEntity) HandleCommand(req *EntityCommandReq) {
-	if e.Commands[req.MsgData.CmdId] != nil {
-		e.Commands[req.MsgData.CmdId](*e)
+func (e *LightEntity) HandleCommand(cmd_id string, params interface{}) {
+	if e.Commands[cmd_id] != nil {
+		e.Commands[cmd_id](*e)
 	}
 }

@@ -57,6 +57,7 @@ func NewClimateEntity(id string, name LanguageText, area string) *ClimateEntity 
 	climateEntity.EntityType.Type = "climate"
 
 	climateEntity.Commands = make(map[string]func(ClimateEntity))
+	climateEntity.Attributes = make(map[string]interface{})
 
 	return &climateEntity
 }
@@ -84,8 +85,8 @@ func (e *ClimateEntity) AddCommand(command ClimateEntityCommand, function func(C
 
 }
 
-func (e *ClimateEntity) HandleCommand(req *EntityCommandReq) {
-	if e.Commands[req.MsgData.CmdId] != nil {
-		e.Commands[req.MsgData.CmdId](*e)
+func (e *ClimateEntity) HandleCommand(cmd_id string, params interface{}) {
+	if e.Commands[cmd_id] != nil {
+		e.Commands[cmd_id](*e)
 	}
 }

@@ -30,7 +30,7 @@ type LanguageText struct {
 }
 
 type DeviceId struct {
-	DeviceId string `json:"device_id"`
+	DeviceId string `json:"device_id,omitempty"`
 }
 
 type DeviceState struct {
@@ -219,13 +219,23 @@ type SetDriverUserData struct {
 }
 
 // Response
+
+type AuthenticationResponse struct {
+	CommonResp
+	MsgData AuthenticationResponseData `json:"msg_data`
+}
+
+type AuthenticationResponseData struct {
+	Name    string  `json:"name"`
+	Version Version `json:"version"`
+}
 type ResponseMessage struct {
 	CommonResp
 	MsgData interface{} `json:"msg_data,omitempty"`
 }
 
 type AvailableEntityData struct {
-	Filter            AvailableEntityFilter `json:"filter"`
+	Filter            AvailableEntityFilter `json:"filter,omitempty"`
 	AvailableEntities []interface{}         `json:"available_entities"`
 }
 
@@ -279,11 +289,32 @@ type EntityCommandResponse struct {
 }
 
 // Events
+
+type AbortDriverSetupEvent struct {
+	CommonEvent
+	MsgData AbortDriverSetupData `json:"msg_data"`
+}
+
+type AbortDriverSetupData struct {
+	Error DriverSetupError `json:"error"`
+}
+
 type EventMessage struct {
 	CommonEvent
 	MsgData interface{} `json:"msg_data"`
 }
 
+type EntityChangeEvent struct {
+	CommonEvent
+	MsgData EntityChangeData `json:"msg_data"`
+}
+
+type EntityChangeData struct {
+	DeviceId   string                 `json:"device_id`
+	EntityType string                 `json:"entity_type"`
+	EntityId   string                 `json:"entity_id"`
+	Attributes map[string]interface{} `json:"attributes"`
+}
 type EntityRemovedEvent struct {
 	CommonEvent
 	MsgData EntityRemovedEventData `json:"msg_data"`

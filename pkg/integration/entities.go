@@ -1,16 +1,11 @@
 package integration
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/splattner/goucrt/pkg/entities"
 )
 
 // Return the ID of an entity
 func GetEntityId(entity interface{}) string {
-	log.Println("Get ID of entity with type: " + fmt.Sprintf("%T", entity))
-
 	var id string
 
 	// Ugly.. I guess but I don't know how better
@@ -102,28 +97,60 @@ func GetEntityType(entity interface{}) entities.EntityType {
 	return entity_type
 }
 
-// Call the correct HandleCommand function depending on the entity type
-func HandleCommand(entity interface{}, req interface{}) {
-	log.Println("Handle the entiy_command in the correct entity: " + fmt.Sprintf("%T", entity))
+// Return the EntityType of an entity
+func GetEntityAttributes(entity interface{}) map[string]interface{} {
+	var attributes map[string]interface{}
 
 	// Ugly.. I guess but I don't know how better
 	switch e := entity.(type) {
 	case *entities.ButtonEntity:
-		e.HandleCommand(req.(*entities.EntityCommandReq))
+		attributes = e.Attributes
 
 	case *entities.LightEntity:
-		e.HandleCommand(req.(*entities.EntityCommandReq))
+		attributes = e.Attributes
 
 	case *entities.SwitchsEntity:
-		e.HandleCommand(req.(*entities.EntityCommandReq))
+		attributes = e.Attributes
 
 	case *entities.MediaPlayerEntity:
-		e.HandleCommand(req.(*entities.EntityCommandReq))
+		attributes = e.Attributes
+
+	case *entities.SensorEntity:
+		attributes = e.Attributes
 
 	case *entities.ClimateEntity:
-		e.HandleCommand(req.(*entities.EntityCommandReq))
+		attributes = e.Attributes
 
 	case *entities.CoverEntity:
-		e.HandleCommand(req.(*entities.EntityCommandReq))
+		attributes = e.Attributes
+	}
+
+	return attributes
+}
+
+// Call the correct HandleCommand function depending on the entity type
+func HandleCommand(entity interface{}, req *EntityCommandReq) {
+	cmd_id := req.MsgData.CmdId
+	params := req.MsgData.Params
+
+	// Ugly.. I guess but I don't know how better
+	switch e := entity.(type) {
+	case *entities.ButtonEntity:
+		e.HandleCommand(cmd_id, params)
+
+	case *entities.LightEntity:
+		e.HandleCommand(cmd_id, params)
+
+	case *entities.SwitchsEntity:
+		e.HandleCommand(cmd_id, params)
+
+	case *entities.MediaPlayerEntity:
+		e.HandleCommand(cmd_id, params)
+
+	case *entities.ClimateEntity:
+		e.HandleCommand(cmd_id, params)
+
+	case *entities.CoverEntity:
+		e.HandleCommand(cmd_id, params)
 	}
 }
