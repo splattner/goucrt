@@ -21,7 +21,7 @@ func (i *Integration) sendEventMessage(res *interface{}, messageType int) error 
 	if i.Remote.standby || !i.Remote.connected || i.Remote.websocket == nil {
 		log.WithFields(log.Fields{
 			"Message":   event.Msg,
-			"Kind:":     event.Kind,
+			"Kind":      event.Kind,
 			"standby":   i.Remote.standby,
 			"connected": i.Remote.connected,
 		}).Info("Remote is in standby mode or not (yet) connected, not sending event / no websocket")

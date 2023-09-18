@@ -149,6 +149,13 @@ func (i *Integration) handleGetDriverMetadataRequest(req *DriverMetadataReq) *Dr
 // With the optional filter, only entities of a given type can be requested.
 func (i *Integration) handleGetAvailableEntitiesRequest(req *AvailableEntityMessageReq) interface{} {
 
+	log.WithFields(log.Fields{
+		"Id":      req.Id,
+		"Kind":    req.Kind,
+		"Msg":     req.Msg,
+		"MsgData": req.MsgData,
+	}).Info("Get available Entities")
+
 	var entities []interface{}
 
 	var res interface{}

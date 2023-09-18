@@ -13,7 +13,7 @@ type CommonReq struct {
 
 type CommonResp struct {
 	Kind string `json:"kind"`
-	Id   int    `json:"id"`
+	Id   int    `json:"req_id"`
 	Msg  string `json:"msg"`
 	Code int    `json:"code"`
 }
