@@ -2,7 +2,6 @@ package integration
 
 import (
 	"encoding/json"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -86,9 +85,6 @@ func (i *Integration) handleRequest(req *RequestMessage, p []byte) {
 	}
 
 	if res != nil {
-		if err := i.Remote.websocket.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
-			log.Error(err)
-		}
 		if err := i.sendResponseMessage(&res, websocket.TextMessage); err != nil {
 			log.Error(err)
 		}
@@ -138,7 +134,7 @@ func (i *Integration) handleGetDriverMetadataRequest(req *DriverMetadataReq) *Dr
 			Msg:  "driver_metadata",
 			Code: 200,
 		},
-		i.Metadata,
+		*i.Metadata,
 	}
 
 	return &res
@@ -154,20 +150,19 @@ func (i *Integration) handleGetAvailableEntitiesRequest(req *AvailableEntityMess
 		"Kind":    req.Kind,
 		"Msg":     req.Msg,
 		"MsgData": req.MsgData,
-	}).Info("Get available Entities")
+	}).Debug("Get available Entities")
 
 	var entities []interface{}
 
 	var res interface{}
 
 	for _, e := range i.Entities {
-		if req.MsgData.Filter.EntityType.Type == "" || GetEntityType(e).Type == req.MsgData.Filter.EntityType.Type {
+		if req.MsgData.Filter.EntityType.Type == "" || i.getEntityType(e).Type == req.MsgData.Filter.EntityType.Type {
 			entities = append(entities, e)
 		}
 	}
 
 	if req.MsgData.Filter.EntityType.Type == "" {
-		log.Debug(("send AvailableEntityMessage without filter"))
 		res = AvailableEntityNoFilterMessage{
 			CommonResp{Kind: "resp", Id: req.Id, Msg: "available_entities", Code: 200},
 			AvailableEntityNoFilterData{
@@ -175,7 +170,6 @@ func (i *Integration) handleGetAvailableEntitiesRequest(req *AvailableEntityMess
 			},
 		}
 	} else {
-		log.Debug(("send AvailableEntityMessage with filter"))
 		res = AvailableEntityMessage{
 			CommonResp{Kind: "resp", Id: req.Id, Msg: "available_entities", Code: 200},
 			AvailableEntityData{
@@ -194,14 +188,14 @@ func (i *Integration) handleGetAvailableEntitiesRequest(req *AvailableEntityMess
 func (i *Integration) handleSetupDriverRequest(req *SetupDriverMessageReq) *ResponseMessage {
 	if i.handleSetupFunction != nil {
 		// The handleSetupFunction is where the driver specific implmenentation for driver setup is
-		go i.handleSetupFunction()
+		go i.handleSetupFunction(req.MsgData.Value)
 	}
 
 	res := ResponseMessage{
 		CommonResp{
 			Kind: "resp",
 			Id:   req.Id,
-			Msg:  req.Msg,
+			Msg:  "result",
 			Code: 200,
 		},
 		nil,
@@ -217,7 +211,7 @@ func (i *Integration) handleSubscribeEventRequest(req *SubscribeEventMessageReq)
 
 	// Add entities to SubscribedEntities if not already in there
 	for _, e := range i.Entities {
-		entity_id := GetEntityId(e)
+		entity_id := i.getEntityId(e)
 		if req.MsgData.EntityIds == nil || slices.Contains(req.MsgData.EntityIds, entity_id) {
 			if !slices.Contains(i.SubscribedEntities, entity_id) {
 				i.SubscribedEntities = append(i.SubscribedEntities, entity_id)
@@ -260,10 +254,10 @@ func (i *Integration) handleGetEntityStatesRequest(req *GetEntityStatesMessageRe
 
 	for _, e := range i.Entities {
 
-		entity_id := GetEntityId(e)
-		device_id := GetDeviceId(e)
-		entity_type := GetEntityType(e)
-		attributes := GetEntityAttributes(e)
+		entity_id := i.getEntityId(e)
+		device_id := i.getDeviceId(e)
+		entity_type := i.getEntityType(e)
+		attributes := i.getEntityAttributes(e)
 
 		entity_state := entities.EntityStateData{
 			EntityId:   entity_id,
@@ -295,26 +289,32 @@ func (i *Integration) handleEntityCommandRequest(req *EntityCommandReq) *EntityC
 		returnCode = 404
 	}
 
-	HandleCommand(entity, req)
+	i.handleCommand(entity, req)
 
 	res := EntityCommandResponse{
-		CommonResp{Kind: "resp", Id: req.Id, Msg: req.Msg, Code: returnCode},
+		CommonResp{Kind: "resp", Id: req.Id, Msg: "result", Code: returnCode},
 	}
 
 	return &res
 
 }
 
-func (i *Integration) handleSetDriverUserDataRequest(req *SetDriverUserDataRequest) *EntityCommandResponse {
+func (i *Integration) handleSetDriverUserDataRequest(req *SetDriverUserDataRequest) *ResponseMessage {
 
-	if req.MsgData.InputValues != nil {
-		i.UserInputValues = req.MsgData.InputValues
+	log.WithField("Message", req.MsgData).Debug("Set DriverUserData Request")
+
+	if i.handleSetDriverUserDataFunction != nil {
+		go i.handleSetDriverUserDataFunction(req.MsgData.InputValues, req.MsgData.Confirm)
 	}
 
-	i.UserInputConfirmation = req.MsgData.Confirm
-
-	res := EntityCommandResponse{
-		CommonResp{Kind: "resp", Id: req.Id, Msg: req.Msg, Code: 200},
+	res := ResponseMessage{
+		CommonResp{
+			Kind: "resp",
+			Id:   req.Id,
+			Msg:  "result",
+			Code: 200,
+		},
+		nil,
 	}
 
 	return &res

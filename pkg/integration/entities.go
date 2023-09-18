@@ -5,7 +5,7 @@ import (
 )
 
 // Return the ID of an entity
-func GetEntityId(entity interface{}) string {
+func (i *Integration) getEntityId(entity interface{}) string {
 	var id string
 
 	// Ugly.. I guess but I don't know how better
@@ -36,7 +36,7 @@ func GetEntityId(entity interface{}) string {
 }
 
 // Return the DeviceId of an entity
-func GetDeviceId(entity interface{}) string {
+func (i *Integration) getDeviceId(entity interface{}) string {
 	var device_id string
 
 	// Ugly.. I guess but I don't know how better
@@ -67,7 +67,7 @@ func GetDeviceId(entity interface{}) string {
 }
 
 // Return the EntityType of an entity
-func GetEntityType(entity interface{}) entities.EntityType {
+func (i *Integration) getEntityType(entity interface{}) entities.EntityType {
 	var entity_type entities.EntityType
 
 	// Ugly.. I guess but I don't know how better
@@ -98,7 +98,7 @@ func GetEntityType(entity interface{}) entities.EntityType {
 }
 
 // Return the EntityType of an entity
-func GetEntityAttributes(entity interface{}) map[string]interface{} {
+func (i *Integration) getEntityAttributes(entity interface{}) map[string]interface{} {
 	var attributes map[string]interface{}
 
 	// Ugly.. I guess but I don't know how better
@@ -129,7 +129,7 @@ func GetEntityAttributes(entity interface{}) map[string]interface{} {
 }
 
 // Call the correct HandleCommand function depending on the entity type
-func HandleCommand(entity interface{}, req *EntityCommandReq) {
+func (i *Integration) handleCommand(entity interface{}, req *EntityCommandReq) {
 	cmd_id := req.MsgData.CmdId
 	params := req.MsgData.Params
 

@@ -49,14 +49,16 @@ func (i *Integration) wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	i.Remote.websocket = ws
 	i.Remote.connected = true
 
-	i.SendAuthenticationResponse()
-
 	// Start reading those messages
 	go i.wsReader()
 	go i.wsWriter()
+
+	i.SendAuthenticationResponse()
+
 }
 
 func (i *Integration) wsReader() {
+	log.Debug("Start Websocket read loop")
 	i.Remote.websocket.SetReadLimit(maxMessageSize)
 	i.Remote.websocket.SetReadDeadline(time.Now().Add(pongWait))
 	i.Remote.websocket.SetPongHandler(func(string) error {
@@ -108,6 +110,7 @@ func (i *Integration) wsReader() {
 }
 
 func (i *Integration) wsWriter() {
+	log.Debug("Start Websocket write loop")
 	ticker := time.NewTicker(pingPeriod)
 
 	defer func() {
@@ -121,6 +124,28 @@ func (i *Integration) wsWriter() {
 
 	for {
 		select {
+
+		case msg := <-i.Remote.messageChannel:
+
+			// Remote should not be in standby as this is a response to a request
+			// or if sent from sendEventMessage the sendEventMessage function makes sure the remote is not in standby
+			if i.Remote.connected && i.Remote.websocket != nil {
+				log.WithFields(log.Fields{
+					"RawMessage": string(msg),
+					"RemoteAddr": i.Remote.websocket.RemoteAddr().String()}).Debug("Send message to websocket")
+
+				if err := i.Remote.websocket.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+					log.WithError(err).Error("Faled to set WriteDeatLine")
+				}
+
+				if err := i.Remote.websocket.WriteMessage(websocket.TextMessage, msg); err != nil {
+					log.WithError(err).Error("Failed to send message")
+				}
+
+			} else {
+				log.Info("Remote not connected")
+			}
+
 		case <-ticker.C:
 			if i.Remote.websocket != nil && i.Remote.connected {
 				i.Remote.websocket.SetWriteDeadline(time.Now().Add(writeWait))

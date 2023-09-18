@@ -25,7 +25,7 @@ type CommonEvent struct {
 }
 
 type LanguageText struct {
-	En string `json:"en"`
+	En string `json:"en,omitempty"`
 	De string `json:"de,omitempty"`
 }
 
@@ -63,7 +63,7 @@ type DriverSetupError string
 const (
 	SetupState              DriverSetupState = "SETUP"
 	WaitUserActionState                      = "WAIT_USER_ACTION"
-	RequiredUserActionState                  = "require_user_action"
+	RequiredUserActionState                  = "require_user_action" // TODO: is this correct?
 	OkState                                  = "OK"
 	ErrorState                               = "ERROR"
 )
@@ -99,9 +99,9 @@ type Token struct {
 
 type ConfirmationPage struct {
 	Title    LanguageText `json:"title"`
-	Message1 LanguageText `json:"message1,omitempty"`
+	Message1 interface{}  `json:"message1,omitempty"`
 	Image    string       `json:"image,omitempty"`
-	Message2 LanguageText `json:"message2,omitempty"`
+	Message2 interface{}  `json:"message2,omitempty"`
 }
 
 type SettigsPage struct {
@@ -214,8 +214,8 @@ type SetDriverUserDataRequest struct {
 }
 
 type SetDriverUserData struct {
-	InputValues map[string]interface{} `json:"input_values,omitempty"`
-	Confirm     bool                   `json:"confirm,omitempty"`
+	InputValues map[string]string `json:"input_values,omitempty"`
+	Confirm     bool              `json:"confirm,omitempty"`
 }
 
 // Response
@@ -351,13 +351,13 @@ type DriverSetupChangeEvent struct {
 }
 
 type DriverSetupChangeData struct {
-	EventType          DriverSetupEventType `json:"event_type"`
-	State              DriverSetupState     `json:"state"`
-	Error              DriverSetupError     `json:"error"`
-	RequiredUserAction RequiredUserAction   `json:"required_user_action,omitempty"`
+	EventType         DriverSetupEventType `json:"event_type"`
+	State             DriverSetupState     `json:"state"`
+	Error             DriverSetupError     `json:"error,omitempty"`
+	RequireUserAction interface{}          `json:"require_user_action,omitempty"`
 }
 
-type RequiredUserAction struct {
-	Input        SettigsPage      `json:"input,omitempty"`
-	Confirmation ConfirmationPage `json:"confirmation,omitempty"`
+type RequireUserAction struct {
+	Input        interface{} `json:"input,omitempty"`
+	Confirmation interface{} `json:"confirmation,omitempty"`
 }

@@ -10,6 +10,9 @@ type remote struct {
 	standby   bool
 	connected bool
 	websocket *websocket.Conn
+
+	// Channel to send new messages over websocket.
+	messageChannel chan []byte
 }
 
 func (r *remote) EnterStandBy() {

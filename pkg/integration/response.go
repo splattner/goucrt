@@ -2,8 +2,6 @@ package integration
 
 import (
 	"encoding/json"
-	"fmt"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -22,24 +20,14 @@ func (i *Integration) sendResponseMessage(res interface{}, messageType int) erro
 	json.Unmarshal(msg, &response)
 
 	log.WithFields(log.Fields{
-		"Message":    response.Msg,
-		"Id":         response.Id,
-		"Kind":       response.Kind,
-		"Data":       response.MsgData,
-		"RawMessage": string(msg)}).Info("Send Response Message")
+		"Message": response.Msg,
+		"Id":      response.Id,
+		"Kind":    response.Kind,
+		"Data":    response.MsgData}).Info("Send Response Message")
 
-	// Remote should not be in standby as this is a response to a request
-	if !i.Remote.connected || i.Remote.websocket == nil {
-		return fmt.Errorf("No Open Websocket connection, cannot send a response")
-	}
+	i.Remote.messageChannel <- msg
 
-	if err := i.Remote.websocket.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
-		return err
-	}
-
-	log.WithField("RawMessage", string(msg)).Debug("Send Response Message")
-
-	return i.Remote.websocket.WriteMessage(messageType, msg)
+	return nil
 
 }
 

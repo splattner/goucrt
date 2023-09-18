@@ -35,10 +35,8 @@ func (i *Integration) sendEventMessage(res *interface{}, messageType int) error 
 		"Data":       event.MsgData,
 	}).Info("Send Event Message")
 
-	if err := i.Remote.websocket.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
-		return err
-	}
-	return i.Remote.websocket.WriteMessage(messageType, msg)
+	i.Remote.messageChannel <- msg
+	return nil
 
 }
 
@@ -86,9 +84,9 @@ func (i *Integration) sendEntityRemoved(e interface{}) {
 	now := time.Now()
 
 	msg_data := EntityRemovedEventData{
-		DeviceId:   GetDeviceId(e),
-		EntityType: GetEntityType(e).Type,
-		EntityId:   GetEntityId(e),
+		DeviceId:   i.getDeviceId(e),
+		EntityType: i.getEntityType(e).Type,
+		EntityId:   i.getEntityId(e),
 	}
 
 	res = EntityRemovedEvent{
@@ -136,12 +134,12 @@ func (i *Integration) sendDeviceStateEvent() {
 }
 
 // Emitted for all driver setup flow state changes.
-func (i *Integration) sendDriverSetupChangeEvent(eventType DriverSetupEventType, state DriverSetupState, err DriverSetupError, required_user_action *RequiredUserAction) {
+func (i *Integration) sendDriverSetupChangeEvent(eventType DriverSetupEventType, state DriverSetupState, err DriverSetupError, require_user_action *RequireUserAction) {
 	var res interface{}
 
 	now := time.Now()
 
-	if required_user_action == nil {
+	if require_user_action == nil {
 		res = DriverSetupChangeEvent{
 			CommonEvent{Kind: "event", Msg: "driver_setup_change", Cat: "DEVICE", Ts: now.Format(time.RFC3339)},
 			DriverSetupChangeData{EventType: eventType, State: state, Error: err},
@@ -149,7 +147,7 @@ func (i *Integration) sendDriverSetupChangeEvent(eventType DriverSetupEventType,
 	} else {
 		res = DriverSetupChangeEvent{
 			CommonEvent{Kind: "event", Msg: "driver_setup_change", Cat: "DEVICE", Ts: now.Format(time.RFC3339)},
-			DriverSetupChangeData{EventType: eventType, State: state, Error: err, RequiredUserAction: *required_user_action},
+			DriverSetupChangeData{EventType: eventType, State: state, Error: err, RequireUserAction: *require_user_action},
 		}
 	}
 
@@ -189,7 +187,7 @@ func (i *Integration) handleAbortDriverSetupEvent(e *AbortDriverSetupEvent) {
 // This keeps the Remote Two in sync with the real state of the entity without the need of constant polling.
 func (i *Integration) sendEntityChangeEvent(e interface{}) {
 
-	entity_id := GetEntityId(e)
+	entity_id := i.getEntityId(e)
 
 	// Only send the event when remote is subscribed to
 	if slices.Contains(i.SubscribedEntities, entity_id) {
@@ -197,10 +195,10 @@ func (i *Integration) sendEntityChangeEvent(e interface{}) {
 		var res interface{}
 		now := time.Now()
 
-		device_id := GetDeviceId(e)
+		device_id := i.getDeviceId(e)
 
-		entity_type := GetEntityType(e)
-		attributes := GetEntityAttributes(e)
+		entity_type := i.getEntityType(e)
+		attributes := i.getEntityAttributes(e)
 
 		res = EntityChangeEvent{
 			CommonEvent{

@@ -15,7 +15,7 @@ const API_VERSION = "0.8.1-alpha"
 type Integration struct {
 	DeviceId string
 
-	Metadata DriverMetadata
+	Metadata *DriverMetadata
 
 	authToken string
 
@@ -27,17 +27,11 @@ type Integration struct {
 
 	Entities []interface{}
 
-	// User input result of a SettingsPage as key values.
-	// key: id of the field
-	// value: entered user value as string. This is either the entered text or number, selected checkbox state or the selected dropdown item id.
-	//⚠️ Non native string values as numbers or booleans are represented as string values!
-	UserInputValues       map[string]interface{}
-	UserInputConfirmation bool
-
 	SubscribedEntities []string
 
-	handleSetupFunction      func()
-	handleConnectionFunction func(*ConnectEvent)
+	handleSetupFunction             func(map[string]string)
+	handleConnectionFunction        func(*ConnectEvent)
+	handleSetDriverUserDataFunction func(map[string]string, bool)
 
 	SetupState DriverSetupState
 
@@ -46,53 +40,30 @@ type Integration struct {
 
 func NewIntegration(config Config) (*Integration, error) {
 
-	infoSetting := SetupDataSchemaSettings{
-		Id: "info",
-		Label: LanguageText{
-			En: "Integration",
-		},
-		Field: SettingTypeLabel{
-			Label: SettingTypeLabelDefinition{
-				Value: LanguageText{
-					En: "No configuration is needed for this integration",
-				},
-			},
-		},
-	}
-
-	setupdataschema := SetupDataSchema{
-		Title: LanguageText{
-			En: "Integration Settings",
-		},
-		Settings: []SetupDataSchemaSettings{infoSetting},
-	}
-
-	metadata := DriverMetadata{
-		DriverId: "myintegration",
-		Developer: Developer{
-			Name: "Sebastian Plattner",
-		},
-		Name: LanguageText{
-			En: "My UCRT Integration",
-			De: "Meine UCRT Integration",
-		},
-		Version:         "0.0.1",
-		SetupDataSchema: setupdataschema,
-	}
-
 	i := Integration{
 		config:      config,
-		Metadata:    metadata,
 		deviceState: DisconnectedDeviceState,
 		DeviceId:    "", // I think device_id is not yet implemented in Remote TV, used for multi-device integrati
 
 	}
 
+	i.Remote.messageChannel = make(chan []byte)
+
 	return &i, nil
 
 }
 
+func (i *Integration) SetMetadata(metadata *DriverMetadata) {
+	log.WithField("Metadata", metadata).Debug("Set Metadata")
+	i.Metadata = metadata
+}
+
 func (i *Integration) Run() error {
+
+	if i.Metadata == nil {
+		log.Error("Metadata not set, cannot run")
+		return fmt.Errorf("Metadata not set")
+	}
 
 	http.HandleFunc("/ws", i.wsEndpoint)
 
@@ -111,7 +82,7 @@ func (i *Integration) AddEntity(e interface{}) error {
 	log.Debug("Add a new entity to the integration")
 
 	// Search if entity is already added
-	_, _, err := i.GetEntityById(GetEntityId(e))
+	_, _, err := i.GetEntityById(i.getEntityId(e))
 	if err != nil {
 		// Entity not found, so add id
 		i.Entities = append(i.Entities, e)
@@ -126,7 +97,7 @@ func (i *Integration) AddEntity(e interface{}) error {
 func (i *Integration) RemoveEntity(entity interface{}) error {
 	// Search if entity is available
 
-	_, ix, err := i.GetEntityById(GetEntityId(entity))
+	_, ix, err := i.GetEntityById(i.getEntityId(entity))
 	if err == nil {
 
 		i.Entities[ix] = i.Entities[len(i.Entities)-1] // Copy last element to index i.
@@ -142,13 +113,13 @@ func (i *Integration) RemoveEntity(entity interface{}) error {
 }
 
 func (i *Integration) GetEntityById(id string) (interface{}, int, error) {
-	for i, entity := range i.Entities {
-		entity_id := GetEntityId(entity)
+	for ix, entity := range i.Entities {
+		entity_id := i.getEntityId(entity)
 		log.Println(entity_id)
 
 		if entity_id == id {
 			log.Println("Found entity with type: " + fmt.Sprintf("%T", entity))
-			return entity, i, nil
+			return entity, ix, nil
 		}
 	}
 
@@ -160,7 +131,7 @@ func (i *Integration) GetEntitiesByType(entityType entities.EntityType) []interf
 	var es []interface{}
 
 	for _, e := range i.Entities {
-		if GetEntityType(e) == entityType {
+		if i.getEntityType(e) == entityType {
 			es = append(es, e)
 		}
 	}
@@ -169,7 +140,7 @@ func (i *Integration) GetEntitiesByType(entityType entities.EntityType) []interf
 }
 
 // Set the function which is called when the setup_driver request was sent by the remote
-func (i *Integration) SetHandleSetupFunction(f func()) {
+func (i *Integration) SetHandleSetupFunction(f func(map[string]string)) {
 	i.handleSetupFunction = f
 }
 
@@ -178,8 +149,24 @@ func (i *Integration) SetHandleConnectionFunction(f func(*ConnectEvent)) {
 	i.handleConnectionFunction = f
 }
 
-func (i *Integration) SetDriverSetupState(event_Type DriverSetupEventType, state DriverSetupState, err DriverSetupError, requiredUserAction *RequiredUserAction) {
+// Set the function which is called when the connect/disconnect request was sent by the remote
+func (i *Integration) SetHandleSetDriverUserDataFunction(f func(map[string]string, bool)) {
+	i.handleSetDriverUserDataFunction = f
+}
 
-	i.sendDriverSetupChangeEvent(event_Type, state, err, requiredUserAction)
+func (i *Integration) SetDriverSetupState(event_Type DriverSetupEventType, state DriverSetupState, err DriverSetupError, requireUserAction *RequireUserAction) {
+
+	log.WithFields(log.Fields{
+		"EventType": event_Type,
+		"State":     state,
+		"Error":     err,
+	}).Info("Set DriverSetup State from Client")
+
+	// Overwrite state if requireUserAction is set
+	if requireUserAction != nil {
+		state = WaitUserActionState
+	}
+
+	i.sendDriverSetupChangeEvent(event_Type, state, err, requireUserAction)
 
 }
