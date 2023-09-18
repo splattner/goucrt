@@ -37,7 +37,7 @@ func (i *Integration) sendResponseMessage(res interface{}, messageType int) erro
 		return err
 	}
 
-	log.WithField("RawMessage", string(msg)).Info("Send Response Message")
+	log.WithField("RawMessage", string(msg)).Debug("Send Response Message")
 
 	return i.Remote.websocket.WriteMessage(messageType, msg)
 

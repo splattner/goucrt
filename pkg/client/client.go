@@ -13,6 +13,8 @@ type Client struct {
 	IntegrationDriver *integration.Integration
 
 	DeviceState integration.DState
+
+	messages chan string
 }
 
 func NewClient(i *integration.Integration) *Client {
@@ -22,6 +24,8 @@ func NewClient(i *integration.Integration) *Client {
 	client.IntegrationDriver = i
 	// Start without a connection
 	client.DeviceState = integration.DisconnectedDeviceState
+
+	client.messages = make(chan string)
 
 	return &client
 
@@ -95,23 +99,41 @@ func (c *Client) HandleButtonPressCommand(button entities.ButtonEntity) {
 }
 
 func (c *Client) connect() {
-
-	time.Sleep(1 * time.Second)
-
-	c.setDeviceState(integration.ConnectedDeviceState)
-
+	go c.clientLoop()
 }
 
 func (c *Client) disconnect() {
-
-	time.Sleep(1 * time.Second)
-
-	c.setDeviceState(integration.DisconnectedDeviceState)
-
+	c.messages <- "dissconnect"
 }
 
 func (c *Client) setDeviceState(state integration.DState) {
 	log.Println("Set device state and send to integration driver: " + state)
 	c.DeviceState = state
 	c.IntegrationDriver.SetDeviceState(c.DeviceState)
+}
+
+func (c *Client) clientLoop() {
+
+	defer func() {
+		c.setDeviceState(integration.DisconnectedDeviceState)
+	}()
+
+	// Handle connection to device this integration shall control
+	// Set Device state to connected when connection is established
+	c.setDeviceState(integration.ConnectedDeviceState)
+
+	// Run Client Loop to handle entity changes from device
+	for {
+
+		select {
+		case msg := <-c.messages:
+
+			switch msg {
+			case "disconnect":
+				return
+			}
+
+		}
+	}
+
 }
