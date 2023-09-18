@@ -1,8 +1,9 @@
 package client
 
 import (
-	"log"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/splattner/goucrt/pkg/entities"
 	"github.com/splattner/goucrt/pkg/integration"

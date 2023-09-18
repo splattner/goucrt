@@ -2,7 +2,9 @@ package integration
 
 import (
 	"encoding/json"
-	"log"
+	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/websocket"
 	"github.com/splattner/goucrt/pkg/entities"
@@ -10,10 +12,7 @@ import (
 )
 
 // Handle the request Message from Remote Two
-func (i *Integration) handleRequest(req *RequestMessage, p []byte) interface{} {
-	log.Println("Handle Request Message: " + req.Msg)
-	log.Println("Full Message: " + string(p))
-
+func (i *Integration) handleRequest(req *RequestMessage, p []byte) {
 	var res interface{}
 
 	switch req.Msg {
@@ -83,16 +82,17 @@ func (i *Integration) handleRequest(req *RequestMessage, p []byte) interface{} {
 		res = i.handleSetDriverUserDataRequest(&setUserData)
 
 	default:
-		log.Println("mesage not know")
+		log.Debug("mesage not know")
 	}
 
 	if res != nil {
+		if err := i.Remote.websocket.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+			log.Error(err)
+		}
 		if err := i.sendResponseMessage(&res, websocket.TextMessage); err != nil {
-			log.Println(err)
+			log.Error(err)
 		}
 	}
-
-	return res
 }
 
 // Called by the Remote Two when it needs to synchronize the device state,
@@ -109,8 +109,8 @@ func (i *Integration) handleGetDriverVersionRequest(req *DriverVersionReq) *Resp
 	msg_data := DriverVersionData{
 		Name: i.Metadata.Name.En,
 		Version: Version{
-			Api:    "test",
-			Driver: i.Metadata.Version,
+			Api:    API_VERSION,
+			Driver: API_VERSION,
 		},
 	}
 
@@ -147,11 +147,11 @@ func (i *Integration) handleGetDriverMetadataRequest(req *DriverMetadataReq) *Dr
 
 // Called while configuring profiles and assigning entities to pages or groups in the web-configurator or the embedded editor of the remote UI.
 // With the optional filter, only entities of a given type can be requested.
-func (i *Integration) handleGetAvailableEntitiesRequest(req *AvailableEntityMessageReq) *AvailableEntityMessage {
+func (i *Integration) handleGetAvailableEntitiesRequest(req *AvailableEntityMessageReq) interface{} {
 
 	var entities []interface{}
 
-	var res AvailableEntityMessage
+	var res interface{}
 
 	for _, e := range i.Entities {
 		if req.MsgData.Filter.EntityType.Type == "" || GetEntityType(e).Type == req.MsgData.Filter.EntityType.Type {
@@ -160,13 +160,15 @@ func (i *Integration) handleGetAvailableEntitiesRequest(req *AvailableEntityMess
 	}
 
 	if req.MsgData.Filter.EntityType.Type == "" {
-		res = AvailableEntityMessage{
+		log.Debug(("send AvailableEntityMessage without filter"))
+		res = AvailableEntityNoFilterMessage{
 			CommonResp{Kind: "resp", Id: req.Id, Msg: "available_entities", Code: 200},
-			AvailableEntityData{
+			AvailableEntityNoFilterData{
 				AvailableEntities: entities,
 			},
 		}
 	} else {
+		log.Debug(("send AvailableEntityMessage with filter"))
 		res = AvailableEntityMessage{
 			CommonResp{Kind: "resp", Id: req.Id, Msg: "available_entities", Code: 200},
 			AvailableEntityData{

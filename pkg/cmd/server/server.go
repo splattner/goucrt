@@ -1,8 +1,9 @@
 package server
 
 import (
-	"log"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 	"github.com/splattner/goucrt/pkg/client"
@@ -21,8 +22,9 @@ func NewCommand() *cobra.Command {
 		Short: "Run a Unfolded Circle Remote Two integratin",
 		Long:  "Run a Unfolded Circle Remote Two integratin",
 		Run: func(c *cobra.Command, args []string) {
+
 			log.SetOutput(os.Stdout)
-			log.Println("Integration run")
+			log.SetLevel(log.DebugLevel)
 
 			var config = make(integration.Config)
 

@@ -1,7 +1,7 @@
 package integration
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/websocket"
 )
@@ -13,15 +13,14 @@ type remote struct {
 }
 
 func (r *remote) EnterStandBy() {
-	log.Println("Remote entered standby mode")
+	log.Info("Remote entered standby mode")
 
 	r.standby = true
 
 }
 
 func (r *remote) ExitStandBy() {
-
-	log.Println("Remote exited standby mode")
+	log.Info("Remote exited standby mode")
 
 	r.standby = false
 }

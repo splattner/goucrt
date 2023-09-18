@@ -2,12 +2,15 @@ package integration
 
 import (
 	"fmt"
-	"log"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/grandcat/zeroconf"
 	"github.com/splattner/goucrt/pkg/entities"
 )
+
+const API_VERSION = "0.8.1-alpha"
 
 type Integration struct {
 	DeviceId string
@@ -43,6 +46,27 @@ type Integration struct {
 
 func NewIntegration(config Config) (*Integration, error) {
 
+	infoSetting := SetupDataSchemaSettings{
+		Id: "info",
+		Label: LanguageText{
+			En: "Integration",
+		},
+		Field: SettingTypeLabel{
+			Label: SettingTypeLabelDefinition{
+				Value: LanguageText{
+					En: "No configuration is needed for this integration",
+				},
+			},
+		},
+	}
+
+	setupdataschema := SetupDataSchema{
+		Title: LanguageText{
+			En: "Integration Settings",
+		},
+		Settings: []SetupDataSchemaSettings{infoSetting},
+	}
+
 	metadata := DriverMetadata{
 		DriverId: "myintegration",
 		Developer: Developer{
@@ -52,14 +76,15 @@ func NewIntegration(config Config) (*Integration, error) {
 			En: "My UCRT Integration",
 			De: "Meine UCRT Integration",
 		},
-		Version: "0.0.1",
+		Version:         "0.0.1",
+		SetupDataSchema: setupdataschema,
 	}
 
 	i := Integration{
 		config:      config,
 		Metadata:    metadata,
 		deviceState: DisconnectedDeviceState,
-		DeviceId:    "", // I think device_id is not yet implemented in Remote TV, used for multi-device integration
+		DeviceId:    "", // I think device_id is not yet implemented in Remote TV, used for multi-device integrati
 
 	}
 
@@ -83,7 +108,7 @@ func (i *Integration) Run() error {
 }
 
 func (i *Integration) AddEntity(e interface{}) error {
-	log.Println("Add a new entity to the integration")
+	log.Debug("Add a new entity to the integration")
 
 	// Search if entity is already added
 	_, _, err := i.GetEntityById(GetEntityId(e))

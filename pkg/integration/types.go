@@ -26,7 +26,7 @@ type CommonEvent struct {
 
 type LanguageText struct {
 	En string `json:"en"`
-	De string `json:"de"`
+	De string `json:"de,omitempty"`
 }
 
 type DeviceId struct {
@@ -222,13 +222,9 @@ type SetDriverUserData struct {
 
 type AuthenticationResponse struct {
 	CommonResp
-	MsgData AuthenticationResponseData `json:"msg_data`
+	MsgData DriverVersionData `json:"msg_data"`
 }
 
-type AuthenticationResponseData struct {
-	Name    string  `json:"name"`
-	Version Version `json:"version"`
-}
 type ResponseMessage struct {
 	CommonResp
 	MsgData interface{} `json:"msg_data,omitempty"`
@@ -239,9 +235,18 @@ type AvailableEntityData struct {
 	AvailableEntities []interface{}         `json:"available_entities"`
 }
 
+type AvailableEntityNoFilterData struct {
+	AvailableEntities []interface{} `json:"available_entities"`
+}
+
 type AvailableEntityMessage struct {
 	CommonResp
 	MsgData AvailableEntityData `json:"msg_data"`
+}
+
+type AvailableEntityNoFilterMessage struct {
+	CommonResp
+	MsgData AvailableEntityNoFilterData `json:"msg_data"`
 }
 
 type DeviceStateEventMessage struct {
@@ -261,7 +266,7 @@ type Developer struct {
 }
 
 type SetupDataSchema struct {
-	Title    map[string]string         `json:"title"`
+	Title    LanguageText              `json:"title"`
 	Settings []SetupDataSchemaSettings `json:"settings"`
 }
 

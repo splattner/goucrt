@@ -1,14 +1,14 @@
 package integration
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/grandcat/zeroconf"
 )
 
 // TODO: not working?
 func (i *Integration) startAdvertising() {
-	log.Println("start advertising UC Integration")
+	log.Info("Start advertising UC Integration with mdns")
 
 	txt := []string{
 		"name=" + i.Metadata.Name.En,
@@ -26,7 +26,7 @@ func (i *Integration) startAdvertising() {
 }
 
 func (i *Integration) stopAdvertising() {
-	log.Println("stop advertising UC Integration")
+	log.Info("Stop advertising UC Integration")
 
 	i.mdns.Shutdown()
 }

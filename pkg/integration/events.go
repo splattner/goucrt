@@ -2,15 +2,47 @@ package integration
 
 import (
 	"encoding/json"
-	"log"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/websocket"
 	"k8s.io/utils/strings/slices"
 )
 
+func (i *Integration) sendEventMessage(res *interface{}, messageType int) error {
+
+	msg, _ := json.Marshal(res)
+
+	// Unmarshal againinto Event Message for some fields
+	event := EventMessage{}
+	json.Unmarshal(msg, &event)
+
+	if i.Remote.standby || !i.Remote.connected || i.Remote.websocket == nil {
+		log.WithFields(log.Fields{
+			"Message":   event.Msg,
+			"Kind:":     event.Kind,
+			"standby":   i.Remote.standby,
+			"connected": i.Remote.connected,
+		}).Info("Remote is in standby mode or not (yet) connected, not sending event / no websocket")
+		return nil
+	}
+
+	log.WithFields(log.Fields{
+		"RemoteAddr": i.Remote.websocket.RemoteAddr().String(),
+		"Message":    event.Msg,
+		"Kind:":      event.Kind,
+		"Data":       event.MsgData,
+	}).Info("Send Event Message")
+
+	if err := i.Remote.websocket.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+		return err
+	}
+	return i.Remote.websocket.WriteMessage(messageType, msg)
+
+}
+
 func (i *Integration) handleEvent(req *RequestMessage, p []byte) interface{} {
-	log.Println("Handle Event Message")
 
 	var res interface{}
 
@@ -22,23 +54,18 @@ func (i *Integration) handleEvent(req *RequestMessage, p []byte) interface{} {
 		i.Remote.ExitStandBy()
 
 	case "connect":
-		log.Println("connect event")
-
 		connectEvent := ConnectEvent{}
 		json.Unmarshal(p, &connectEvent)
 
 		i.handleConnectEvent(&connectEvent)
 
 	case "disconnect":
-		log.Println("connect event")
-
 		connectEvent := ConnectEvent{}
 		json.Unmarshal(p, &connectEvent)
 
 		i.handleConnectEvent(&connectEvent)
 
 	case "abort_driver_setup":
-		log.Println("abort_driver_setup event")
 
 		abortDriverSetupEvent := AbortDriverSetupEvent{}
 		json.Unmarshal(p, &abortDriverSetupEvent)
@@ -46,7 +73,7 @@ func (i *Integration) handleEvent(req *RequestMessage, p []byte) interface{} {
 		i.handleAbortDriverSetupEvent(&abortDriverSetupEvent)
 
 	default:
-		log.Println("mesage not know: " + req.Msg)
+		log.WithField("Message", req.Msg).Debug("Mesage not know")
 	}
 
 	return res
@@ -153,7 +180,7 @@ func (i *Integration) handleConnectEvent(e *ConnectEvent) {
 // If the user aborts the setup process, the Remote Two sends this event.
 // Further messages from the integration from the setup process will be ignored afterwards.
 func (i *Integration) handleAbortDriverSetupEvent(e *AbortDriverSetupEvent) {
-	log.Println("Abort Driver Setup")
+	log.Info("Abort Driver Setup")
 	// TODO: implement something?
 }
 

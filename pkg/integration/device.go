@@ -1,6 +1,8 @@
 package integration
 
-import "log"
+import (
+	log "github.com/sirupsen/logrus"
+)
 
 type DState string
 
@@ -12,7 +14,7 @@ const (
 )
 
 func (i *Integration) SetDeviceState(state DState) {
-	log.Println("Set Device state to:" + state)
+	log.WithField("DeviceState", state).Info("Set Device State")
 	i.deviceState = state
 
 	// Notify remote about new state

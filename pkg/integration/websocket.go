@@ -2,9 +2,10 @@ package integration
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/websocket"
 )
@@ -35,14 +36,14 @@ func (i *Integration) wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 
-	log.Println("Unfolded Circle Remote with addr " + r.RemoteAddr + " connected")
+	log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Unfolded Circle Remote connected")
 
 	if i.Remote.websocket != nil {
-		// TODO: do we need to support more?
-		log.Println("There is already a websocket connection open, cannot open an othner one")
+		// TODO: do we need to support this? Just overwrite the old websocket?
+		log.WithField("RemoteAddr", r.RemoteAddr).Info("There is already a websocket connection open")
 	}
 
 	i.Remote.websocket = ws
@@ -64,7 +65,7 @@ func (i *Integration) wsReader() {
 	})
 
 	defer func() {
-		log.Println("Closing Websocket, not able to read message anymore")
+		log.WithField("RemoteAddr", i.Remote.websocket.RemoteAddr().String()).Info("Closing Websocket, not able to read message anymore")
 		i.Remote.websocket.Close()
 
 		i.Remote.websocket = nil
@@ -73,16 +74,25 @@ func (i *Integration) wsReader() {
 
 	for {
 		_, p, err := i.Remote.websocket.ReadMessage()
+
 		if err != nil {
-			log.Println(err)
+			log.Error(err)
 			return
 		}
 
 		req := RequestMessage{}
 
 		if json.Unmarshal(p, &req) != nil {
-			log.Println("Cannot unmarshall " + string(p))
+			log.Error("Cannot unmarshall " + string(p))
+			continue
 		}
+
+		log.WithFields(log.Fields{
+			"RemoteAddr": i.Remote.websocket.RemoteAddr().String(),
+			"Message":    req.Msg,
+			"Kind":       req.Kind,
+			"Id":         req.Id,
+		}).Info("Message received")
 
 		// Event Message
 		if req.Kind == "event" {
@@ -101,7 +111,7 @@ func (i *Integration) wsWriter() {
 	ticker := time.NewTicker(pingPeriod)
 
 	defer func() {
-		log.Println("Closing Websocket, no response in time to Ping message")
+		log.WithField("RemoteAddr", i.Remote.websocket.RemoteAddr().String()).Info("Closing Websocket, no response in time to Ping message")
 		ticker.Stop()
 		i.Remote.websocket.Close()
 
@@ -114,26 +124,12 @@ func (i *Integration) wsWriter() {
 		case <-ticker.C:
 			if i.Remote.websocket != nil && i.Remote.connected {
 				i.Remote.websocket.SetWriteDeadline(time.Now().Add(writeWait))
+				log.WithField("RemoteAddr", i.Remote.websocket.RemoteAddr().String()).Debug("Send Ping Message")
 				if err := i.Remote.websocket.WriteMessage(websocket.PingMessage, nil); err != nil {
-					log.Println("Could not send Ping message")
+					log.WithField("RemoteAddr", i.Remote.websocket.RemoteAddr().String()).Info("Could not send Ping message to")
 					return
 				}
 			}
 		}
 	}
-}
-
-func (i *Integration) sendEventMessage(res *interface{}, messageType int) error {
-	log.Println("Send Event Message")
-
-	msg, _ := json.Marshal(res)
-	log.Println(string(msg))
-
-	if i.Remote.standby || !i.Remote.connected {
-		log.Println("Remote is in standby mode or not (yet) connected, not sending event")
-		return nil
-	}
-
-	return i.Remote.websocket.WriteMessage(messageType, msg)
-
 }
