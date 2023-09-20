@@ -2,6 +2,10 @@ package entities
 
 type EntityState string
 
+import (
+	log "github.com/sirupsen/logrus"
+)
+
 const (
 	UnavailableEntityState EntityState = "UNAVAILABLE"
 	UnkownEntityState                  = "UNKNOWN"
@@ -46,4 +50,14 @@ func (e *Entity) GetEntityState() *EntityStateData {
 	}
 
 	return &entityState
+}
+
+func (e *Entity) HandleAttributeChange(attributes map[string]interface{}) {
+
+	log.WithField("Attributes", attributes).Info("Handle attribute Change")
+
+	for k, v := range attributes {
+		e.Attributes[k] = v
+	}
+
 }

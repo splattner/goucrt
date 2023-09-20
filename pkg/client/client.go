@@ -5,6 +5,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/splattner/goucrt/pkg/denonavr"
 	"github.com/splattner/goucrt/pkg/entities"
 	"github.com/splattner/goucrt/pkg/integration"
 )
@@ -15,6 +16,10 @@ type Client struct {
 	DeviceState integration.DState
 
 	messages chan string
+
+	setupData map[string]string
+
+	denon *denonavr.DenonAVR
 }
 
 func NewClient(i *integration.Integration) *Client {
@@ -26,6 +31,7 @@ func NewClient(i *integration.Integration) *Client {
 	client.DeviceState = integration.DisconnectedDeviceState
 
 	client.messages = make(chan string)
+	client.setupData = make(map[string]string)
 
 	return &client
 
@@ -33,28 +39,14 @@ func NewClient(i *integration.Integration) *Client {
 
 func (c *Client) SetupClient() {
 
-	infoSetting := integration.SetupDataSchemaSettings{
-		Id: "info",
-		Label: integration.LanguageText{
-			En: "Integration",
-		},
-		Field: integration.SettingTypeLabel{
-			Label: integration.SettingTypeLabelDefinition{
-				Value: integration.LanguageText{
-					En: "Hi",
-				},
-			},
-		},
-	}
-
 	inputSetting := integration.SetupDataSchemaSettings{
-		Id: "data",
+		Id: "ipaddr",
 		Label: integration.LanguageText{
-			En: "We need some data",
+			En: "IP Address",
 		},
 		Field: integration.SettingTypeText{
 			Text: integration.SettingTypeTextDefinition{
-				Value: "some preset text",
+				Value: "192.168.10.153",
 			},
 		},
 	}
@@ -63,7 +55,7 @@ func (c *Client) SetupClient() {
 		Title: integration.LanguageText{
 			En: "Integration Settings",
 		},
-		Settings: []integration.SetupDataSchemaSettings{infoSetting, inputSetting},
+		Settings: []integration.SetupDataSchemaSettings{inputSetting},
 	}
 
 	metadata := integration.DriverMetadata{
@@ -85,6 +77,9 @@ func (c *Client) SetupClient() {
 	button := entities.NewButtonEntity("mybutton", entities.LanguageText{En: "My Button", De: "Mein Button"}, "")
 	button.AddCommand(entities.PushButtonEntityCommand, c.HandleButtonPressCommand)
 	c.IntegrationDriver.AddEntity(button)
+
+	sensor := entities.NewSensorEntity("mySensor", entities.LanguageText{En: "My Sensor", De: "Mein Seinsor"}, "")
+	c.IntegrationDriver.AddEntity(sensor)
 
 	// Pass function to the integration driver that is called when the remote want to setup the driver
 	c.IntegrationDriver.SetHandleSetupFunction(c.HandleSetup)
@@ -129,13 +124,10 @@ func (c *Client) HandleSetup(setup_data map[string]string) {
 
 	log.WithField("SetupData", setup_data).Info("Handle setup_driver request in client")
 
-	var userAction = integration.RequireUserAction{
-		Confirmation: integration.ConfirmationPage{
-			Title: integration.LanguageText{
-				En: "You are about to add this integration. Just confirm it",
-			},
-		},
-	}
+	c.setupData = setup_data
+
+	c.denon = denonavr.NewDenonAVR(c.setupData["ipaddr"])
+	c.denon.AddHandleEntityChangeFunc("MasterVolume", c.handleDenonEntityChange)
 
 	//event_type: SETUP with state: SETUP is a progress event to keep the process running,
 	// If the setup process takes more than a few seconds,
@@ -144,14 +136,19 @@ func (c *Client) HandleSetup(setup_data map[string]string) {
 	c.IntegrationDriver.SetDriverSetupState(integration.SetupEvent, integration.SetupState, "", nil)
 	time.Sleep(1 * time.Second)
 
-	// Start the setup
-	c.IntegrationDriver.SetDriverSetupState(integration.SetupEvent, integration.WaitUserActionState, "", &userAction)
+	// var userAction = integration.RequireUserAction{
+	// 	Confirmation: integration.ConfirmationPage{
+	// 		Title: integration.LanguageText{
+	// 			En: "You are about to add this integration. Just confirm it",
+	// 		},
+	// 	},
+	// }
 
-	// // For Testing, just Wait a bit
-	// time.Sleep(1 * time.Second)
+	// Start the setup with some require user data
+	//c.IntegrationDriver.SetDriverSetupState(integration.SetupEvent, integration.WaitUserActionState, "", &userAction)
 
 	// // Finish the setup
-	// c.IntegrationDriver.SetDriverSetupState(integration.StopEvent, integration.OkState, "", nil)
+	c.IntegrationDriver.SetDriverSetupState(integration.StopEvent, integration.OkState, "", nil)
 
 }
 
@@ -204,6 +201,14 @@ func (c *Client) clientLoop() {
 	// Set Device state to connected when connection is established
 	c.setDeviceState(integration.ConnectedDeviceState)
 
+	if c.denon == nil {
+		log.WithField("SetupData", c.setupData).Info("Setup")
+		c.denon = denonavr.NewDenonAVR("192.168.10.153")
+		c.denon.AddHandleEntityChangeFunc("MasterVolume", c.handleDenonEntityChange)
+	}
+
+	go c.denon.StartListenLoop()
+
 	// Run Client Loop to handle entity changes from device
 	for {
 		select {
@@ -216,5 +221,12 @@ func (c *Client) clientLoop() {
 
 		}
 	}
+
+}
+
+func (c *Client) handleDenonEntityChange(value string) {
+
+	log.WithFields(log.Fields{
+		"value": value}).Info("Denon Entity Change")
 
 }
