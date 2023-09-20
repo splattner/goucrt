@@ -1,10 +1,10 @@
 package entities
 
-type EntityState string
-
 import (
 	log "github.com/sirupsen/logrus"
 )
+
+type EntityState string
 
 const (
 	UnavailableEntityState EntityState = "UNAVAILABLE"
@@ -14,12 +14,13 @@ const (
 type Entity struct {
 	Id string `json:"entity_id"`
 	EntityType
-	DeviceId    string                 `json:"device_id,omitempty"`
-	Features    []interface{}          `json:"features"`
-	Name        LanguageText           `json:"name"`
-	Area        string                 `json:"area,omitempty"`
-	DeviceClass string                 `json:"-"`
-	Attributes  map[string]interface{} `json:"-"`
+	DeviceId               string                 `json:"device_id,omitempty"`
+	Features               []interface{}          `json:"features"`
+	Name                   LanguageText           `json:"name"`
+	Area                   string                 `json:"area,omitempty"`
+	DeviceClass            string                 `json:"-"`
+	Attributes             map[string]interface{} `json:"-"`
+	handleEntityChangeFunc func(interface{})      `json:"-"`
 }
 
 type EntityType struct {
@@ -52,12 +53,23 @@ func (e *Entity) GetEntityState() *EntityStateData {
 	return &entityState
 }
 
-func (e *Entity) HandleAttributeChange(attributes map[string]interface{}) {
+func (e *Entity) SetHandleEntityChangeFunc(f func(interface{})) {
+	log.WithField("entity_id", e.Id).Debug("Entity Change Handler Set")
+	e.handleEntityChangeFunc = f
+}
 
-	log.WithField("Attributes", attributes).Info("Handle attribute Change")
+func (e *Entity) SetAttributes(attributes map[string]interface{}) {
+
+	log.WithField("Attributes", attributes).Info("Handle attribute change")
 
 	for k, v := range attributes {
 		e.Attributes[k] = v
+	}
+
+	// Handle the entity Change
+	log.WithField("entity_id", e.Id).Debug("Calling the Entity Change Handler if set")
+	if e.handleEntityChangeFunc != nil {
+		e.handleEntityChangeFunc(e)
 	}
 
 }

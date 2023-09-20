@@ -200,12 +200,14 @@ type EntityCommandData struct {
 
 type SetupDriverMessageReq struct {
 	CommonReq
-	MsgData SettingsVaulues `json:"msg_data"`
+	MsgData SetupDataValue `json:"msg_data"`
 }
 
-type SettingsVaulues struct {
-	Value map[string]string `json:"setup_data"`
+type SetupDataValue struct {
+	Value SetupData `json:"setup_data"`
 }
+
+type SetupData map[string]string
 
 // Set required data to configure the integration driver or continue the setup process.
 type SetDriverUserDataRequest struct {

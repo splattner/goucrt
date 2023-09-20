@@ -1,15 +1,22 @@
 package integration
 
 import (
+	"fmt"
+
+	log "github.com/sirupsen/logrus"
 	"github.com/splattner/goucrt/pkg/entities"
 )
 
 // Return the ID of an entity
 func (i *Integration) getEntityId(entity interface{}) string {
+	t := fmt.Sprintf("%T", entity)
+	log.WithFields(log.Fields{"entity": entity, "type": t}).Debug("getEntityId")
 	var id string
 
 	// Ugly.. I guess but I don't know how better
 	switch e := entity.(type) {
+	case *entities.Entity:
+		id = e.Id
 	case *entities.ButtonEntity:
 		id = e.Id
 
@@ -41,6 +48,8 @@ func (i *Integration) getDeviceId(entity interface{}) string {
 
 	// Ugly.. I guess but I don't know how better
 	switch e := entity.(type) {
+	case *entities.Entity:
+		device_id = e.DeviceId
 	case *entities.ButtonEntity:
 		device_id = e.DeviceId
 
@@ -72,6 +81,8 @@ func (i *Integration) getEntityType(entity interface{}) entities.EntityType {
 
 	// Ugly.. I guess but I don't know how better
 	switch e := entity.(type) {
+	case *entities.Entity:
+		entity_type = e.EntityType
 	case *entities.ButtonEntity:
 		entity_type = e.EntityType
 
@@ -103,6 +114,8 @@ func (i *Integration) getEntityAttributes(entity interface{}) map[string]interfa
 
 	// Ugly.. I guess but I don't know how better
 	switch e := entity.(type) {
+	case *entities.Entity:
+		attributes = e.Attributes
 	case *entities.ButtonEntity:
 		attributes = e.Attributes
 
@@ -126,6 +139,75 @@ func (i *Integration) getEntityAttributes(entity interface{}) map[string]interfa
 	}
 
 	return attributes
+}
+
+// Add a new Entity to the list of Entities (if not already added)
+// Also make sure the EntityChange Function is set so Entity Change Events are emitted when a Entity Attribute changes
+// Send Entity Available Event to RT
+func (i *Integration) AddEntity(e interface{}) error {
+	log.Debug("Add a new entity to the integration")
+
+	// Search if entity is already added
+	_, _, err := i.GetEntityById(i.getEntityId(e))
+	if err != nil {
+		// Entity not found, so add id
+		i.setEntityChangeFunc(e, i.SendEntityChangeEvent)
+		i.Entities = append(i.Entities, e)
+		// Send "entity_available" event to remote
+		i.sendEntityAvailable(e)
+		return nil
+	}
+
+	return fmt.Errorf("this entity is already added")
+}
+
+// Remove an Entity from the Integration
+// Send Entity Removed Event to RT
+func (i *Integration) RemoveEntity(entity interface{}) error {
+	// Search if entity is available
+
+	_, ix, err := i.GetEntityById(i.getEntityId(entity))
+	if err == nil {
+
+		i.Entities[ix] = i.Entities[len(i.Entities)-1] // Copy last element to index i.
+		i.Entities[len(i.Entities)-1] = ""             // Erase last element (write zero value).
+		i.Entities = i.Entities[:len(i.Entities)-1]    // Truncate slice.
+
+		// Send "entity_removed" event to remote
+		i.sendEntityRemoved(entity)
+		return nil
+	}
+
+	return fmt.Errorf("entity to remove not found")
+}
+
+// Return an Entity by its Name
+// Also return the current index in the Entities Array (TODO: do we need this?)
+// Error when Entity not found
+func (i *Integration) GetEntityById(id string) (interface{}, int, error) {
+	for ix, entity := range i.Entities {
+		entity_id := i.getEntityId(entity)
+
+		if entity_id == id {
+			log.Println("Found entity with type: " + fmt.Sprintf("%T", entity))
+			return entity, ix, nil
+		}
+	}
+
+	return entities.Entity{}, 0, fmt.Errorf("entity with id %s not found", id)
+}
+
+// Return all available entities of a given type
+func (i *Integration) GetEntitiesByType(entityType entities.EntityType) []interface{} {
+	var es []interface{}
+
+	for _, e := range i.Entities {
+		if i.getEntityType(e) == entityType {
+			es = append(es, e)
+		}
+	}
+
+	return es
 }
 
 // Call the correct HandleCommand function depending on the entity type
@@ -152,5 +234,30 @@ func (i *Integration) handleCommand(entity interface{}, req *EntityCommandReq) {
 
 	case *entities.CoverEntity:
 		e.HandleCommand(cmd_id, params)
+	}
+}
+
+// Call the correct HandleCommand function depending on the entity type
+func (i *Integration) setEntityChangeFunc(entity interface{}, f func(interface{})) {
+
+	entity_id := i.getEntityId(entity)
+	log.WithField("entity_id", entity_id).Debug("Set Entity Change function")
+
+	// Ugly.. I guess but I don't know how better
+	switch e := entity.(type) {
+	case *entities.Entity:
+		e.SetHandleEntityChangeFunc(f)
+	case *entities.ButtonEntity:
+		e.SetHandleEntityChangeFunc(f)
+	case *entities.LightEntity:
+		e.SetHandleEntityChangeFunc(f)
+	case *entities.SwitchsEntity:
+		e.SetHandleEntityChangeFunc(f)
+	case *entities.MediaPlayerEntity:
+		e.SetHandleEntityChangeFunc(f)
+	case *entities.ClimateEntity:
+		e.SetHandleEntityChangeFunc(f)
+	case *entities.CoverEntity:
+		e.SetHandleEntityChangeFunc(f)
 	}
 }

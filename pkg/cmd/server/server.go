@@ -33,9 +33,9 @@ func NewCommand() *cobra.Command {
 			i, err := integration.NewIntegration(config)
 			cmd.CheckError(err)
 
-			myclient := client.NewClient(i)
+			myclient := client.NewDenonAVRClient(i)
 
-			myclient.SetupClient()
+			myclient.InitClient()
 
 			cmd.CheckError(i.Run())
 

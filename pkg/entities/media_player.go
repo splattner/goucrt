@@ -4,6 +4,7 @@ type MediaPlayerEntityState string
 type MediaPlayerEntityFeatures string
 type MediaPlayerEntityAttributes string
 type MediaPlayerEntityCommand string
+type MediaPlayerDeviceClass string
 
 const (
 	OnMediaPlayerEntityState        MediaPlayerEntityState = "ON"
@@ -104,19 +105,29 @@ const (
 	SearchMediaPlayerEntityCommand                                    = "search"
 )
 
+const (
+	ReceiverMediaPlayerDeviceClass      MediaPlayerDeviceClass = "receiver"
+	SetTopBoxMediaPlayerDeviceClass                            = "set_top_box"
+	SpeakerMediaPlayerDeviceClass                              = "speaker"
+	StreamingBoxMMediaPlayerDeviceClass                        = "streaming_box"
+	TVMediaPlayerDeviceClass                                   = "tv"
+)
+
 type MediaPlayerEntity struct {
 	Entity
-	Commands map[string]func(MediaPlayerEntity) `json:"-"`
+	DeviceClass MediaPlayerDeviceClass
+	Commands    map[string]func(MediaPlayerEntity) `json:"-"`
 }
 
-func NewMediaPlayerEntity(id string, name LanguageText, area string) *MediaPlayerEntity {
+func NewMediaPlayerEntity(id string, name LanguageText, area string, deviceClass MediaPlayerDeviceClass) *MediaPlayerEntity {
 
 	mediaPlayerEntity := MediaPlayerEntity{}
 	mediaPlayerEntity.Id = id
 	mediaPlayerEntity.Name = name
 	mediaPlayerEntity.Area = area
+	mediaPlayerEntity.DeviceClass = deviceClass
 
-	mediaPlayerEntity.EntityType.Type = "light"
+	mediaPlayerEntity.EntityType.Type = "media_player"
 
 	mediaPlayerEntity.Commands = make(map[string]func(MediaPlayerEntity))
 	mediaPlayerEntity.Attributes = make(map[string]interface{})

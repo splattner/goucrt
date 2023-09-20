@@ -185,12 +185,17 @@ func (i *Integration) handleAbortDriverSetupEvent(e *AbortDriverSetupEvent) {
 // Emitted when an attribute of an entity changes, e.g. is switched off.
 // Either after an entity_command or if the entity is updated manually through a user or an external system.
 // This keeps the Remote Two in sync with the real state of the entity without the need of constant polling.
-func (i *Integration) sendEntityChangeEvent(e interface{}) {
+func (i *Integration) SendEntityChangeEvent(e interface{}) {
+
+	log.WithField("entity", e).Debug("SendEntityChangeEvent called")
 
 	entity_id := i.getEntityId(e)
 
+	log.WithField("entity_id", entity_id).Debug("Send Entity Change Event if subscribed")
+
 	// Only send the event when remote is subscribed to
 	if slices.Contains(i.SubscribedEntities, entity_id) {
+		log.WithField("entity_id", entity_id).Debug("RT is subscribed to this Entity")
 
 		var res interface{}
 		now := time.Now()

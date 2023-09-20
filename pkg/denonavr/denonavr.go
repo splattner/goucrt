@@ -40,7 +40,7 @@ type DenonXMLValue struct {
 }
 
 type DenonAVR struct {
-	host    string
+	Host    string
 	baseURL string
 
 	data DenonXML
@@ -52,7 +52,7 @@ func NewDenonAVR(host string) *DenonAVR {
 
 	denonavr := DenonAVR{}
 
-	denonavr.host = host
+	denonavr.Host = host
 
 	denonavr.baseURL = "http://" + host + "/goform/formMainZone_MainZoneXml.xml"
 
