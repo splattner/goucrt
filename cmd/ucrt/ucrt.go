@@ -8,6 +8,8 @@ import (
 	"github.com/splattner/goucrt/pkg/cmd/ucrt"
 )
 
+const RELEASEDATE string = "21.09.2023"
+
 func main() {
 
 	baseName := filepath.Base(os.Args[0])

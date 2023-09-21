@@ -36,7 +36,12 @@ type EntityStateData struct {
 
 // Add an attribute if not already available
 func (e *Entity) AddAttribute(name string, value interface{}) {
-	if e.Attributes[name] != nil {
+
+	if e.Attributes[name] == nil {
+		log.WithFields(log.Fields{
+			"entity_id": e.Id,
+			"attribute": name,
+		}).Debug("Add Attribute to entitiy")
 		e.Attributes[name] = value
 	}
 }
@@ -54,20 +59,20 @@ func (e *Entity) GetEntityState() *EntityStateData {
 }
 
 func (e *Entity) SetHandleEntityChangeFunc(f func(interface{})) {
-	log.WithField("entity_id", e.Id).Debug("Entity Change Handler Set")
 	e.handleEntityChangeFunc = f
 }
 
 func (e *Entity) SetAttributes(attributes map[string]interface{}) {
 
-	log.WithField("Attributes", attributes).Info("Handle attribute change")
+	log.WithFields(log.Fields{
+		"entity_id":  e.Id,
+		"attributes": attributes}).Info("Handle attribute change")
 
 	for k, v := range attributes {
 		e.Attributes[k] = v
 	}
 
 	// Handle the entity Change
-	log.WithField("entity_id", e.Id).Debug("Calling the Entity Change Handler if set")
 	if e.handleEntityChangeFunc != nil {
 		e.handleEntityChangeFunc(e)
 	}

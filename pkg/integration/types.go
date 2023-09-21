@@ -61,11 +61,10 @@ type DriverSetupEventType string
 type DriverSetupError string
 
 const (
-	SetupState              DriverSetupState = "SETUP"
-	WaitUserActionState                      = "WAIT_USER_ACTION"
-	RequiredUserActionState                  = "require_user_action" // TODO: is this correct?
-	OkState                                  = "OK"
-	ErrorState                               = "ERROR"
+	SetupState          DriverSetupState = "SETUP"
+	WaitUserActionState                  = "WAIT_USER_ACTION"
+	OkState                              = "OK"
+	ErrorState                           = "ERROR"
 )
 
 const (
@@ -192,10 +191,10 @@ type EntityCommandReq struct {
 }
 
 type EntityCommandData struct {
-	DeviceId string      `json:"device_id"`
-	EntityId string      `json:"entity_id"`
-	CmdId    string      `json:"cmd_id"`
-	Params   interface{} `json:"params"`
+	DeviceId string                 `json:"device_id"`
+	EntityId string                 `json:"entity_id"`
+	CmdId    string                 `json:"cmd_id"`
+	Params   map[string]interface{} `json:"params"`
 }
 
 type SetupDriverMessageReq struct {

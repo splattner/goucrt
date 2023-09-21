@@ -26,7 +26,8 @@ func (i *Integration) startAdvertising() {
 }
 
 func (i *Integration) stopAdvertising() {
-	log.Info("Stop advertising UC Integration")
-
-	i.mdns.Shutdown()
+	if i.mdns != nil {
+		log.Info("Stop advertising UC Integration")
+		i.mdns.Shutdown()
+	}
 }

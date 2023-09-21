@@ -116,7 +116,7 @@ const (
 type MediaPlayerEntity struct {
 	Entity
 	DeviceClass MediaPlayerDeviceClass
-	Commands    map[string]func(MediaPlayerEntity) `json:"-"`
+	Commands    map[string]func(MediaPlayerEntity, map[string]interface{}) `json:"-"`
 }
 
 func NewMediaPlayerEntity(id string, name LanguageText, area string, deviceClass MediaPlayerDeviceClass) *MediaPlayerEntity {
@@ -129,7 +129,7 @@ func NewMediaPlayerEntity(id string, name LanguageText, area string, deviceClass
 
 	mediaPlayerEntity.EntityType.Type = "media_player"
 
-	mediaPlayerEntity.Commands = make(map[string]func(MediaPlayerEntity))
+	mediaPlayerEntity.Commands = make(map[string]func(MediaPlayerEntity, map[string]interface{}))
 	mediaPlayerEntity.Attributes = make(map[string]interface{})
 
 	return &mediaPlayerEntity
@@ -224,22 +224,22 @@ func (e *MediaPlayerEntity) AddFeature(feature MediaPlayerEntityFeatures) {
 
 	case SelectSourceMediaPlayerEntityFeatures:
 		e.AddAttribute(string(SourceMediaPlayerEntityAttribute), "")
-		e.AddAttribute(string(SourceListMediaPlayerEntityAttribute), nil)
+		e.AddAttribute(string(SourceListMediaPlayerEntityAttribute), []string{})
 
 	case SelectSoundModeMediaPlayerEntityFeatures:
 		e.AddAttribute(string(SourceModeMediaPlayerEntityAttribute), "")
-		e.AddAttribute(string(SourceModeListMediaPlayerEntityAttribute), nil)
+		e.AddAttribute(string(SourceModeListMediaPlayerEntityAttribute), []string{})
 
 	}
 }
 
-func (e *MediaPlayerEntity) AddCommand(command MediaPlayerEntityCommand, function func(MediaPlayerEntity)) {
+func (e *MediaPlayerEntity) AddCommand(command MediaPlayerEntityCommand, function func(MediaPlayerEntity, map[string]interface{})) {
 	e.Commands[string(command)] = function
 
 }
 
-func (e *MediaPlayerEntity) HandleCommand(cmd_id string, params interface{}) {
+func (e *MediaPlayerEntity) HandleCommand(cmd_id string, params map[string]interface{}) {
 	if e.Commands[cmd_id] != nil {
-		e.Commands[cmd_id](*e)
+		e.Commands[cmd_id](*e, params)
 	}
 }

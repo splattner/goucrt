@@ -187,15 +187,13 @@ func (i *Integration) handleAbortDriverSetupEvent(e *AbortDriverSetupEvent) {
 // This keeps the Remote Two in sync with the real state of the entity without the need of constant polling.
 func (i *Integration) SendEntityChangeEvent(e interface{}) {
 
-	log.WithField("entity", e).Debug("SendEntityChangeEvent called")
-
 	entity_id := i.getEntityId(e)
 
 	log.WithField("entity_id", entity_id).Debug("Send Entity Change Event if subscribed")
+	log.WithField("subscribedEtities", i.SubscribedEntities).Debug("Currently subscribed entities")
 
 	// Only send the event when remote is subscribed to
 	if slices.Contains(i.SubscribedEntities, entity_id) {
-		log.WithField("entity_id", entity_id).Debug("RT is subscribed to this Entity")
 
 		var res interface{}
 		now := time.Now()

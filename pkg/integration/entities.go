@@ -9,8 +9,6 @@ import (
 
 // Return the ID of an entity
 func (i *Integration) getEntityId(entity interface{}) string {
-	t := fmt.Sprintf("%T", entity)
-	log.WithFields(log.Fields{"entity": entity, "type": t}).Debug("getEntityId")
 	var id string
 
 	// Ugly.. I guess but I don't know how better
@@ -145,10 +143,11 @@ func (i *Integration) getEntityAttributes(entity interface{}) map[string]interfa
 // Also make sure the EntityChange Function is set so Entity Change Events are emitted when a Entity Attribute changes
 // Send Entity Available Event to RT
 func (i *Integration) AddEntity(e interface{}) error {
-	log.Debug("Add a new entity to the integration")
+	entity_id := i.getEntityId(e)
+	log.WithField("entity_id", entity_id).Debug("Add a new entity to the integration")
 
 	// Search if entity is already added
-	_, _, err := i.GetEntityById(i.getEntityId(e))
+	_, _, err := i.GetEntityById(entity_id)
 	if err != nil {
 		// Entity not found, so add id
 		i.setEntityChangeFunc(e, i.SendEntityChangeEvent)
@@ -189,7 +188,6 @@ func (i *Integration) GetEntityById(id string) (interface{}, int, error) {
 		entity_id := i.getEntityId(entity)
 
 		if entity_id == id {
-			log.Println("Found entity with type: " + fmt.Sprintf("%T", entity))
 			return entity, ix, nil
 		}
 	}
@@ -240,12 +238,11 @@ func (i *Integration) handleCommand(entity interface{}, req *EntityCommandReq) {
 // Call the correct HandleCommand function depending on the entity type
 func (i *Integration) setEntityChangeFunc(entity interface{}, f func(interface{})) {
 
-	entity_id := i.getEntityId(entity)
-	log.WithField("entity_id", entity_id).Debug("Set Entity Change function")
-
 	// Ugly.. I guess but I don't know how better
 	switch e := entity.(type) {
 	case *entities.Entity:
+		e.SetHandleEntityChangeFunc(f)
+	case *entities.SensorEntity:
 		e.SetHandleEntityChangeFunc(f)
 	case *entities.ButtonEntity:
 		e.SetHandleEntityChangeFunc(f)

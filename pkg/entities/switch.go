@@ -27,7 +27,7 @@ const (
 
 type SwitchsEntity struct {
 	Entity
-	Commands map[string]func(SwitchsEntity) `json:"-"`
+	Commands map[string]func(SwitchsEntity, map[string]interface{}) `json:"-"`
 }
 
 func NewSwitchEntity(id string, name LanguageText, area string) *SwitchsEntity {
@@ -39,7 +39,7 @@ func NewSwitchEntity(id string, name LanguageText, area string) *SwitchsEntity {
 
 	switchEntity.EntityType.Type = "switch"
 
-	switchEntity.Commands = make(map[string]func(SwitchsEntity))
+	switchEntity.Commands = make(map[string]func(SwitchsEntity, map[string]interface{}))
 	switchEntity.Attributes = make(map[string]interface{})
 
 	return &switchEntity
@@ -57,13 +57,13 @@ func (e *SwitchsEntity) AddFeature(feature SwitchEntityFeatures) {
 	}
 }
 
-func (e *SwitchsEntity) AddCommand(command LightEntityCommand, function func(SwitchsEntity)) {
+func (e *SwitchsEntity) AddCommand(command LightEntityCommand, function func(SwitchsEntity, map[string]interface{})) {
 	e.Commands[string(command)] = function
 
 }
 
-func (e *SwitchsEntity) HandleCommand(cmd_id string, params interface{}) {
+func (e *SwitchsEntity) HandleCommand(cmd_id string, params map[string]interface{}) {
 	if e.Commands[cmd_id] != nil {
-		e.Commands[cmd_id](*e)
+		e.Commands[cmd_id](*e, params)
 	}
 }

@@ -2,6 +2,7 @@ package client
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -28,12 +29,11 @@ func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
 	client.DeviceState = integration.DisconnectedDeviceState
 
 	client.messages = make(chan string)
-	client.setupData = make(map[string]string)
 
 	inputSetting := integration.SetupDataSchemaSettings{
 		Id: "ipaddr",
 		Label: integration.LanguageText{
-			En: "IP Address",
+			En: "IP Address of your Denon Receiver",
 		},
 		Field: integration.SettingTypeText{
 			Text: integration.SettingTypeTextDefinition{
@@ -43,21 +43,22 @@ func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
 	}
 
 	metadata := integration.DriverMetadata{
-		DriverId: "myintegration",
+		DriverId: "denonavr",
 		Developer: integration.Developer{
 			Name: "Sebastian Plattner",
 		},
 		Name: integration.LanguageText{
-			En: "My UCRT Integration",
-			De: "Meine UCRT Integration",
+			En: "Denon AVR",
 		},
 		Version: "0.0.1",
 		SetupDataSchema: integration.SetupDataSchema{
 			Title: integration.LanguageText{
-				En: "Integration Settings",
+				En: "Configuration",
+				De: "KOnfiguration",
 			},
 			Settings: []integration.SetupDataSchemaSettings{inputSetting},
 		},
+		Icon: "custom:denon.png",
 	}
 
 	client.IntegrationDriver.SetMetadata(&metadata)
@@ -71,19 +72,16 @@ func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
 }
 
 func (c *DenonAVRClient) initDenonAVRClient() {
-	// Some dummy test data
-	c.testButton = entities.NewButtonEntity("mybutton", entities.LanguageText{En: "My Button", De: "Mein Button"}, "")
-	c.testButton.AddCommand(entities.PushButtonEntityCommand, c.HandleButtonPressCommand)
-	c.IntegrationDriver.AddEntity(c.testButton)
-
-	// Volume Sensor
-	c.volumeSensor = entities.NewSensorEntity("mastervolume", entities.LanguageText{En: "Master Volume", De: "Master Volume"}, "", entities.CustomSensorDeviceClass)
-	c.IntegrationDriver.AddEntity(c.volumeSensor)
 
 	// Media Player
 	c.mediaPlayer = entities.NewMediaPlayerEntity("mediaplayer", entities.LanguageText{En: "Denon AVR"}, "", entities.ReceiverMediaPlayerDeviceClass)
 	c.mediaPlayer.AddFeature(entities.OnOffMediaPlayerEntityFeatures)
+	c.mediaPlayer.AddFeature(entities.ToggleMediaPlayerEntityyFeatures)
 	c.mediaPlayer.AddFeature(entities.VolumeMediaPlayerEntityyFeatures)
+	c.mediaPlayer.AddFeature(entities.MuteMediaPlayerEntityFeatures)
+	c.mediaPlayer.AddFeature(entities.UnmuteMediaPlayerEntityFeatures)
+	c.mediaPlayer.AddFeature(entities.MuteToggleMediaPlayerEntityFeatures)
+	c.mediaPlayer.AddFeature(entities.SelectSourceMediaPlayerEntityFeatures)
 	c.IntegrationDriver.AddEntity(c.mediaPlayer)
 
 	// Pass function to the integration driver that is called when the remote want to setup the driver
@@ -95,7 +93,7 @@ func (c *DenonAVRClient) initDenonAVRClient() {
 
 func (c *DenonAVRClient) denonHandleSetup() {
 
-	log.WithField("SetupData", c.setupData).Info("Handle setup_driver request in client")
+	log.WithField("SetupData", c.IntegrationDriver.SetupData).Info("Handle setup_driver request in client")
 
 	//event_type: SETUP with state: SETUP is a progress event to keep the process running,
 	// If the setup process takes more than a few seconds,
@@ -122,8 +120,8 @@ func (c *DenonAVRClient) denonHandleSetup() {
 
 func (c *DenonAVRClient) setupDenon() {
 	if c.denon == nil {
-		if c.setupData != nil && c.setupData["ipaddr"] != "" {
-			c.denon = denonavr.NewDenonAVR(c.setupData["ipaddr"])
+		if c.IntegrationDriver.SetupData != nil && c.IntegrationDriver.SetupData["ipaddr"] != "" {
+			c.denon = denonavr.NewDenonAVR(c.IntegrationDriver.SetupData["ipaddr"])
 		} else {
 			log.Error("Cannot setup Denon, missing setupData")
 		}
@@ -133,26 +131,149 @@ func (c *DenonAVRClient) setupDenon() {
 func (c *DenonAVRClient) configureDenon() {
 
 	if c.denon != nil {
-		c.denon.AddHandleEntityChangeFunc("MasterVolume", func(value string) {
+		// Configure the Entity Change Func
+		c.denon.AddHandleEntityChangeFunc("MasterVolume", func(value interface{}) {
 			attributes := make(map[string]interface{})
 
-			attributes[entities.ValueSensortEntityyAttribute] = value
+			attributes[entities.ValueSensortEntityyAttribute] = value.(string)
 			attributes[entities.UnitSSensorntityyAttribute] = "db"
 
 			c.volumeSensor.SetAttributes(attributes)
 		})
 
-		c.denon.AddHandleEntityChangeFunc("MasterVolume", func(value string) {
+		c.denon.AddHandleEntityChangeFunc("MasterVolume", func(value interface{}) {
 			attributes := make(map[string]interface{})
 
 			var volume float64
-			if s, err := strconv.ParseFloat(value, 64); err == nil {
+			if s, err := strconv.ParseFloat(value.(string), 64); err == nil {
 				volume = s
 			}
 
 			attributes[entities.VolumeMediaPlayerEntityAttribute] = volume + 80
 
 			c.mediaPlayer.SetAttributes(attributes)
+		})
+
+		c.denon.AddHandleEntityChangeFunc("ZonePower", func(value interface{}) {
+
+			attributes := make(map[string]interface{})
+
+			switch value.(string) {
+			case "ON":
+				attributes[string(entities.StateMediaPlayerEntityAttribute)] = entities.OnMediaPlayerEntityState
+			case "OFF":
+				attributes[string(entities.StateMediaPlayerEntityAttribute)] = entities.OffMediaPlayerEntityState
+			}
+
+			c.mediaPlayer.SetAttributes(attributes)
+		})
+
+		c.denon.AddHandleEntityChangeFunc("Mute", func(value interface{}) {
+
+			attributes := make(map[string]interface{})
+
+			switch value.(string) {
+			case "on":
+				attributes[string(entities.MutedMediaPlayeEntityAttribute)] = true
+			case "off":
+				attributes[string(entities.MutedMediaPlayeEntityAttribute)] = false
+			}
+
+			c.mediaPlayer.SetAttributes(attributes)
+		})
+
+		c.denon.AddHandleEntityChangeFunc("VideoSelectLists", func(value interface{}) {
+
+			attributes := make(map[string]interface{})
+
+			videoSelectList := value.([]denonavr.ValueLists)
+
+			var tabelEntries []string
+
+			for _, i := range videoSelectList {
+				if i.Index == "ON" || i.Index == "OFF" {
+					continue
+				}
+				tabelEntries = append(tabelEntries, strings.TrimRight(i.Table, " "))
+			}
+
+			attributes["source_list"] = tabelEntries
+
+			c.mediaPlayer.SetAttributes(attributes)
+
+		})
+
+		c.denon.AddHandleEntityChangeFunc("VideoSelect", func(value interface{}) {
+
+			attributes := make(map[string]interface{})
+
+			videoSelect := value.(string)
+
+			videoSelectList := make(map[string]string)
+
+			for _, i := range c.denon.GetVideoSelectList() {
+				videoSelectList[i.Index] = strings.TrimRight(i.Table, " ")
+			}
+
+			attributes["source"] = videoSelectList[videoSelect]
+
+			c.mediaPlayer.SetAttributes(attributes)
+
+		})
+
+		// Add Commands
+		c.mediaPlayer.AddCommand(entities.OnMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) {
+			log.WithField("entityId", mediaPlayer.Id).Info("OnMediaPlayerEntityCommand called")
+			c.denon.TurnOn()
+
+		})
+
+		c.mediaPlayer.AddCommand(entities.OffMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) {
+			log.WithField("entityId", mediaPlayer.Id).Info("OffMediaPlayerEntityCommand called")
+			c.denon.TurnOff()
+
+		})
+
+		c.mediaPlayer.AddCommand(entities.ToggleMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) {
+			log.WithField("entityId", mediaPlayer.Id).Info("ToggleMediaPlayerEntityCommand called")
+
+			c.denon.TogglePower()
+
+		})
+
+		c.mediaPlayer.AddCommand(entities.VolumeMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) {
+			log.WithField("entityId", mediaPlayer.Id).Info("VolumeMediaPlayerEntityCommand called")
+
+			var volume float64
+			if v, err := strconv.ParseFloat(params["volume"].(string), 64); err == nil {
+				volume = v
+			}
+			c.denon.SetVolume(volume)
+		})
+
+		c.mediaPlayer.AddCommand(entities.VolumeUpMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) {
+			log.WithField("entityId", mediaPlayer.Id).Info("VolumeUpMediaPlayerEntityCommand called")
+			c.denon.SetVolumeUp()
+		})
+
+		c.mediaPlayer.AddCommand(entities.VolumeDownMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) {
+			log.WithField("entityId", mediaPlayer.Id).Info("VolumeDownMediaPlayerEntityCommand called")
+			c.denon.SetVolumeDown()
+		})
+
+		c.mediaPlayer.AddCommand(entities.MuteMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) {
+			log.WithField("entityId", mediaPlayer.Id).Info("MuteMediaPlayerEntityCommand called")
+			c.denon.Mute()
+		})
+
+		c.mediaPlayer.AddCommand(entities.UnmuteMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) {
+			log.WithField("entityId", mediaPlayer.Id).Info("UnmuteMediaPlayerEntityCommand called")
+			c.denon.UnMute()
+		})
+
+		c.mediaPlayer.AddCommand(entities.MuteToggleMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) {
+			log.WithField("entityId", mediaPlayer.Id).Info("MuteToggleMediaPlayerEntityCommand called")
+			c.denon.MuteToggle()
 		})
 	}
 }

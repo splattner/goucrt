@@ -34,7 +34,7 @@ const (
 
 type LightEntity struct {
 	Entity
-	Commands map[string]func(LightEntity) `json:"-"`
+	Commands map[string]func(LightEntity, map[string]interface{}) `json:"-"`
 }
 
 func NewLightEntity(id string, name LanguageText, area string) *LightEntity {
@@ -46,7 +46,7 @@ func NewLightEntity(id string, name LanguageText, area string) *LightEntity {
 
 	lightEntity.EntityType.Type = "light"
 
-	lightEntity.Commands = make(map[string]func(LightEntity))
+	lightEntity.Commands = make(map[string]func(LightEntity, map[string]interface{}))
 	lightEntity.Attributes = make(map[string]interface{})
 
 	return &lightEntity
@@ -71,13 +71,13 @@ func (e *LightEntity) AddFeature(feature LightEntityFeatures) {
 	}
 }
 
-func (e *LightEntity) AddCommand(command LightEntityCommand, function func(LightEntity)) {
+func (e *LightEntity) AddCommand(command LightEntityCommand, function func(LightEntity, map[string]interface{})) {
 	e.Commands[string(command)] = function
 
 }
 
-func (e *LightEntity) HandleCommand(cmd_id string, params interface{}) {
+func (e *LightEntity) HandleCommand(cmd_id string, params map[string]interface{}) {
 	if e.Commands[cmd_id] != nil {
-		e.Commands[cmd_id](*e)
+		e.Commands[cmd_id](*e, params)
 	}
 }

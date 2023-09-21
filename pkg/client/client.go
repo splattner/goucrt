@@ -1,13 +1,10 @@
 package client
 
 import (
-	"encoding/json"
-	"os"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/splattner/goucrt/pkg/entities"
 	"github.com/splattner/goucrt/pkg/integration"
 )
 
@@ -23,8 +20,6 @@ type Client struct {
 	initFunc       func()
 	setupFunc      func()
 	clientLoopFunc func()
-
-	setupData integration.SetupData
 }
 
 func NewClient(i *integration.Integration) *Client {
@@ -36,26 +31,12 @@ func NewClient(i *integration.Integration) *Client {
 	client.DeviceState = integration.DisconnectedDeviceState
 
 	client.messages = make(chan string)
-	client.setupData = make(map[string]string)
 
 	return &client
 
 }
 
 func (c *Client) InitClient() {
-	log.Debug("Call Client setup function if set")
-
-	// Load persist setupData File
-	// TODO: handle location via ENV's
-
-	file, err := os.ReadFile("ucrt.json")
-	if err != nil {
-		log.WithError(err).Info("Cannot read setupDataFile")
-	} else {
-		json.Unmarshal(file, &c.setupData)
-		log.WithField("SetupData", c.setupData).Info("Read persisted setup data")
-	}
-
 	// Call setup Function if its set
 	if c.initFunc != nil {
 		c.initFunc()
@@ -95,14 +76,6 @@ func (c *Client) HandleConnection(e *integration.ConnectEvent) {
 
 func (c *Client) HandleSetup(setup_data integration.SetupData) {
 
-	// Persist File
-	// TODO: handle location via ENV's
-	log.WithField("SetupData", setup_data).Info("Persist setup data")
-	file, _ := json.MarshalIndent(setup_data, "", " ")
-	_ = os.WriteFile("ucrt.json", file, 0644)
-
-	c.setupData = setup_data
-
 	if c.setupFunc != nil {
 		c.setupFunc()
 	}
@@ -128,10 +101,6 @@ func (c *Client) HandleSetDriverUserDataFunction(userdata map[string]string, con
 		//c.IntegrationDriver.SetDriverSetupState(integration.SetupEvent, integration.WaitUserActionState, "", nil)
 	}
 
-}
-
-func (c *Client) HandleButtonPressCommand(button entities.ButtonEntity) {
-	log.Println("Button " + button.Id + "pressed")
 }
 
 func (c *Client) connect() {

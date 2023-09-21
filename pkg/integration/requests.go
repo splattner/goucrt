@@ -186,6 +186,11 @@ func (i *Integration) handleGetAvailableEntitiesRequest(req *AvailableEntityMess
 // start driver setup
 // https://studio.asyncapi.com/?url=https://raw.githubusercontent.com/unfoldedcircle/core-api/main/integration-api/asyncapi.yaml#message-setup_driver
 func (i *Integration) handleSetupDriverRequest(req *SetupDriverMessageReq) *ResponseMessage {
+
+	i.SetupData = req.MsgData.Value
+
+	i.persistSetupData()
+
 	if i.handleSetupFunction != nil {
 		// The handleSetupFunction is where the driver specific implmenentation for driver setup is
 		go i.handleSetupFunction(req.MsgData.Value)
@@ -214,10 +219,13 @@ func (i *Integration) handleSubscribeEventRequest(req *SubscribeEventMessageReq)
 		entity_id := i.getEntityId(e)
 		if req.MsgData.EntityIds == nil || slices.Contains(req.MsgData.EntityIds, entity_id) {
 			if !slices.Contains(i.SubscribedEntities, entity_id) {
+				log.WithField("entity_id", entity_id).Info("RT subscribed to entity")
 				i.SubscribedEntities = append(i.SubscribedEntities, entity_id)
 			}
 		}
 	}
+
+	log.WithField("subscribedEtities", i.SubscribedEntities).Debug("Change in subscribed entities")
 
 	res := SubscribeEventMessage{
 		CommonResp{Kind: "resp", Id: req.Id, Msg: "result", Code: 200},
@@ -233,12 +241,15 @@ func (i *Integration) handleUnsubscribeEventsRequest(req *UnubscribeEventMessage
 
 	for ix, e := range i.SubscribedEntities {
 		if req.MsgData.EntityIds == nil || slices.Contains(i.SubscribedEntities, e) {
+			log.WithField("entity_id", e).Info("RT subscribed from entity")
 
 			i.SubscribedEntities[ix] = i.SubscribedEntities[len(i.SubscribedEntities)-1] // Copy last element to index i.
 			i.SubscribedEntities[len(i.SubscribedEntities)-1] = ""                       // Erase last element (write zero value).
 			i.SubscribedEntities = i.SubscribedEntities[:len(i.SubscribedEntities)-1]    // Truncate slice.
 		}
 	}
+
+	log.WithField("subscribedEtities", i.SubscribedEntities).Debug("Change in subscribed entities")
 
 	res := UnubscribeEventMessage{
 		CommonResp{Kind: "resp", Id: req.Id, Msg: "result", Code: 200},
@@ -278,6 +289,11 @@ func (i *Integration) handleGetEntityStatesRequest(req *GetEntityStatesMessageRe
 
 // Handle the entity command request sent by the remote
 func (i *Integration) handleEntityCommandRequest(req *EntityCommandReq) *EntityCommandResponse {
+
+	log.WithFields(log.Fields{
+		"entity_id": req.MsgData.EntityId,
+		"command":   req.MsgData.CmdId,
+		"params":    req.MsgData.Params}).Debug("Entity Command")
 
 	entity, _, err := i.GetEntityById(req.MsgData.EntityId)
 

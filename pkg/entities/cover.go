@@ -41,7 +41,7 @@ const (
 
 type CoverEntity struct {
 	Entity
-	Commands map[string]func(CoverEntity) `json:"-"`
+	Commands map[string]func(CoverEntity, map[string]interface{}) `json:"-"`
 }
 
 func NewCoverEntity(id string, name LanguageText, area string) *CoverEntity {
@@ -53,7 +53,7 @@ func NewCoverEntity(id string, name LanguageText, area string) *CoverEntity {
 
 	coverEntity.EntityType.Type = "cover"
 
-	coverEntity.Commands = make(map[string]func(CoverEntity))
+	coverEntity.Commands = make(map[string]func(CoverEntity, map[string]interface{}))
 	coverEntity.Attributes = make(map[string]interface{})
 
 	return &coverEntity
@@ -85,13 +85,13 @@ func (e *CoverEntity) AddFeature(feature CoverEntityFeatures) {
 	}
 }
 
-func (e *CoverEntity) AddCommand(command CoverEntityCommand, function func(CoverEntity)) {
+func (e *CoverEntity) AddCommand(command CoverEntityCommand, function func(CoverEntity, map[string]interface{})) {
 	e.Commands[string(command)] = function
 
 }
 
-func (e *CoverEntity) HandleCommand(cmd_id string, params interface{}) {
+func (e *CoverEntity) HandleCommand(cmd_id string, params map[string]interface{}) {
 	if e.Commands[cmd_id] != nil {
-		e.Commands[cmd_id](*e)
+		e.Commands[cmd_id](*e, params)
 	}
 }

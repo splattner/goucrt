@@ -27,7 +27,7 @@ const (
 
 type ButtonEntity struct {
 	Entity
-	Commands map[string]func(ButtonEntity) `json:"-"`
+	Commands map[string]func(ButtonEntity, map[string]interface{}) `json:"-"`
 }
 
 func NewButtonEntity(id string, name LanguageText, area string) *ButtonEntity {
@@ -39,7 +39,7 @@ func NewButtonEntity(id string, name LanguageText, area string) *ButtonEntity {
 
 	buttonEntity.EntityType.Type = "button"
 
-	buttonEntity.Commands = make(map[string]func(ButtonEntity))
+	buttonEntity.Commands = make(map[string]func(ButtonEntity, map[string]interface{}))
 	buttonEntity.Attributes = make(map[string]interface{})
 
 	// PressButtonEntityyFeatures is always present even if not specified
@@ -56,15 +56,15 @@ func (e *ButtonEntity) AddFeature(feature ButtonEntityFeatures) {
 
 }
 
-func (e *ButtonEntity) AddCommand(command ButtonEntityCommand, function func(ButtonEntity)) {
+func (e *ButtonEntity) AddCommand(command ButtonEntityCommand, function func(ButtonEntity, map[string]interface{})) {
 	e.Commands[string(command)] = function
 }
 
-func (e *ButtonEntity) HandleCommand(cmd_id string, params interface{}) {
+func (e *ButtonEntity) HandleCommand(cmd_id string, params map[string]interface{}) {
 	log.Println("Handle Command in Button Entity")
 
 	if e.Commands[cmd_id] != nil {
-		e.Commands[cmd_id](*e)
+		e.Commands[cmd_id](*e, params)
 	}
 
 }
