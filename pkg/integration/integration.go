@@ -112,6 +112,7 @@ func (i *Integration) SetHandleSetDriverUserDataFunction(f func(map[string]strin
 	i.handleSetDriverUserDataFunction = f
 }
 
+// Send the Driver Setup State to Remote two
 func (i *Integration) SetDriverSetupState(event_Type DriverSetupEventType, state DriverSetupState, err DriverSetupError, requireUserAction *RequireUserAction) {
 
 	log.WithFields(log.Fields{
@@ -129,9 +130,9 @@ func (i *Integration) SetDriverSetupState(event_Type DriverSetupEventType, state
 
 }
 
+// Load persist setupData File
+// TODO: handle location via ENV's
 func (i *Integration) loadSetupData() {
-	// Load persist setupData File
-	// TODO: handle location via ENV's
 
 	file, err := os.ReadFile("ucrt.json")
 	if err != nil {
@@ -143,9 +144,10 @@ func (i *Integration) loadSetupData() {
 	}
 }
 
+// Persist File
+// TODO: handle location via ENV's
 func (i *Integration) persistSetupData() {
-	// Persist File
-	// TODO: handle location via ENV's
+
 	log.WithField("SetupData", i.SetupData).Info("Persist setup data")
 	file, _ := json.MarshalIndent(i.SetupData, "", " ")
 	_ = os.WriteFile("ucrt.json", file, 0644)

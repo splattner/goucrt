@@ -52,6 +52,8 @@ func NewLightEntity(id string, name LanguageText, area string) *LightEntity {
 	return &lightEntity
 }
 
+// Register a function for the Entity command
+// Based on the Feature, the correct Attributes will be added
 func (e *LightEntity) AddFeature(feature LightEntityFeatures) {
 	e.Features = append(e.Features, feature)
 
@@ -71,11 +73,13 @@ func (e *LightEntity) AddFeature(feature LightEntityFeatures) {
 	}
 }
 
+// Register a function for the Entity command
 func (e *LightEntity) AddCommand(command LightEntityCommand, function func(LightEntity, map[string]interface{}) int) {
 	e.Commands[string(command)] = function
 
 }
 
+// Call the registred function for this entity_command
 func (e *LightEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
 	if e.Commands[cmd_id] != nil {
 		return e.Commands[cmd_id](*e, params)

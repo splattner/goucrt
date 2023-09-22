@@ -20,8 +20,9 @@ type Client struct {
 	// Initialize the client
 	// Here you can add entities if they are already known
 	initFunc func()
-	//
-	setupFunc      func()
+	// Called by RemoteTwo when the integration is added and setup started
+	setupFunc func()
+	// Handles connect/disconnect calls from RemoteTwo
 	clientLoopFunc func()
 }
 
@@ -47,12 +48,10 @@ func (c *Client) InitClient() {
 }
 
 func (c *Client) HandleConnection(e *integration.ConnectEvent) {
-	log.Println("Client, Handle connection")
 	switch e.Msg {
 	case "connect":
 		// Only start connecting if in disconnected state or error state
 		if c.DeviceState == integration.DisconnectedDeviceState || c.DeviceState == integration.ErrorDeviceState {
-			log.Info("Start connecting")
 			c.setDeviceState(integration.ConnectingDeviceState)
 
 			// to make sure event is sent
@@ -68,8 +67,6 @@ func (c *Client) HandleConnection(e *integration.ConnectEvent) {
 	case "disconnect":
 
 		if c.DeviceState == integration.ConnectedDeviceState {
-			log.Info("Disconnecting")
-
 			// And disconnect
 			go c.disconnect()
 		}
@@ -117,16 +114,18 @@ func (c *Client) disconnect() {
 }
 
 func (c *Client) setDeviceState(state integration.DState) {
-	log.Println("Set device state and send to integration driver: " + state)
+	log.WithField("state", state).Debug("Set device state and send to integration")
 	c.DeviceState = state
 	c.IntegrationDriver.SetDeviceState(c.DeviceState)
 }
 
 func (c *Client) clientLoop() {
-	log.Debug("Start Client Loop")
+	log.Info("Start Client Loop")
 
 	if c.clientLoopFunc != nil {
 		go c.clientLoopFunc()
+	} else {
+		log.Fatal("Client loop not implemented")
 	}
 
 }

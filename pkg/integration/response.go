@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// Send a generic Response Message to Remote Two
 func (i *Integration) sendResponseMessage(res interface{}, messageType int) error {
 
 	msg, err := json.Marshal(res)

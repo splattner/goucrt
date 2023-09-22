@@ -135,6 +135,8 @@ func NewMediaPlayerEntity(id string, name LanguageText, area string, deviceClass
 	return &mediaPlayerEntity
 }
 
+// Register a function for the Entity command
+// Based on the Feature, the correct Attributes will be added
 func (e *MediaPlayerEntity) AddFeature(feature MediaPlayerEntityFeatures) {
 	e.Features = append(e.Features, feature)
 
@@ -233,11 +235,13 @@ func (e *MediaPlayerEntity) AddFeature(feature MediaPlayerEntityFeatures) {
 	}
 }
 
+// Register a function for the Entity command
 func (e *MediaPlayerEntity) AddCommand(command MediaPlayerEntityCommand, function func(MediaPlayerEntity, map[string]interface{}) int) {
 	e.Commands[string(command)] = function
 
 }
 
+// Call the registred function for this entity_command
 func (e *MediaPlayerEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
 	if e.Commands[cmd_id] != nil {
 		return e.Commands[cmd_id](*e, params)

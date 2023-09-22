@@ -62,6 +62,8 @@ func NewClimateEntity(id string, name LanguageText, area string) *ClimateEntity 
 	return &climateEntity
 }
 
+// Add a Feature to this Climat Entity
+// Based on the Feature, the correct Attributes will be added
 func (e *ClimateEntity) AddFeature(feature ClimateEntityFeatures) {
 	e.Features = append(e.Features, feature)
 
@@ -80,11 +82,13 @@ func (e *ClimateEntity) AddFeature(feature ClimateEntityFeatures) {
 	}
 }
 
+// Register a function for the Entity command
 func (e *ClimateEntity) AddCommand(command ClimateEntityCommand, function func(ClimateEntity, map[string]interface{}) int) {
 	e.Commands[string(command)] = function
 
 }
 
+// Call the registred function for this entity_command
 func (e *ClimateEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
 	if e.Commands[cmd_id] != nil {
 		return e.Commands[cmd_id](*e, params)

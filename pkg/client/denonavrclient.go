@@ -38,7 +38,7 @@ func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
 		},
 		Field: integration.SettingTypeText{
 			Text: integration.SettingTypeTextDefinition{
-				Value: "192.168.10.153",
+				Value: "",
 			},
 		},
 	}
@@ -103,9 +103,6 @@ func (c *DenonAVRClient) initDenonAVRClient() {
 }
 
 func (c *DenonAVRClient) denonHandleSetup() {
-
-	log.WithField("SetupData", c.IntegrationDriver.SetupData).Info("Handle setup_driver request in client")
-
 	//event_type: SETUP with state: SETUP is a progress event to keep the process running,
 	// If the setup process takes more than a few seconds,
 	// the integration should send driver_setup_change events with state: SETUP to the Remote Two
@@ -362,7 +359,7 @@ func (c *DenonAVRClient) denonClientLoop() {
 		c.configureDenon()
 
 		log.WithFields(log.Fields{
-			"Denon IP": c.denon.Host}).Info("Start Denon Client Loop")
+			"Denon IP": c.denon.Host}).Info("Start Denon AVR Client Loop")
 		go c.denon.StartListenLoop()
 	}
 

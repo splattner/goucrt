@@ -46,6 +46,7 @@ func (e *Entity) AddAttribute(name string, value interface{}) {
 	}
 }
 
+// Retun the Entity State fr this entity
 func (e *Entity) GetEntityState() *EntityStateData {
 
 	entityState := EntityStateData{
@@ -58,10 +59,14 @@ func (e *Entity) GetEntityState() *EntityStateData {
 	return &entityState
 }
 
+// Register the function that is called when a Attribute change
+// This normally is set by the integration when the entity is added
+// To send entity_change events to Remote two
 func (e *Entity) SetHandleEntityChangeFunc(f func(interface{})) {
 	e.handleEntityChangeFunc = f
 }
 
+// Set attributes for the Entity and then call the EntityChange Function
 func (e *Entity) SetAttributes(attributes map[string]interface{}) {
 
 	log.WithFields(log.Fields{

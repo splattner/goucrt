@@ -1,9 +1,5 @@
 package entities
 
-import (
-	"log"
-)
-
 type ButtonEntityState string
 type ButtonEntityFeatures string
 type ButtonEntityAttribute string
@@ -51,17 +47,19 @@ func NewButtonEntity(id string, name LanguageText, area string) *ButtonEntity {
 	return &buttonEntity
 }
 
+// Add a feature to this Button
 func (e *ButtonEntity) AddFeature(feature ButtonEntityFeatures) {
 	e.Features = append(e.Features, feature)
 
 }
 
+// Register a function for the Entity command
 func (e *ButtonEntity) AddCommand(command ButtonEntityCommand, function func(ButtonEntity) int) {
 	e.Commands[string(command)] = function
 }
 
+// Call the registred function for this entity_command
 func (e *ButtonEntity) HandleCommand(cmd_id string) int {
-	log.Println("Handle Command in Button Entity")
 
 	if e.Commands[cmd_id] != nil {
 		return e.Commands[cmd_id](*e)

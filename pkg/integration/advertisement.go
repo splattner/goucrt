@@ -8,7 +8,7 @@ import (
 
 // TODO: not working?
 func (i *Integration) startAdvertising() {
-	log.Info("Start advertising UC Integration with mdns")
+	log.Info("Start advertising UC Integration with mDNS")
 
 	txt := []string{
 		"name=" + i.Metadata.Name.En,
