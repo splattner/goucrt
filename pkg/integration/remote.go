@@ -2,15 +2,10 @@ package integration
 
 import (
 	log "github.com/sirupsen/logrus"
-
-	"github.com/gorilla/websocket"
 )
 
 type remote struct {
-	standby   bool
-	connected bool
-	websocket *websocket.Conn
-
+	standby bool
 	// Channel to send new messages over websocket.
 	messageChannel chan []byte
 }

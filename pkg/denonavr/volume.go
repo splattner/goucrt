@@ -7,15 +7,15 @@ import (
 	"strings"
 )
 
-func (d *DenonAVR) GetMasterVolume() string {
+func (d *DenonAVR) GetMainZoneVolume() string {
 
-	return d.data.MasterVolume
+	return d.mainZoneStatus.MasterVolume
 }
 
 func (d *DenonAVR) GetVolume() float64 {
 
 	var volume float64
-	if s, err := strconv.ParseFloat(d.GetMasterVolume(), 64); err == nil {
+	if s, err := strconv.ParseFloat(d.GetMainZoneVolume(), 64); err == nil {
 		volume = s
 	}
 
@@ -23,7 +23,7 @@ func (d *DenonAVR) GetVolume() float64 {
 
 }
 
-func (d *DenonAVR) SetVolume(volume float64) {
+func (d *DenonAVR) SetVolume(volume float64) int {
 
 	// The Volume command need the following
 	// 10.5 -> MV105
@@ -37,34 +37,36 @@ func (d *DenonAVR) SetVolume(volume float64) {
 		convertedVolume = strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", volume), "0"), ".")
 	}
 
-	d.sendCommandToDevice(DenonCommandVolume, convertedVolume)
+	status, _ := d.sendCommandToDevice(DenonCommandVolume, convertedVolume)
+
+	return status
 
 }
 
-func (d *DenonAVR) Mute() {
+func (d *DenonAVR) MainZoneMute() int {
 
-	d.sendCommandToDevice(DenonCommandMute, "ON")
+	status, _ := d.sendCommandToDevice(DenonCommandMute, "ON")
+	return status
 }
 
-func (d *DenonAVR) UnMute() {
+func (d *DenonAVR) MainZoneUnMute() int {
 
-	d.sendCommandToDevice(DenonCommandMute, "OFF")
+	status, _ := d.sendCommandToDevice(DenonCommandMute, "OFF")
+	return status
 }
 
-func (d *DenonAVR) MuteToggle() {
+func (d *DenonAVR) MainZoneMuteToggle() int {
 
-	if d.Muted() {
-		d.UnMute()
+	if d.MainZoneMuted() {
+		return d.MainZoneUnMute()
 
-	} else {
-		d.Mute()
 	}
-
+	return d.MainZoneMute()
 }
 
-func (d *DenonAVR) Muted() bool {
+func (d *DenonAVR) MainZoneMuted() bool {
 
-	switch d.data.Mute {
+	switch d.mainZoneStatus.Mute {
 	case "on":
 		return true
 	default:
@@ -72,16 +74,16 @@ func (d *DenonAVR) Muted() bool {
 	}
 }
 
-func (d *DenonAVR) SetVolumeUp() {
+func (d *DenonAVR) SetVolumeUp() int {
 
 	newVolume := d.GetVolume() + DenonVolumeStep
-	d.SetVolume(newVolume)
+	return d.SetVolume(newVolume)
 
 }
 
-func (d *DenonAVR) SetVolumeDown() {
+func (d *DenonAVR) SetVolumeDown() int {
 
 	newVolume := d.GetVolume() - DenonVolumeStep
-	d.SetVolume(newVolume)
+	return d.SetVolume(newVolume)
 
 }

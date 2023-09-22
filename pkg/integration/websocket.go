@@ -36,46 +36,35 @@ func (i *Integration) wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Error(err)
+		log.WithError(err).Fatal("Cannot upgrade connection")
 	}
 
 	log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Unfolded Circle Remote connected")
 
-	if i.Remote.websocket != nil {
-		// TODO: do we need to support this? Just overwrite the old websocket?
-		log.WithField("RemoteAddr", r.RemoteAddr).Info("There is already a websocket connection open")
-	}
-
-	i.Remote.websocket = ws
-	i.Remote.connected = true
-
 	// Start reading those messages
-	go i.wsReader()
-	go i.wsWriter()
+	go i.wsReader(ws)
+	go i.wsWriter(ws)
 
 	i.SendAuthenticationResponse()
 
 }
 
-func (i *Integration) wsReader() {
+func (i *Integration) wsReader(ws *websocket.Conn) {
 	log.Debug("Start Websocket read loop")
-	i.Remote.websocket.SetReadLimit(maxMessageSize)
-	i.Remote.websocket.SetReadDeadline(time.Now().Add(pongWait))
-	i.Remote.websocket.SetPongHandler(func(string) error {
-		i.Remote.websocket.SetReadDeadline(time.Now().Add(pongWait))
+	ws.SetReadLimit(maxMessageSize)
+	ws.SetReadDeadline(time.Now().Add(pongWait))
+	ws.SetPongHandler(func(string) error {
+		ws.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
 
 	defer func() {
-		log.WithField("RemoteAddr", i.Remote.websocket.RemoteAddr().String()).Info("Closing Websocket, not able to read message anymore")
-		i.Remote.websocket.Close()
-
-		i.Remote.websocket = nil
-		i.Remote.connected = false
+		log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Closing Websocket, not able to read message anymore")
+		ws.Close()
 	}()
 
 	for {
-		_, p, err := i.Remote.websocket.ReadMessage()
+		_, p, err := ws.ReadMessage()
 
 		if err != nil {
 			log.Error(err)
@@ -90,7 +79,7 @@ func (i *Integration) wsReader() {
 		}
 
 		log.WithFields(log.Fields{
-			"RemoteAddr": i.Remote.websocket.RemoteAddr().String(),
+			"RemoteAddr": ws.RemoteAddr().String(),
 			"Message":    req.Msg,
 			"Kind":       req.Kind,
 			"Id":         req.Id,
@@ -109,17 +98,14 @@ func (i *Integration) wsReader() {
 	}
 }
 
-func (i *Integration) wsWriter() {
+func (i *Integration) wsWriter(ws *websocket.Conn) {
 	log.Debug("Start Websocket write loop")
 	ticker := time.NewTicker(pingPeriod)
 
 	defer func() {
-		log.WithField("RemoteAddr", i.Remote.websocket.RemoteAddr().String()).Info("Closing Websocket, no response in time to Ping message")
+		log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Closing Websocket, no response in time to Ping message")
+		ws.Close()
 		ticker.Stop()
-		i.Remote.websocket.Close()
-
-		i.Remote.websocket = nil
-		i.Remote.connected = false
 	}()
 
 	for {
@@ -129,31 +115,24 @@ func (i *Integration) wsWriter() {
 
 			// Remote should not be in standby as this is a response to a request
 			// or if sent from sendEventMessage the sendEventMessage function makes sure the remote is not in standby
-			if i.Remote.connected && i.Remote.websocket != nil {
-				log.WithFields(log.Fields{
-					"RawMessage": string(msg),
-					"RemoteAddr": i.Remote.websocket.RemoteAddr().String()}).Debug("Send message to websocket")
+			log.WithFields(log.Fields{
+				"RawMessage": string(msg),
+				"RemoteAddr": ws.RemoteAddr().String()}).Debug("Send message to websocket")
 
-				if err := i.Remote.websocket.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
-					log.WithError(err).Error("Faled to set WriteDeatLine")
-				}
+			if err := ws.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+				log.WithError(err).Error("Faled to set WriteDeatLine")
+			}
 
-				if err := i.Remote.websocket.WriteMessage(websocket.TextMessage, msg); err != nil {
-					log.WithError(err).Error("Failed to send message")
-				}
-
-			} else {
-				log.Info("Remote not connected")
+			if err := ws.WriteMessage(websocket.TextMessage, msg); err != nil {
+				log.WithError(err).Error("Failed to send message")
 			}
 
 		case <-ticker.C:
-			if i.Remote.websocket != nil && i.Remote.connected {
-				i.Remote.websocket.SetWriteDeadline(time.Now().Add(writeWait))
-				log.WithField("RemoteAddr", i.Remote.websocket.RemoteAddr().String()).Debug("Send Ping Message")
-				if err := i.Remote.websocket.WriteMessage(websocket.PingMessage, nil); err != nil {
-					log.WithField("RemoteAddr", i.Remote.websocket.RemoteAddr().String()).Info("Could not send Ping message to")
-					return
-				}
+			ws.SetWriteDeadline(time.Now().Add(writeWait))
+			log.WithField("RemoteAddr", ws.RemoteAddr().String()).Debug("Send Ping Message")
+			if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
+				log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Could not send Ping message to")
+				return
 			}
 		}
 	}

@@ -49,60 +49,60 @@ const (
 )
 
 const (
-	StateMediaPlayerEntityAttribute          MediaPlayerEntityAttributes = "state"
-	VolumeMediaPlayerEntityAttribute                                     = "volume"
-	MutedMediaPlayeEntityAttribute                                       = "muted"
-	MediaDurationMediaPlayerEntityAttribute                              = "media_duration"
-	MediaPositionMediaPlayerEntityAttribute                              = "media_position"
-	MediaTypeMediaPlayerEntityAttribute                                  = "media_type"
-	MediaImageUrlMediaPlayerEntityAttribute                              = "media_image_url"
-	MediaTitleMediaPlayerEntityAttribute                                 = "media_title"
-	MediaArtistMediaPlayerEntityAttribute                                = "media_artist"
-	MediaAlbumMediaPlayerEntityAttribute                                 = "media_album"
-	RepeatMediaPlayerEntityAttribute                                     = "repeat"
-	ShuffleMediaPlayerEntityAttribute                                    = "shuffle"
-	SourceMediaPlayerEntityAttribute                                     = "source"
-	SourceListMediaPlayerEntityAttribute                                 = "source_list"
-	SourceModeMediaPlayerEntityAttribute                                 = "sound_mode"
-	SourceModeListMediaPlayerEntityAttribute                             = "sound_mode_list"
+	StateMediaPlayerEntityAttribute         MediaPlayerEntityAttributes = "state"
+	VolumeMediaPlayerEntityAttribute                                    = "volume"
+	MutedMediaPlayeEntityAttribute                                      = "muted"
+	MediaDurationMediaPlayerEntityAttribute                             = "media_duration"
+	MediaPositionMediaPlayerEntityAttribute                             = "media_position"
+	MediaTypeMediaPlayerEntityAttribute                                 = "media_type"
+	MediaImageUrlMediaPlayerEntityAttribute                             = "media_image_url"
+	MediaTitleMediaPlayerEntityAttribute                                = "media_title"
+	MediaArtistMediaPlayerEntityAttribute                               = "media_artist"
+	MediaAlbumMediaPlayerEntityAttribute                                = "media_album"
+	RepeatMediaPlayerEntityAttribute                                    = "repeat"
+	ShuffleMediaPlayerEntityAttribute                                   = "shuffle"
+	SourceMediaPlayerEntityAttribute                                    = "source"
+	SourceListMediaPlayerEntityAttribute                                = "source_list"
+	SoundModeMediaPlayerEntityAttribute                                 = "sound_mode"
+	SoundModeListMediaPlayerEntityAttribute                             = "sound_mode_list"
 )
 
 const (
-	OnMediaPlayerEntityCommand               MediaPlayerEntityCommand = "on"
-	OffMediaPlayerEntityCommand                                       = "off"
-	ToggleMediaPlayerEntityCommand                                    = "toggle"
-	PlayPauseMediaPlayerEntityCommand                                 = "play_pause"
-	StopMediaPlayerEntityCommand                                      = "stop"
-	PreviusMediaPlayerEntityCommand                                   = "previous"
-	NextMediaPlayerEntityCommand                                      = "next"
-	FastForwardMediaPlayerEntityCommand                               = "fast_forward"
-	RewindMediaPlayerEntityCommand                                    = "rewind"
-	SeekMediaPlayerEntityCommand                                      = "seek"
-	VolumeMediaPlayerEntityCommand                                    = "volume"
-	VolumeUpMediaPlayerEntityCommand                                  = "volume_up"
-	VolumeDownMediaPlayerEntityCommand                                = "volume_down"
-	MuteToggleMediaPlayerEntityCommand                                = "mute_toggle"
-	MuteMediaPlayerEntityCommand                                      = "mute"
-	UnmuteMediaPlayerEntityCommand                                    = "unmute"
-	RepeatMediaPlayerEntityCommand                                    = "repeat"
-	ShuffleMediaPlayerEntityCommand                                   = "shuffle"
-	ChannelUpMediaPlayerEntityCommand                                 = "channel_up"
-	ChannelDownMediaPlayerEntityCommand                               = "channel_down"
-	CursorUpMediaPlayerEntityCommand                                  = "cursor_up"
-	CursorDownMediaPlayerEntityCommand                                = "cursor_down"
-	CursorLeftMediaPlayerEntityCommand                                = "cursor_left"
-	CursorRightMediaPlayerEntityCommand                               = "cursor_right"
-	CursorEnterMediaPlayerEntityCommand                               = "cursor_enter"
-	FunctionRedMediaPlayerEntityCommand                               = "function_red"
-	FunctionGreenMediaPlayerEntityCommand                             = "function_green"
-	FunctionYellowMediaPlayerEntityCommand                            = "function_yellow"
-	FunctionBlueMediaPlayerEntityCommand                              = "function_blue"
-	HomeMediaPlayerEntityCommand                                      = "home"
-	MenuMediaPlayerEntityCommand                                      = "menu"
-	BackMediaPlayerEntityCommand                                      = "back"
-	SelectSourcMediaPlayerEntityCommand                               = "select_source"
-	SelectSourceModeMediaPlayerEntityCommand                          = "select_sound_mode"
-	SearchMediaPlayerEntityCommand                                    = "search"
+	OnMediaPlayerEntityCommand              MediaPlayerEntityCommand = "on"
+	OffMediaPlayerEntityCommand                                      = "off"
+	ToggleMediaPlayerEntityCommand                                   = "toggle"
+	PlayPauseMediaPlayerEntityCommand                                = "play_pause"
+	StopMediaPlayerEntityCommand                                     = "stop"
+	PreviusMediaPlayerEntityCommand                                  = "previous"
+	NextMediaPlayerEntityCommand                                     = "next"
+	FastForwardMediaPlayerEntityCommand                              = "fast_forward"
+	RewindMediaPlayerEntityCommand                                   = "rewind"
+	SeekMediaPlayerEntityCommand                                     = "seek"
+	VolumeMediaPlayerEntityCommand                                   = "volume"
+	VolumeUpMediaPlayerEntityCommand                                 = "volume_up"
+	VolumeDownMediaPlayerEntityCommand                               = "volume_down"
+	MuteToggleMediaPlayerEntityCommand                               = "mute_toggle"
+	MuteMediaPlayerEntityCommand                                     = "mute"
+	UnmuteMediaPlayerEntityCommand                                   = "unmute"
+	RepeatMediaPlayerEntityCommand                                   = "repeat"
+	ShuffleMediaPlayerEntityCommand                                  = "shuffle"
+	ChannelUpMediaPlayerEntityCommand                                = "channel_up"
+	ChannelDownMediaPlayerEntityCommand                              = "channel_down"
+	CursorUpMediaPlayerEntityCommand                                 = "cursor_up"
+	CursorDownMediaPlayerEntityCommand                               = "cursor_down"
+	CursorLeftMediaPlayerEntityCommand                               = "cursor_left"
+	CursorRightMediaPlayerEntityCommand                              = "cursor_right"
+	CursorEnterMediaPlayerEntityCommand                              = "cursor_enter"
+	FunctionRedMediaPlayerEntityCommand                              = "function_red"
+	FunctionGreenMediaPlayerEntityCommand                            = "function_green"
+	FunctionYellowMediaPlayerEntityCommand                           = "function_yellow"
+	FunctionBlueMediaPlayerEntityCommand                             = "function_blue"
+	HomeMediaPlayerEntityCommand                                     = "home"
+	MenuMediaPlayerEntityCommand                                     = "menu"
+	BackMediaPlayerEntityCommand                                     = "back"
+	SelectSourcMediaPlayerEntityCommand                              = "select_source"
+	SelectSoundModeMediaPlayerEntityCommand                          = "select_sound_mode"
+	SearchMediaPlayerEntityCommand                                   = "search"
 )
 
 const (
@@ -116,7 +116,7 @@ const (
 type MediaPlayerEntity struct {
 	Entity
 	DeviceClass MediaPlayerDeviceClass
-	Commands    map[string]func(MediaPlayerEntity, map[string]interface{}) `json:"-"`
+	Commands    map[string]func(MediaPlayerEntity, map[string]interface{}) int `json:"-"`
 }
 
 func NewMediaPlayerEntity(id string, name LanguageText, area string, deviceClass MediaPlayerDeviceClass) *MediaPlayerEntity {
@@ -129,7 +129,7 @@ func NewMediaPlayerEntity(id string, name LanguageText, area string, deviceClass
 
 	mediaPlayerEntity.EntityType.Type = "media_player"
 
-	mediaPlayerEntity.Commands = make(map[string]func(MediaPlayerEntity, map[string]interface{}))
+	mediaPlayerEntity.Commands = make(map[string]func(MediaPlayerEntity, map[string]interface{}) int)
 	mediaPlayerEntity.Attributes = make(map[string]interface{})
 
 	return &mediaPlayerEntity
@@ -227,19 +227,21 @@ func (e *MediaPlayerEntity) AddFeature(feature MediaPlayerEntityFeatures) {
 		e.AddAttribute(string(SourceListMediaPlayerEntityAttribute), []string{})
 
 	case SelectSoundModeMediaPlayerEntityFeatures:
-		e.AddAttribute(string(SourceModeMediaPlayerEntityAttribute), "")
-		e.AddAttribute(string(SourceModeListMediaPlayerEntityAttribute), []string{})
+		e.AddAttribute(string(SoundModeMediaPlayerEntityAttribute), "")
+		e.AddAttribute(string(SoundModeListMediaPlayerEntityAttribute), []string{})
 
 	}
 }
 
-func (e *MediaPlayerEntity) AddCommand(command MediaPlayerEntityCommand, function func(MediaPlayerEntity, map[string]interface{})) {
+func (e *MediaPlayerEntity) AddCommand(command MediaPlayerEntityCommand, function func(MediaPlayerEntity, map[string]interface{}) int) {
 	e.Commands[string(command)] = function
 
 }
 
-func (e *MediaPlayerEntity) HandleCommand(cmd_id string, params map[string]interface{}) {
+func (e *MediaPlayerEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
 	if e.Commands[cmd_id] != nil {
-		e.Commands[cmd_id](*e, params)
+		return e.Commands[cmd_id](*e, params)
 	}
+
+	return 404
 }

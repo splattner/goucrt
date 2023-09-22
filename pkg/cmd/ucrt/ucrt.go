@@ -18,7 +18,11 @@ func NewCommand(name string) *cobra.Command {
 
 	rootCmd.PersistentFlags().Bool("mdns", true, "Enable integration advertisement via mDNS")
 	rootCmd.PersistentFlags().Bool("registration", false, "Enable driver registration on the Remote Two instead of mDNS advertisement")
+	rootCmd.PersistentFlags().String("registrationUsername", "web-configurator", "Username of the RemoteTwo for driver registration")
 	rootCmd.PersistentFlags().String("registrationPin", "", "Pin of the RemoteTwo for driver registration")
+	rootCmd.PersistentFlags().String("remoteTwoIP", "", "IP Address of your Remote Two instance (disables Remote Two discovery)")
+	rootCmd.PersistentFlags().Int("remoteTwoPort", 80, "Port of your Remote Two instance (disables Remote Two discovery)")
+
 	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug log level")
 
 	rootCmd.AddCommand(

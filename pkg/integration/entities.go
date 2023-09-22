@@ -209,30 +209,32 @@ func (i *Integration) GetEntitiesByType(entityType entities.EntityType) []interf
 }
 
 // Call the correct HandleCommand function depending on the entity type
-func (i *Integration) handleCommand(entity interface{}, req *EntityCommandReq) {
+func (i *Integration) handleCommand(entity interface{}, req *EntityCommandReq) int {
 	cmd_id := req.MsgData.CmdId
 	params := req.MsgData.Params
 
 	// Ugly.. I guess but I don't know how better
 	switch e := entity.(type) {
 	case *entities.ButtonEntity:
-		e.HandleCommand(cmd_id, params)
+		return e.HandleCommand(cmd_id)
 
 	case *entities.LightEntity:
-		e.HandleCommand(cmd_id, params)
+		return e.HandleCommand(cmd_id, params)
 
 	case *entities.SwitchsEntity:
-		e.HandleCommand(cmd_id, params)
+		return e.HandleCommand(cmd_id, params)
 
 	case *entities.MediaPlayerEntity:
-		e.HandleCommand(cmd_id, params)
+		return e.HandleCommand(cmd_id, params)
 
 	case *entities.ClimateEntity:
-		e.HandleCommand(cmd_id, params)
+		return e.HandleCommand(cmd_id, params)
 
 	case *entities.CoverEntity:
-		e.HandleCommand(cmd_id, params)
+		return e.HandleCommand(cmd_id, params)
 	}
+
+	return 404
 }
 
 // Call the correct HandleCommand function depending on the entity type

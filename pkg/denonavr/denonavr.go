@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"reflect"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -12,13 +13,33 @@ import (
 )
 
 type DenonCommand string
+type DenonZone string
 
 const (
-	DenonCommandPower       DenonCommand = "PV"
-	DenonCommandVolume                   = "MV"
-	DenonCommandMute                     = "MU"
-	DenonCommandSelectInput              = "SI"
-	DenonVolumeStep         float64      = 1
+	DenonCommandPower         DenonCommand = "PW"
+	DennonCommandZoneMain                  = "ZM"
+	DenonCommandVolume                     = "MV"
+	DenonCommandMute                       = "MU"
+	DenonCommandSelectInput                = "SI"
+	DenonCommandCursorControl              = "MN"
+	DenonCommandNS                         = "NS"
+	DenonCommandMS                         = "MS"
+	DenonCommandVS                         = "VS"
+	DenonVolumeStep           float64      = 1
+)
+
+const (
+	MainZone DenonZone = "MAIN"
+	Zone2              = "Z2"
+	Zone3              = "Z3"
+)
+
+const (
+	STATUS_URL    string = "/goform/formMainZone_MainZoneXmlStatus.xml"
+	STATUS_Z2_URL        = "/goform/formZone2_Zone2XmlStatus.xml"
+	STATUS_Z3_URL        = "/goform/formZone3_Zone3XmlStatus.xml"
+	MAINZONE_URL         = "/goform/formMainZone_MainZoneXml.xml"
+	COMMAND_URL          = "/goform/formiPhoneAppDirect.xml"
 )
 
 type DenonXML struct {
@@ -31,7 +52,7 @@ type DenonXML struct {
 	VideoSelectDisp  string       `xml:"VideoSelectDisp>value"`
 	VideoSelect      string       `xml:"VideoSelect>value"`
 	VideoSelectOnOff string       `xml:"VideoSelectOnOff>value"`
-	VideoSelectLists []ValueLists `xml:"VideoSelectLists>value"`
+	VideoSelectList  []ValueLists `xml:"VideoSelectLists>value"`
 	ECOModeDisp      string       `xml:"ECOModeDisp>value"`
 	ECOMode          string       `xml:"ECOMode>value"`
 	ECOModeList      []ValueLists `xml:"ECOModeLists>value"`
@@ -53,11 +74,14 @@ type ValueLists struct {
 }
 
 type DenonAVR struct {
-	Host       string
-	baseURL    string
-	commandURL string
+	Host string
 
-	data DenonXML
+	mainZoneData DenonXML
+
+	// Zone Status
+	mainZoneStatus DenonStatus
+	zone2Status    DenonStatus
+	zone3Status    DenonStatus
 
 	updateTrigger chan string
 
@@ -70,10 +94,12 @@ func NewDenonAVR(host string) *DenonAVR {
 
 	denonavr.Host = host
 
-	denonavr.baseURL = "http://" + host + "/goform/formMainZone_MainZoneXml.xml"
-	denonavr.commandURL = "http://" + host + "/goform/formiPhoneAppDirect.xml"
+	denonavr.mainZoneData = DenonXML{}
 
-	denonavr.data = DenonXML{}
+	denonavr.mainZoneStatus = DenonStatus{}
+	denonavr.zone2Status = DenonStatus{}
+	denonavr.zone3Status = DenonStatus{}
+
 	denonavr.entityChangedFunction = make(map[string][]func(interface{}))
 
 	denonavr.updateTrigger = make(chan string)
@@ -87,38 +113,38 @@ func (d *DenonAVR) AddHandleEntityChangeFunc(key string, f func(interface{})) {
 
 }
 
-func (d *DenonAVR) getDataFromDevice() {
+func (d *DenonAVR) getMainZoneDataFromDevice() {
 
-	d.data = DenonXML{} // Somehow the values in the array are added instead of replaced. Not sure if this is the solution, but it works...
-	resp, err := http.Get(d.baseURL)
+	d.mainZoneData = DenonXML{} // Somehow the values in the array are added instead of replaced. Not sure if this is the solution, but it works...
+	resp, err := http.Get("http://" + d.Host + MAINZONE_URL)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 
-	if err := xml.Unmarshal(body, &d.data); err != nil {
+	if err := xml.Unmarshal(body, &d.mainZoneData); err != nil {
 		log.WithError(err).Info("Could not unmarshall")
 	}
 }
 
-func (d *DenonAVR) sendCommandToDevice(denonCommandType DenonCommand, command string) error {
+func (d *DenonAVR) sendCommandToDevice(denonCommandType DenonCommand, command string) (int, error) {
 
-	url := d.commandURL + "?" + string(denonCommandType) + command
+	url := "http://" + d.Host + COMMAND_URL + "?" + string(denonCommandType) + command
 	log.WithFields(log.Fields{
 		"type":    string(denonCommandType),
 		"command": command,
 		"url":     url}).Info("Send Command to Denon Device")
 
-	_, err := http.Get(url)
+	req, err := http.Get(url)
 	if err != nil {
-		return fmt.Errorf("Error sending command: %w", err)
+		return req.StatusCode, fmt.Errorf("Error sending command: %w", err)
 	}
 
 	// Trigger a updata data, handeld in the Listen Looü
 	d.updateTrigger <- "update"
 
-	return nil
+	return req.StatusCode, nil
 }
 
 func (d *DenonAVR) StartListenLoop() {
@@ -136,76 +162,158 @@ func (d *DenonAVR) StartListenLoop() {
 		select {
 		case <-d.updateTrigger:
 			// force manual update
-			d.UpdateAndNotify()
+			d.updateAndNotify()
 		case <-ticker.C:
 			// Update every 5 Seconds
-			d.UpdateAndNotify()
+			d.updateAndNotify()
 
 		}
 	}
 }
 
-func (d *DenonAVR) UpdateAndNotify() {
-	oldData := d.data
-	d.getDataFromDevice()
+func (d *DenonAVR) updateAndNotify() {
+
+	// Make copy of data to compare and update on changes
+	oldMainZonData := d.mainZoneData
+	oldMainZoneStatus := d.mainZoneStatus
+	oldZone2Status := d.zone2Status
+	oldZone3Status := d.zone3Status
+
+	d.getMainZoneDataFromDevice()
+	d.getZoneStatus(MainZone)
+	d.getZoneStatus(Zone2)
+	d.getZoneStatus(Zone3)
 
 	// TODO: make the following part nicer?
-
-	if len(d.entityChangedFunction["MasterVolume"]) > 0 {
-		if oldData.MasterVolume != d.data.MasterVolume {
-			for _, f := range d.entityChangedFunction["MasterVolume"] {
-				f(d.data.MasterVolume)
-			}
-		}
-
-	}
-
+	// Power
 	if len(d.entityChangedFunction["Power"]) > 0 {
-		if oldData.Power != d.data.Power {
+		if oldMainZonData.Power != d.mainZoneData.Power {
 			for _, f := range d.entityChangedFunction["Power"] {
-				f(d.data.Power)
+				f(d.mainZoneData.Power)
 			}
 		}
 	}
 
-	if len(d.entityChangedFunction["ZonePower"]) > 0 {
-		if oldData.ZonePower != d.data.ZonePower {
-			for _, f := range d.entityChangedFunction["ZonePower"] {
-				f(d.data.ZonePower)
+	// Zone Power
+	if len(d.entityChangedFunction["MainZonePower"]) > 0 {
+		if oldMainZoneStatus.Power != d.mainZoneStatus.Power {
+			for _, f := range d.entityChangedFunction["MainZonePower"] {
+				f(d.mainZoneStatus.Power)
 			}
 		}
 	}
 
-	if len(d.entityChangedFunction["Mute"]) > 0 {
-		if oldData.Mute != d.data.Mute {
-			for _, f := range d.entityChangedFunction["Mute"] {
-				f(d.data.Mute)
+	if len(d.entityChangedFunction["Zone2Power"]) > 0 {
+		if oldZone2Status.Power != d.zone2Status.Power {
+			for _, f := range d.entityChangedFunction["Zone2Power"] {
+				f(d.zone2Status.Power)
 			}
 		}
 	}
 
-	if len(d.entityChangedFunction["VideoSelectLists"]) > 0 {
-		if !EqualValueList(oldData.VideoSelectLists, d.data.VideoSelectLists) {
-			for _, f := range d.entityChangedFunction["VideoSelectLists"] {
-				f(d.data.VideoSelectLists)
+	if len(d.entityChangedFunction["Zone3Power"]) > 0 {
+		if oldZone3Status.Power != d.zone3Status.Power {
+			for _, f := range d.entityChangedFunction["Zone3Power"] {
+				f(d.zone3Status.Power)
 			}
 		}
 	}
 
-	if len(d.entityChangedFunction["VideoSelect"]) > 0 {
-		if oldData.VideoSelect != d.data.VideoSelect {
-			for _, f := range d.entityChangedFunction["VideoSelect"] {
-				f(d.data.VideoSelect)
+	// Volume
+	if len(d.entityChangedFunction["MainZoneVolume"]) > 0 {
+		if oldMainZoneStatus.MasterVolume != d.mainZoneStatus.MasterVolume {
+			for _, f := range d.entityChangedFunction["MainZoneVolume"] {
+				f(d.mainZoneData.MasterVolume)
 			}
 		}
 	}
+
+	if len(d.entityChangedFunction["Zone2Volume"]) > 0 {
+		if oldZone2Status.MasterVolume != d.zone2Status.MasterVolume {
+			for _, f := range d.entityChangedFunction["Zone2Volume"] {
+				f(d.zone2Status.MasterVolume)
+			}
+		}
+	}
+
+	if len(d.entityChangedFunction["Zone3Volume"]) > 0 {
+		if oldZone3Status.MasterVolume != d.zone3Status.MasterVolume {
+			for _, f := range d.entityChangedFunction["Zone23olume"] {
+				f(d.zone3Status.MasterVolume)
+			}
+		}
+	}
+
+	if len(d.entityChangedFunction["MainZoneMute"]) > 0 {
+		if oldMainZoneStatus.Mute != d.mainZoneStatus.Mute {
+			for _, f := range d.entityChangedFunction["MainZoneMute"] {
+				f(d.mainZoneStatus.Mute)
+			}
+		}
+	}
+
+	if len(d.entityChangedFunction["Zone2Mute"]) > 0 {
+		if oldZone2Status.Mute != d.zone2Status.Mute {
+			for _, f := range d.entityChangedFunction["Zone2Mute"] {
+				f(d.zone2Status.Mute)
+			}
+		}
+	}
+
+	if len(d.entityChangedFunction["Zone3Mute"]) > 0 {
+		if oldZone3Status.Mute != d.zone3Status.Mute {
+			for _, f := range d.entityChangedFunction["Zone3Mute"] {
+				f(d.zone3Status.Mute)
+			}
+		}
+	}
+
+	// Video Select
+
+	if len(d.entityChangedFunction["MainZoneInputFuncList"]) > 0 {
+		if !reflect.DeepEqual(oldMainZoneStatus.InputFuncList, d.mainZoneStatus.InputFuncList) {
+			for _, f := range d.entityChangedFunction["MainZoneInputFuncList"] {
+				f(d.mainZoneData.VideoSelectList)
+			}
+		}
+	}
+
+	if len(d.entityChangedFunction["MainZoneInputFuncSelect"]) > 0 {
+		if oldMainZonData.VideoSelect != d.mainZoneData.VideoSelect {
+			for _, f := range d.entityChangedFunction["MainZoneInputFuncSelect"] {
+				f(d.mainZoneData.VideoSelect)
+			}
+		}
+	}
+
+	// Surround Mode
+	if len(d.entityChangedFunction["MainZoneSurroundMode"]) > 0 {
+		if oldMainZoneStatus.SurrMode != d.mainZoneStatus.SurrMode {
+			for _, f := range d.entityChangedFunction["MainZoneSurroundMode"] {
+				f(d.GetSurroundMode(MainZone))
+			}
+		}
+	}
+
+	if len(d.entityChangedFunction["Zone2SurroundMode"]) > 0 {
+		if oldZone2Status.SurrMode != d.zone2Status.SurrMode {
+			for _, f := range d.entityChangedFunction["Zone2SurroundMode"] {
+				f(d.GetSurroundMode(Zone2))
+			}
+		}
+	}
+
+	if len(d.entityChangedFunction["Zone3SurroundMode"]) > 0 {
+		if oldZone3Status.SurrMode != d.zone3Status.SurrMode {
+			for _, f := range d.entityChangedFunction["Zone3SurroundMode"] {
+				f(d.GetSurroundMode(Zone3))
+			}
+		}
+	}
+
 }
 
 func (d *DenonAVR) GetFriendlyName() string {
 
-	return d.data.FriendlyName
-}
-
-func (d *DenonAVR) GetVideoSelectList() []ValueLists {
-	return d.data.VideoSelectLists
+	return d.mainZoneData.FriendlyName
 }

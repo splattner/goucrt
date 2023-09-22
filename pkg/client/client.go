@@ -17,7 +17,10 @@ type Client struct {
 	messages chan string
 
 	// Client specific functions
-	initFunc       func()
+	// Initialize the client
+	// Here you can add entities if they are already known
+	initFunc func()
+	//
 	setupFunc      func()
 	clientLoopFunc func()
 }
@@ -74,6 +77,8 @@ func (c *Client) HandleConnection(e *integration.ConnectEvent) {
 	}
 }
 
+// Handle Setup called by Remote Two to setup this integration
+// the SetupData are passed to this function
 func (c *Client) HandleSetup(setup_data integration.SetupData) {
 
 	if c.setupFunc != nil {

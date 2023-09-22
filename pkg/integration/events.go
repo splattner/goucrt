@@ -18,24 +18,29 @@ func (i *Integration) sendEventMessage(res *interface{}, messageType int) error 
 	event := EventMessage{}
 	json.Unmarshal(msg, &event)
 
-	if i.Remote.standby || !i.Remote.connected || i.Remote.websocket == nil {
+	if i.Remote.standby {
 		log.WithFields(log.Fields{
-			"Message":   event.Msg,
-			"Kind":      event.Kind,
-			"standby":   i.Remote.standby,
-			"connected": i.Remote.connected,
+			"Message": event.Msg,
+			"Kind":    event.Kind,
+			"standby": i.Remote.standby,
 		}).Info("Remote is in standby mode or not (yet) connected, not sending event / no websocket")
 		return nil
 	}
 
 	log.WithFields(log.Fields{
-		"RemoteAddr": i.Remote.websocket.RemoteAddr().String(),
-		"Message":    event.Msg,
-		"Kind:":      event.Kind,
-		"Data":       event.MsgData,
+		"Message": event.Msg,
+		"Kind:":   event.Kind,
+		"Data":    event.MsgData,
 	}).Info("Send Event Message")
 
-	i.Remote.messageChannel <- msg
+	select {
+	case i.Remote.messageChannel <- msg:
+		log.Debug("Message sent for processing")
+	default:
+		log.Debug("Message Channel not ready")
+
+	}
+
 	return nil
 
 }

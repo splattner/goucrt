@@ -34,13 +34,57 @@ type DriverRegistration struct {
 // TODO: make this more robust and nicer
 func (i *Integration) registerIntegration() {
 
+	// Use configured IP for registration instead of Remote Two discovery
+	if i.config["remoteTwoIP"].(string) != "" && i.config["remoteTwoPort"].(int) > 0 {
+		i.registerWithRemoteTwo(i.config["remoteTwoIP"].(string), i.config["remoteTwoPort"].(int))
+	} else {
+
+		entries := make(chan *zeroconf.ServiceEntry)
+
+		go func(results <-chan *zeroconf.ServiceEntry) {
+			for entry := range results {
+
+				log.WithField("MDNS Record", entry).Debug("Found Remote Two instance")
+
+				if len(entry.AddrIPv4) == 0 {
+					// TODO: IPv6?
+					log.Debug("No IPv4 address available. Not using this record")
+					continue
+				}
+
+				i.registerWithRemoteTwo(entry.AddrIPv4[0].String(), entry.Port)
+
+			}
+		}(entries)
+
+		resolver, err := zeroconf.NewResolver(nil)
+		if err != nil {
+			log.Fatalln("Failed to initialize resolver:", err.Error())
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+
+		defer cancel()
+
+		err = resolver.Browse(ctx, "_uc-remote._tcp", "local.", entries)
+		if err != nil {
+			log.Fatalln("Failed to browse:", err.Error())
+		}
+
+		<-ctx.Done()
+	}
+}
+
+func (i *Integration) registerWithRemoteTwo(remoteTwoIP string, remoteTwoPort int) {
+
 	myip := GetLocalIP()
-	log.WithField("MyIP", myip).Info("Register driver at availabe Remote Two instances")
+	driverURL := "ws://" + myip + i.listenAddress + i.config["websocketPath"].(string)
+	remoteTwoURL := "http://" + remoteTwoIP + ":" + fmt.Sprint(remoteTwoPort)
 
 	driverRegistration := DriverRegistration{
 		DriverId:        i.SetupData["driver_id"],
 		Name:            i.Metadata.Name,
-		DriverURL:       "ws://" + myip + i.listenAddress + i.config["websocketPath"].(string),
+		DriverURL:       driverURL,
 		Version:         i.Metadata.Version,
 		Icon:            i.Metadata.Icon,
 		Enabled:         true,
@@ -49,66 +93,51 @@ func (i *Integration) registerIntegration() {
 		SetupDataSchema: i.Metadata.SetupDataSchema,
 	}
 
-	entries := make(chan *zeroconf.ServiceEntry)
+	log.WithFields(log.Fields{
+		"My IP":      myip,
+		"Remote Two": remoteTwoURL,
+		"IP":         remoteTwoIP,
+		"DriverURL":  driverURL}).Info("Register Integration with Remote Two")
 
-	go func(results <-chan *zeroconf.ServiceEntry) {
-		for entry := range results {
-
-			remoteTwoURL := "http://" + entry.AddrIPv4[0].String() + ":" + fmt.Sprint(entry.Port)
-
-			log.WithFields(log.Fields{
-				"Remote Two": remoteTwoURL,
-				"IP":         entry.AddrIPv4[0].String()}).Info("Register Integration with Remote Two")
-
-			data, err := json.Marshal(driverRegistration)
-			req, err := http.NewRequest("POST", remoteTwoURL+"/api/intg/drivers", bytes.NewReader(data))
-			if err != nil {
-				log.WithError(err).Fatal("impossible to build request")
-			}
-			req.Header.Set("Content-Type", "application/json")
-
-			credentials := b64.StdEncoding.EncodeToString([]byte("web-configurator:" + i.config["registrationPin"].(string)))
-
-			req.Header.Set("Authorization", "Basic "+credentials)
-			client := http.Client{Timeout: 10 * time.Second}
-
-			// send the request
-			res, err := client.Do(req)
-			if err != nil {
-				log.WithError(err).Fatal("impossible to send request")
-			}
-
-			defer res.Body.Close()
-
-			resBody, err := io.ReadAll(res.Body)
-			if err != nil {
-				log.Fatalf("impossible to read all body of response: %s", err)
-			}
-			json.Unmarshal(resBody, &driverRegistration)
-
-			log.WithField("Response", string(resBody)).Debug("Driver Registration")
-
-			i.SetupData["driver_id"] = driverRegistration.DriverId
-			i.persistSetupData()
-		}
-		log.Info("No more entries.")
-	}(entries)
-
-	resolver, err := zeroconf.NewResolver(nil)
+	data, err := json.Marshal(driverRegistration)
+	req, err := http.NewRequest("POST", remoteTwoURL+"/api/intg/drivers", bytes.NewReader(data))
 	if err != nil {
-		log.Fatalln("Failed to initialize resolver:", err.Error())
+		log.WithError(err).Fatal("impossible to build request")
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	// Authentication wit the Remote Two
+	credentials := b64.StdEncoding.EncodeToString([]byte(i.config["registrationUsername"].(string) + ":" + i.config["registrationPin"].(string)))
+	req.Header.Set("Authorization", "Basic "+credentials)
+
+	// send the request
+	client := http.Client{Timeout: 10 * time.Second}
+	res, err := client.Do(req)
+	if err != nil {
+		log.WithError(err).Fatal("Failed to send the request")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	defer res.Body.Close()
 
-	defer cancel()
-
-	err = resolver.Browse(ctx, "_uc-remote._tcp", "local.", entries)
+	statusCode := res.StatusCode
+	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatalln("Failed to browse:", err.Error())
+		log.Fatalf("impossible to read all body of response: %s", err)
 	}
 
-	<-ctx.Done()
+	log.WithFields(log.Fields{
+		"Status Code": statusCode,
+		"Response":    string(resBody)}).Debug("Driver Registration")
+
+	switch statusCode {
+	//case http.StatusUnprocessableEntity:
+
+	case http.StatusCreated:
+		json.Unmarshal(resBody, &driverRegistration)
+
+		i.SetupData["driver_id"] = driverRegistration.DriverId
+		i.persistSetupData()
+	}
 }
 
 // GetLocalIP returns the non loopback local IP of the host

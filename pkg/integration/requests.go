@@ -300,12 +300,10 @@ func (i *Integration) handleEntityCommandRequest(req *EntityCommandReq) *EntityC
 	var returnCode int
 
 	if err == nil {
-		returnCode = 200
+		returnCode = i.handleCommand(entity, req)
 	} else {
 		returnCode = 404
 	}
-
-	i.handleCommand(entity, req)
 
 	res := EntityCommandResponse{
 		CommonResp{Kind: "resp", Id: req.Id, Msg: "result", Code: returnCode},

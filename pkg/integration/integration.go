@@ -67,13 +67,14 @@ func (i *Integration) SetMetadata(metadata *DriverMetadata) {
 }
 
 func (i *Integration) Run() error {
+	log.Info("Start Remote Two integration")
 
 	defer func() {
 		i.stopAdvertising()
 	}()
 
 	if i.Metadata == nil {
-		log.Panic("Metadata not set, cannot run")
+		log.Panic("Metadata not set, cannot start Remote Two integration")
 		return fmt.Errorf("Metadata not set")
 	}
 
@@ -81,14 +82,15 @@ func (i *Integration) Run() error {
 
 	//MDNS
 	if i.config["enableMDNS"].(bool) {
-		i.startAdvertising()
+		go i.startAdvertising()
 	}
 
 	// Register the integration
 	if i.config["enableRegistration"].(bool) && i.config["registrationPin"].(string) != "" {
-		i.registerIntegration()
+		go i.registerIntegration()
 	}
 
+	log.Debug("Listen for new Websocket connection")
 	log.Fatal(http.ListenAndServe(i.listenAddress, nil))
 
 	return nil
@@ -134,6 +136,7 @@ func (i *Integration) loadSetupData() {
 	file, err := os.ReadFile("ucrt.json")
 	if err != nil {
 		log.WithError(err).Info("Cannot read setupDataFile")
+		i.SetupData = make(SetupData)
 	} else {
 		json.Unmarshal(file, &i.SetupData)
 		log.WithField("SetupData", i.SetupData).Info("Read persisted setup data")
