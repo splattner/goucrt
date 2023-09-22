@@ -53,7 +53,7 @@ Use "ucrt [command] --help" for more information about a command.
 
 ```
 
-## Developpent
+## Development
 
 The generic client is in `pgk/client/client.go`. In order to implement your own client, you have to implement the following functions:
 
@@ -70,10 +70,14 @@ clientLoopFunc func()
 
 ## Todo's
 
-[] Allow for driver authentication
-[] Driver registration instead of MDNS
+[x] Implement all available entities
+[x] Handle command calls
+[x] Allow for attribute changes
+[x] Allow for driver regisration
+    [] [] Make it more robust
+[] Allow for driver authentication with token/header
 [] Documentation, how to use, how to implement your own device
-[...]
+[] probably way more
 
 ## Build
 
