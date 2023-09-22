@@ -1,5 +1,8 @@
 # A Unfolded Circle Remote Two Integration in Go
 
+![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/splattner/goucrt/docker-publish.yml)
+
+
 > **⚠️ DISCLAIMER**
 > This is Work in Progress and might not yet be functional.
 
