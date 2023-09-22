@@ -1,10 +1,11 @@
-# A Unfolded Circle Remoter Two Integration in Go
+# A Unfolded Circle Remote Two Integration in Go
 
-DISCLAIMER: This is Work in Progress and not yet functional.
+> **⚠️ DISCLAIMER**
+> This is Work in Progress and might not yet be functional.
 
 This [Unfolded Circle Remote Two](https://www.unfoldedcircle.com/) integration driver written in Go implements is written as generic as possible to be used with any kind of device to control.
 
-Currently this repository implements a Driver for the following devices:
+Currently this repository implements a driver for the following devices:
 
 * Denon Audio/Video Reveiver
 
@@ -16,13 +17,11 @@ The generic client is not functional. You need to implement your own Client for 
 
 ### Denon Audio/Video Reveiver
 
-Start with `ucrt denon`
+Run with `ucrt denon`
 
 This client currently implements a [`MediaPlayer` entity](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/entity_media_player.md) and some [`Button` entities](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/entity_button.md)
 
-The client implementation is in `pkg/client/denonavrclient.go`
 
-`pkg/denonavr` contains a libary to communicate with a DenonAVR over HTTP
 
 ## How to use
 
@@ -50,7 +49,6 @@ Flags:
       --websocketPath string          path where this integration is available for websocket connections (default "/ws")
 
 Use "ucrt [command] --help" for more information about a command.
-
 ```
 
 ## Development
@@ -68,6 +66,8 @@ setupFunc      func()
 clientLoopFunc func()
 ```
 
+See Denon Client Example in in `pkg/client/denonavrclient.go`
+
 ## Todo's
 
 * [x] Implement all available entities
@@ -79,8 +79,21 @@ clientLoopFunc func()
 * [ ] Documentation, how to use, how to implement your own device
 * [ ] probably way more
 
-## Build
+## How to Build and Run
+
+```bash
+# in cmd/ucrt
+go get -u
+go build .
+```
+
+### Docker
 
 ```bash
 docker build -f build/Dockerfile -t splattner/goucrt
 ```
+
+## License
+
+This project is licensed under the [**Mozilla Public License 2.0**](https://choosealicense.com/licenses/mpl-2.0/).
+See the [LICENSE](LICENSE) file for details.
