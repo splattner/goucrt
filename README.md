@@ -70,14 +70,14 @@ clientLoopFunc func()
 
 ## Todo's
 
-[x] Implement all available entities
-[x] Handle command calls
-[x] Allow for attribute changes
-[x] Allow for driver regisration
-    [] [] Make it more robust
-[] Allow for driver authentication with token/header
-[] Documentation, how to use, how to implement your own device
-[] probably way more
+* [x] Implement all available entities
+* [x] Handle command calls
+* [x] Allow for attribute changes
+* [x] Allow for driver regisration
+  * [] Make it more robust
+* [] Allow for driver authentication with token/header
+* [] Documentation, how to use, how to implement your own device
+* [] probably way more
 
 ## Build
 
