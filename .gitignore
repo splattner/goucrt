@@ -1,3 +1,4 @@
 .vscode/
 
 cmd/ucrt/ucrt
+cmd/ucrt/*.json
