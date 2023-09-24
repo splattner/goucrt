@@ -11,6 +11,7 @@ This [Unfolded Circle Remote Two](https://www.unfoldedcircle.com/) integration d
 Currently this repository implements a driver for the following devices:
 
 * Denon Audio/Video Reveiver
+* [DeCONZ](https://dresden-elektronik.github.io/deconz-rest-doc/)
 
 ## Device / Clients
 
@@ -24,7 +25,9 @@ Run with `ucrt denon`
 
 This client currently implements a [`MediaPlayer` entity](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/entity_media_player.md) and some [`Button` entities](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/entity_button.md)
 
+### Deconz
 
+Run with `ucrt deconz`
 
 ## How to use
 

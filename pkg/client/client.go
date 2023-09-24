@@ -23,7 +23,8 @@ type Client struct {
 	// Called by RemoteTwo when the integration is added and setup started
 	setupFunc func()
 	// Handles connect/disconnect calls from RemoteTwo
-	clientLoopFunc func()
+	clientLoopFunc        func()
+	setDriverUserDataFunc func(map[string]string, bool)
 }
 
 func NewClient(i *integration.Integration) *Client {
@@ -41,6 +42,13 @@ func NewClient(i *integration.Integration) *Client {
 }
 
 func (c *Client) InitClient() {
+
+	// Pass function to the integration driver that is called when the remote want to setup the driver
+	c.IntegrationDriver.SetHandleSetupFunction(c.HandleSetup)
+	// Pass function to the integration driver that is called when the remote want to setup the driver
+	c.IntegrationDriver.SetHandleConnectionFunction(c.HandleConnection)
+	c.IntegrationDriver.SetHandleSetDriverUserDataFunction(c.HandleSetDriverUserDataFunction)
+
 	// Call setup Function if its set
 	if c.initFunc != nil {
 		c.initFunc()
@@ -95,12 +103,8 @@ func (c *Client) HandleSetDriverUserDataFunction(userdata map[string]string, con
 		"Confim":   confirm,
 	}).Debug(("Handle SetDriverUserData"))
 
-	if confirm {
-		c.IntegrationDriver.SetDriverSetupState(integration.StopEvent, integration.OkState, "", nil)
-	} else {
-		c.IntegrationDriver.SetDriverSetupState(integration.StopEvent, integration.OkState, "", nil)
-		// Confirm is not set.. Bug?
-		//c.IntegrationDriver.SetDriverSetupState(integration.SetupEvent, integration.WaitUserActionState, "", nil)
+	if c.setDriverUserDataFunc != nil {
+		c.setDriverUserDataFunc(userdata, confirm)
 	}
 
 }

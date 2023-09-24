@@ -56,8 +56,8 @@ type SettingTypeDropdowDefinition struct {
 	Items []SettingTypeDropdowItemsDefinition `json:"items`
 }
 type SettingTypeDropdowItemsDefinition struct {
-	id    string       `json:"id"`
-	label LanguageText `json:"label"`
+	Id    string       `json:"id"`
+	Label LanguageText `json:"label"`
 }
 
 type SettingTypeLabel struct {

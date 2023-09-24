@@ -1,5 +1,9 @@
 package entities
 
+import (
+	log "github.com/sirupsen/logrus"
+)
+
 type LightEntityState string
 type LightEntityFeatures string
 type LightEntityAttributes string
@@ -38,6 +42,11 @@ type LightEntity struct {
 }
 
 func NewLightEntity(id string, name LanguageText, area string) *LightEntity {
+	log.WithFields(log.Fields{
+		"ID":   id,
+		"Name": name,
+		"Area": area,
+	}).Debug(("Create new LightEntity"))
 
 	lightEntity := LightEntity{}
 	lightEntity.Id = id
@@ -67,6 +76,9 @@ func (e *LightEntity) AddFeature(feature LightEntityFeatures) {
 		e.AddAttribute(string(HueLightEntityAttribute), 0)
 		e.AddAttribute(string(SaturationLightEntityAttribute), 0)
 
+	case DimLightEntityFeatures:
+		e.AddAttribute(string(BrightnessLightEntityAttribute), 0)
+
 	case ColorTemperatureLightEntityFeatures:
 		e.AddAttribute(string(ColorTemperatureLightEntityAttribute), 0)
 
@@ -86,4 +98,10 @@ func (e *LightEntity) HandleCommand(cmd_id string, params map[string]interface{}
 	}
 
 	return 404
+}
+
+func (e *LightEntity) HasAttribute(attribute LightEntityAttributes) bool {
+	_, ok := e.Attributes[string(attribute)]
+
+	return ok
 }

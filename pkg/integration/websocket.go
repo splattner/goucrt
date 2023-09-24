@@ -61,6 +61,9 @@ func (i *Integration) wsReader(ws *websocket.Conn) {
 	defer func() {
 		log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Closing Websocket, not able to read message anymore")
 		ws.Close()
+
+		// Close Write loop also
+		i.Remote.controlChannel <- ws.RemoteAddr().String()
 	}()
 
 	for {
@@ -103,13 +106,22 @@ func (i *Integration) wsWriter(ws *websocket.Conn) {
 	ticker := time.NewTicker(pingPeriod)
 
 	defer func() {
-		log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Closing Websocket, no response in time to Ping message")
+		log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Closing Websocket")
 		ws.Close()
 		ticker.Stop()
+		// Close Read loop
+		i.Remote.controlChannel <- ws.RemoteAddr().String()
 	}()
 
 	for {
 		select {
+
+		case msg := <-i.Remote.controlChannel:
+			// Close the writer if message was for this websocket. Closed by reader
+			if ws.RemoteAddr().String() == msg {
+				log.Debug("Closing write loop as read loop closed")
+				return
+			}
 
 		case msg := <-i.Remote.messageChannel:
 
@@ -131,7 +143,7 @@ func (i *Integration) wsWriter(ws *websocket.Conn) {
 			ws.SetWriteDeadline(time.Now().Add(writeWait))
 			log.WithField("RemoteAddr", ws.RemoteAddr().String()).Debug("Send Ping Message")
 			if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
-				log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Could not send Ping message to")
+				log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Could not send Ping message")
 				return
 			}
 		}

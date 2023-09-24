@@ -189,7 +189,7 @@ func (i *Integration) handleSetupDriverRequest(req *SetupDriverMessageReq) *Resp
 
 	i.SetupData = req.MsgData.Value
 
-	i.persistSetupData()
+	i.PersistSetupData()
 
 	if i.handleSetupFunction != nil {
 		// The handleSetupFunction is where the driver specific implmenentation for driver setup is

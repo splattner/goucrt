@@ -136,7 +136,7 @@ func (i *Integration) registerWithRemoteTwo(remoteTwoIP string, remoteTwoPort in
 		json.Unmarshal(resBody, &driverRegistration)
 
 		i.SetupData["driver_id"] = driverRegistration.DriverId
-		i.persistSetupData()
+		i.PersistSetupData()
 	}
 }
 

@@ -37,7 +37,7 @@ type EntityStateData struct {
 // Add an attribute if not already available
 func (e *Entity) AddAttribute(name string, value interface{}) {
 
-	if e.Attributes[name] == nil {
+	if _, ok := e.Attributes[name]; !ok {
 		log.WithFields(log.Fields{
 			"entity_id": e.Id,
 			"attribute": name,

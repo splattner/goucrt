@@ -17,6 +17,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/mdns v1.0.5 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/jurgen-kluft/go-conbee v0.0.0-20211124004556-1d2ff903ea59 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/miekg/dns v1.1.56 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect

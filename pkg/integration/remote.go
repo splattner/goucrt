@@ -8,6 +8,9 @@ type remote struct {
 	standby bool
 	// Channel to send new messages over websocket.
 	messageChannel chan []byte
+
+	// Channel to close a Websocket
+	controlChannel chan string
 }
 
 func (r *remote) EnterStandBy() {

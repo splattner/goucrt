@@ -95,11 +95,6 @@ func (c *DenonAVRClient) initDenonAVRClient() {
 	c.moniAutoButton = entities.NewButtonEntity("moniauto", entities.LanguageText{En: "Monitor Out Auto"}, "")
 	c.IntegrationDriver.AddEntity(c.moniAutoButton)
 
-	// Pass function to the integration driver that is called when the remote want to setup the driver
-	c.IntegrationDriver.SetHandleSetupFunction(c.HandleSetup)
-	// Pass function to the integration driver that is called when the remote want to setup the driver
-	c.IntegrationDriver.SetHandleConnectionFunction(c.HandleConnection)
-	c.IntegrationDriver.SetHandleSetDriverUserDataFunction(c.HandleSetDriverUserDataFunction)
 }
 
 func (c *DenonAVRClient) denonHandleSetup() {

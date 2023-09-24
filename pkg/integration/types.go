@@ -47,7 +47,7 @@ type DriverMetadata struct {
 	MinCoreAPI      string          `json:"min_core_api,omitempty"`
 	Icon            string          `json:"icon,omitempty"`
 	Description     LanguageText    `json:"description"`
-	Developer       Developer       `json:"description,omitempty"`
+	Developer       Developer       `json:"developer,omitempty"`
 	HomePage        string          `json:"home_page,omitempty"`
 	DeviceDiscovery bool            `json:"device_discovery,omitempty"`
 	SetupDataSchema SetupDataSchema `json:"setup_data_schema,omitempty"`

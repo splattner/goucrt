@@ -2,6 +2,7 @@ package ucrt
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/splattner/goucrt/pkg/cmd/deconz"
 	"github.com/splattner/goucrt/pkg/cmd/denonavr"
 )
 
@@ -27,6 +28,7 @@ func NewCommand(name string) *cobra.Command {
 
 	rootCmd.AddCommand(
 		denonavr.NewCommand(rootCmd),
+		deconz.NewCommand(rootCmd),
 	)
 
 	return rootCmd

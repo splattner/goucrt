@@ -53,9 +53,8 @@ func NewIntegration(config Config) (*Integration, error) {
 
 	}
 
-	i.loadSetupData()
-
 	i.Remote.messageChannel = make(chan []byte)
+	i.Remote.controlChannel = make(chan string)
 
 	return &i, nil
 
@@ -64,6 +63,8 @@ func NewIntegration(config Config) (*Integration, error) {
 func (i *Integration) SetMetadata(metadata *DriverMetadata) {
 	log.WithField("Metadata", metadata).Debug("Set Metadata")
 	i.Metadata = metadata
+
+	i.LoadSetupData()
 }
 
 func (i *Integration) Run() error {
@@ -132,9 +133,9 @@ func (i *Integration) SetDriverSetupState(event_Type DriverSetupEventType, state
 
 // Load persist setupData File
 // TODO: handle location via ENV's
-func (i *Integration) loadSetupData() {
+func (i *Integration) LoadSetupData() {
 
-	file, err := os.ReadFile("ucrt.json")
+	file, err := os.ReadFile(i.Metadata.DriverId + ".json")
 	if err != nil {
 		log.WithError(err).Info("Cannot read setupDataFile")
 		i.SetupData = make(SetupData)
@@ -146,9 +147,9 @@ func (i *Integration) loadSetupData() {
 
 // Persist File
 // TODO: handle location via ENV's
-func (i *Integration) persistSetupData() {
+func (i *Integration) PersistSetupData() {
 
 	log.WithField("SetupData", i.SetupData).Info("Persist setup data")
 	file, _ := json.MarshalIndent(i.SetupData, "", " ")
-	_ = os.WriteFile("ucrt.json", file, 0644)
+	_ = os.WriteFile(i.Metadata.DriverId+".json", file, 0644)
 }
