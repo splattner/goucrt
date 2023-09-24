@@ -29,6 +29,8 @@ This client currently implements a [`MediaPlayer` entity](https://github.com/unf
 
 Run with `ucrt deconz`
 
+This client currently implements [`Light` entities](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/entity_light.md) for discovered DeCONZ Lights and [`Sensor` entitites](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/entity_sensor.md) for selected DeCONZ sensors.
+
 ## How to use
 
 ```bash
@@ -39,6 +41,7 @@ Usage:
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
+  deconz      Deconz
   denonavr    Denon AVR
   help        Help about any command
 
@@ -55,6 +58,7 @@ Flags:
       --websocketPath string          path where this integration is available for websocket connections (default "/ws")
 
 Use "ucrt [command] --help" for more information about a command.
+
 ```
 
 ## Development
