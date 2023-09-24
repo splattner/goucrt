@@ -20,6 +20,8 @@ type DeconzClient struct {
 func NewDeconzClient(i *integration.Integration) *DeconzClient {
 	client := DeconzClient{}
 
+	i.Config["ignoreEntitySubscription"] = true
+
 	client.IntegrationDriver = i
 	// Start without a connection
 	client.DeviceState = integration.DisconnectedDeviceState
@@ -185,6 +187,195 @@ func (c *DeconzClient) configureDeconz() {
 
 }
 
+func (c *DeconzClient) handleNewSensorDeviceDiscovered(device *deconz.DeconzDevice) {
+
+	var sensor *entities.SensorEntity
+	if device.Sensor.State.Temperature > 0 {
+		sensor = entities.NewSensorEntity(fmt.Sprintf("sensor%d", device.GetID()), entities.LanguageText{En: device.GetName()}, "", entities.TemperaturSensorDeviceClass)
+	}
+
+	if device.Sensor.State.Humidity > 0 {
+		sensor = entities.NewSensorEntity(fmt.Sprintf("sensor%d", device.GetID()), entities.LanguageText{En: device.GetName()}, "", entities.HumiditySensorDeviceClass)
+	}
+
+	if sensor != nil {
+
+		device.SetHandleChangeStateFunc(func(state *deconz.DeconzState) {
+			log.WithFields(log.Fields{
+				"ID":    device.GetID(),
+				"State": state,
+			}).Debug("Sensor changed")
+
+			attributes := make(map[string]interface{})
+
+			switch sensor.DeviceClass {
+			case entities.TemperaturSensorDeviceClass:
+				attributes["value"] = state.Temperature
+
+			case entities.HumiditySensorDeviceClass:
+				attributes["value"] = state.Humidity
+
+			}
+
+			sensor.SetAttributes(attributes)
+
+		})
+
+		c.IntegrationDriver.AddEntity(sensor)
+	}
+}
+
+func (c *DeconzClient) handleNewLightDeviceDiscovered(device *deconz.DeconzDevice) {
+	light := entities.NewLightEntity(fmt.Sprintf("light%d", device.GetID()), entities.LanguageText{En: device.GetName()}, "")
+
+	// All correct Attributes
+	light.AddFeature(entities.OnOffLightEntityFeatures)
+	light.AddFeature(entities.ToggleLightEntityFeatures)
+	light.AddFeature(entities.DimLightEntityFeatures)
+
+	if device.Light.HasColor {
+		switch device.Light.State.ColorMode {
+		case "ct":
+			light.AddFeature(entities.ColorTemperatureLightEntityFeatures)
+		case "hs":
+			light.AddFeature(entities.ColorLightEntityFeatures)
+		}
+	}
+
+	// Set initial attribute
+	if light.HasAttribute(entities.StateLightEntityAttribute) {
+		if *device.Light.State.On {
+			light.Attributes[string(entities.StateLightEntityAttribute)] = entities.OnLightEntityState
+		} else {
+			light.Attributes[string(entities.StateLightEntityAttribute)] = entities.OffLightEntityState
+		}
+	}
+
+	if light.HasAttribute(entities.BrightnessLightEntityAttribute) {
+		light.Attributes[string(entities.BrightnessLightEntityAttribute)] = device.Light.State.Bri
+
+	}
+
+	// Add commands
+	light.AddCommand(entities.OnLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
+
+		if err := device.TurnOn(); err != nil {
+			return 404
+		}
+		return 200
+	})
+
+	light.AddCommand(entities.OffLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
+
+		if err := device.TurnOff(); err != nil {
+			return 404
+		}
+		return 200
+	})
+
+	light.AddCommand(entities.ToggleLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
+		if device.IsOn() {
+			device.TurnOff()
+		} else {
+			device.TurnOff()
+		}
+		return 200
+	})
+
+	// Set the Handle State Change function
+	device.SetHandleChangeStateFunc(func(state *deconz.DeconzState) {
+		log.WithFields(log.Fields{
+			"ID":   device.GetID(),
+			"Type": device.Type,
+		}).Debug("Handle State Change")
+
+		attributes := make(map[string]interface{})
+
+		if light.HasAttribute(entities.StateLightEntityAttribute) {
+			if *state.On {
+				attributes[string(entities.StateLightEntityAttribute)] = entities.OnLightEntityState
+			} else {
+				attributes[string(entities.StateLightEntityAttribute)] = entities.OffLightEntityState
+			}
+		}
+
+		if light.HasAttribute(entities.BrightnessLightEntityAttribute) {
+			attributes[string(entities.BrightnessLightEntityAttribute)] = state.Bri
+
+		}
+
+		light.SetAttributes(attributes)
+
+	})
+
+	c.IntegrationDriver.AddEntity(light)
+}
+
+func (c *DeconzClient) handleNewGroupDeviceDiscovered(device *deconz.DeconzDevice) {
+	group := entities.NewLightEntity(fmt.Sprintf("group%d", device.GetID()), entities.LanguageText{En: device.GetName()}, "")
+	// Group only allows for on/off -> basic switch, no dimming
+	group.AddFeature(entities.OnOffLightEntityFeatures)
+	group.AddFeature(entities.ToggleLightEntityFeatures)
+
+	// Set initial attribute
+	if group.HasAttribute(entities.StateLightEntityAttribute) {
+		if *device.Group.Action.On {
+			group.Attributes[string(entities.StateLightEntityAttribute)] = entities.OnLightEntityState
+		} else {
+			group.Attributes[string(entities.StateLightEntityAttribute)] = entities.OffLightEntityState
+		}
+	}
+
+	// Commands
+
+	group.AddCommand(entities.OnLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
+
+		if err := device.TurnOn(); err != nil {
+			return 404
+		}
+		return 200
+	})
+
+	group.AddCommand(entities.OffLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
+
+		if err := device.TurnOff(); err != nil {
+			return 404
+		}
+		return 200
+	})
+
+	group.AddCommand(entities.ToggleLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
+		if device.IsOn() {
+			device.TurnOff()
+		} else {
+			device.TurnOff()
+		}
+		return 200
+	})
+
+	device.SetHandleChangeStateFunc(func(state *deconz.DeconzState) {
+		log.WithFields(log.Fields{
+			"ID":   device.GetID(),
+			"Type": device.Type,
+		}).Debug("Handle State Change")
+
+		attributes := make(map[string]interface{})
+
+		if group.HasAttribute(entities.StateLightEntityAttribute) {
+			if *&state.AnyOn {
+				attributes[string(entities.StateLightEntityAttribute)] = entities.OnLightEntityState
+			} else {
+				attributes[string(entities.StateLightEntityAttribute)] = entities.OffLightEntityState
+			}
+		}
+
+		group.SetAttributes(attributes)
+
+	})
+
+	c.IntegrationDriver.AddEntity(group)
+}
+
 func (c *DeconzClient) handleNewDeviceDiscovered(device *deconz.DeconzDevice) {
 	log.WithFields(log.Fields{
 		"id":   device.GetID(),
@@ -194,159 +385,13 @@ func (c *DeconzClient) handleNewDeviceDiscovered(device *deconz.DeconzDevice) {
 
 	switch device.Type {
 	case deconz.SensorDeconzDeviceType:
-		//sensor := entities.NewSensorEntity(fmt.Sprintf("light%d", device.GetID()), entities.LanguageText{En: device.GetName()}, "")
-
-		//c.IntegrationDriver.AddEntity(sensor)
+		c.handleNewSensorDeviceDiscovered(device)
 
 	case deconz.LightDeconzDeviceType:
-		light := entities.NewLightEntity(fmt.Sprintf("light%d", device.GetID()), entities.LanguageText{En: device.GetName()}, "")
-
-		// All correct Attributes
-		light.AddFeature(entities.OnOffLightEntityFeatures)
-		light.AddFeature(entities.ToggleLightEntityFeatures)
-		light.AddFeature(entities.DimLightEntityFeatures)
-
-		if device.Light.HasColor {
-			switch device.Light.State.ColorMode {
-			case "ct":
-				light.AddFeature(entities.ColorTemperatureLightEntityFeatures)
-			case "hs":
-				light.AddFeature(entities.ColorLightEntityFeatures)
-			}
-		}
-
-		// Set initial attribute
-		if light.HasAttribute(entities.StateLightEntityAttribute) {
-			if *device.Light.State.On {
-				light.Attributes[string(entities.StateLightEntityAttribute)] = entities.OnLightEntityState
-			} else {
-				light.Attributes[string(entities.StateLightEntityAttribute)] = entities.OffLightEntityState
-			}
-		}
-
-		if light.HasAttribute(entities.BrightnessLightEntityAttribute) {
-			light.Attributes[string(entities.BrightnessLightEntityAttribute)] = device.Light.State.Bri
-
-		}
-
-		// Add commands
-		light.AddCommand(entities.OnLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
-
-			if err := device.TurnOn(); err != nil {
-				return 404
-			}
-			return 200
-		})
-
-		light.AddCommand(entities.OffLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
-
-			if err := device.TurnOff(); err != nil {
-				return 404
-			}
-			return 200
-		})
-
-		light.AddCommand(entities.ToggleLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
-			if device.IsOn() {
-				device.TurnOff()
-			} else {
-				device.TurnOff()
-			}
-			return 200
-		})
-
-		// Set the Handle State Change function
-		device.SetHandleChangeStateFunc(func(state *deconz.DeconzState) {
-			log.WithFields(log.Fields{
-				"ID":   device.GetID(),
-				"Type": device.Type,
-			}).Debug("Handle State Change")
-
-			attributes := make(map[string]interface{})
-
-			if light.HasAttribute(entities.StateLightEntityAttribute) {
-				if *state.On {
-					attributes[string(entities.StateLightEntityAttribute)] = entities.OnLightEntityState
-				} else {
-					attributes[string(entities.StateLightEntityAttribute)] = entities.OffLightEntityState
-				}
-			}
-
-			if light.HasAttribute(entities.BrightnessLightEntityAttribute) {
-				attributes[string(entities.BrightnessLightEntityAttribute)] = state.Bri
-
-			}
-
-			light.SetAttributes(attributes)
-
-		})
-
-		c.IntegrationDriver.AddEntity(light)
+		c.handleNewLightDeviceDiscovered(device)
 
 	case deconz.GroupDeconzDeviceType:
-
-		group := entities.NewLightEntity(fmt.Sprintf("group%d", device.GetID()), entities.LanguageText{En: device.GetName()}, "")
-		// Group only allows for on/off -> basic switch, no dimming
-		group.AddFeature(entities.OnOffLightEntityFeatures)
-		group.AddFeature(entities.ToggleLightEntityFeatures)
-
-		// Set initial attribute
-		// if group.HasAttribute(entities.StateLightEntityAttribute) {
-		// 	if *&device.Group.State.AnyOn {
-		// 		light.Attributes[string(entities.StateLightEntityAttribute)] = entities.OnLightEntityState
-		// 	} else {
-		// 		light.Attributes[string(entities.StateLightEntityAttribute)] = entities.OffLightEntityState
-		// 	}
-		// }
-
-		// Commands
-
-		group.AddCommand(entities.OnLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
-
-			if err := device.TurnOn(); err != nil {
-				return 404
-			}
-			return 200
-		})
-
-		group.AddCommand(entities.OffLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
-
-			if err := device.TurnOff(); err != nil {
-				return 404
-			}
-			return 200
-		})
-
-		group.AddCommand(entities.ToggleLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
-			if device.IsOn() {
-				device.TurnOff()
-			} else {
-				device.TurnOff()
-			}
-			return 200
-		})
-
-		device.SetHandleChangeStateFunc(func(state *deconz.DeconzState) {
-			log.WithFields(log.Fields{
-				"ID":   device.GetID(),
-				"Type": device.Type,
-			}).Debug("Handle State Change")
-
-			attributes := make(map[string]interface{})
-
-			if group.HasAttribute(entities.StateLightEntityAttribute) {
-				if *&state.AnyOn {
-					attributes[string(entities.StateLightEntityAttribute)] = entities.OnLightEntityState
-				} else {
-					attributes[string(entities.StateLightEntityAttribute)] = entities.OffLightEntityState
-				}
-			}
-
-			group.SetAttributes(attributes)
-
-		})
-
-		c.IntegrationDriver.AddEntity(group)
+		c.handleNewGroupDeviceDiscovered(device)
 	}
 
 }

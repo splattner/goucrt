@@ -23,7 +23,7 @@ type Integration struct {
 
 	deviceState DState
 
-	config        Config
+	Config        Config
 	listenAddress string
 
 	Remote remote
@@ -46,7 +46,7 @@ type Integration struct {
 func NewIntegration(config Config) (*Integration, error) {
 
 	i := Integration{
-		config:        config,
+		Config:        config,
 		listenAddress: fmt.Sprintf(":%d", config["listenport"].(int)),
 		deviceState:   DisconnectedDeviceState,
 		DeviceId:      "", // I think device_id is not yet implemented in Remote TV, used for multi-device integrati
@@ -79,15 +79,15 @@ func (i *Integration) Run() error {
 		return fmt.Errorf("Metadata not set")
 	}
 
-	http.HandleFunc(i.config["websocketPath"].(string), i.wsEndpoint)
+	http.HandleFunc(i.Config["websocketPath"].(string), i.wsEndpoint)
 
 	//MDNS
-	if i.config["enableMDNS"].(bool) {
+	if i.Config["enableMDNS"].(bool) {
 		go i.startAdvertising()
 	}
 
 	// Register the integration
-	if i.config["enableRegistration"].(bool) && i.config["registrationPin"].(string) != "" {
+	if i.Config["enableRegistration"].(bool) && i.Config["registrationPin"].(string) != "" {
 		go i.registerIntegration()
 	}
 

@@ -51,5 +51,8 @@ type DeconzState struct {
 	AnyOn bool `json:"any_on,omitempty"`
 
 	// Sensor
-	ButtonEvent int `json:"buttonevent,omitempty"`
+	ButtonEvent int     `json:"buttonevent,omitempty"`
+	Humidity    *uint16 `json:"humidity,omitempty"`
+	Temperature *int16  `json:"temperature,omitempty"`
+	Pressure    *int16  `json:"pressure,omitempty"`
 }

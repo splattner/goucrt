@@ -17,7 +17,7 @@ func (i *Integration) startAdvertising() {
 		"ws_path=/ws",
 	}
 
-	server, err := zeroconf.Register(i.Metadata.DriverId, "_uc-integration._tcp", "local.", i.config["listenport"].(int), txt, nil)
+	server, err := zeroconf.Register(i.Metadata.DriverId, "_uc-integration._tcp", "local.", i.Config["listenport"].(int), txt, nil)
 	if err != nil {
 		panic(err)
 	}
