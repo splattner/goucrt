@@ -2,11 +2,6 @@ package deconz
 
 import (
 	"fmt"
-	"math"
-
-	deconzgroup "github.com/jurgen-kluft/go-conbee/groups"
-	deconzlight "github.com/jurgen-kluft/go-conbee/lights"
-	deconzsensor "github.com/jurgen-kluft/go-conbee/sensors"
 )
 
 type DeconzDeviceType string
@@ -22,13 +17,9 @@ type DeconzDevice struct {
 
 	Type DeconzDeviceType
 
-	Light  deconzlight.Light
-	Group  deconzgroup.Group
-	Sensor deconzsensor.Sensor
-
-	// For when there are multiple buttons on one sensor
-	// sensorButtonId is the identifier to get the correct device
-	sensorButtonId int
+	Light  DeconzLight
+	Group  DeconzGroup
+	Sensor DeconzSensor
 
 	handleStateChangeFunc func(state *DeconzState)
 }
@@ -95,25 +86,6 @@ func (d *DeconzDevice) GetName() string {
 	return ""
 }
 
-// Apply update from deconz device
-func (d *DeconzDevice) SetValue(value float32, channelName string) error {
-
-	switch channelName {
-
-	case "basic_switch", "brightness":
-		brightness := float32(math.Round(float64(value)))
-		return d.SetBrightness(brightness)
-	case "hue":
-		return d.SetHue(value)
-	case "saturation":
-		return d.SetSaturation(value)
-	case "colortemp":
-		return d.SetColorTemp(value)
-	}
-
-	return fmt.Errorf("Channel Name not found")
-}
-
 func (d *DeconzDevice) TurnOn() error {
 
 	switch d.Type {
@@ -123,7 +95,9 @@ func (d *DeconzDevice) TurnOn() error {
 		d.Group.Action.SetOn(true)
 	}
 
-	return d.setState()
+	err := d.setState()
+
+	return err
 }
 
 func (d *DeconzDevice) TurnOff() error {
@@ -153,22 +127,26 @@ func (d *DeconzDevice) SetBrightness(brightness float32) error {
 
 	switch d.Type {
 	case LightDeconzDeviceType:
+		// Reset State
+		d.Light.State = DeconzState{}
 		if brightness == 0 {
 			d.Light.State.SetOn(false)
 		} else {
 			d.Light.State.SetOn(true)
 		}
 
-		bri_converted := uint8(math.Round(float64(brightness) / 100 * 255))
+		bri_converted := uint8(brightness)
 		d.Light.State.Bri = &bri_converted
 	case GroupDeconzDeviceType:
+		// Reset State
+		d.Group.Action = DeconzState{}
 		if brightness == 0 {
 			d.Group.Action.SetOn(false)
 		} else {
 			d.Group.Action.SetOn(true)
 		}
 
-		bri_converted := uint8(math.Round(float64(brightness) / 100 * 255))
+		bri_converted := uint8(brightness)
 		d.Group.Action.Bri = &bri_converted
 	}
 
@@ -181,8 +159,12 @@ func (d *DeconzDevice) SetColorTemp(ct float32) error {
 
 	switch d.Type {
 	case LightDeconzDeviceType:
+		// Reset State
+		d.Light.State = DeconzState{}
 		d.Light.State.CT = &converted
 	case GroupDeconzDeviceType:
+		// Reset State
+		d.Group.Action = DeconzState{}
 		d.Group.Action.CT = &converted
 	}
 
@@ -195,8 +177,12 @@ func (d *DeconzDevice) SetHue(hue float32) error {
 
 	switch d.Type {
 	case LightDeconzDeviceType:
+		// Reset State
+		d.Light.State = DeconzState{}
 		d.Light.State.Hue = &converted
 	case GroupDeconzDeviceType:
+		// Reset State
+		d.Group.Action = DeconzState{}
 		d.Group.Action.Hue = &converted
 	}
 
@@ -209,8 +195,12 @@ func (d *DeconzDevice) SetSaturation(saturation float32) error {
 
 	switch d.Type {
 	case LightDeconzDeviceType:
+		// Reset State
+		d.Light.State = DeconzState{}
 		d.Light.State.Sat = &converted
 	case GroupDeconzDeviceType:
+		// Reset State
+		d.Group.Action = DeconzState{}
 		d.Group.Action.Sat = &converted
 	}
 

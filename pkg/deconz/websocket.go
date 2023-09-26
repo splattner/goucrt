@@ -133,7 +133,9 @@ func (d *Deconz) websocketReceiveHandler(ws *websocket.Conn) {
 				for _, l := range d.allDeconzDevices {
 					if l.Type == LightDeconzDeviceType {
 						if fmt.Sprint(l.Light.ID) == message.ID {
-							log.WithField("name", l.Light.Name).Debug("Deconz Websocket changed event for light")
+							log.WithFields(log.Fields{
+								"ID":   l.Light.ID,
+								"Name": l.Light.Name}).Debug("Deconz Websocket changed event for light")
 							l.stateChangeHandler(&message.State)
 							break
 						}
@@ -150,7 +152,9 @@ func (d *Deconz) websocketReceiveHandler(ws *websocket.Conn) {
 			for _, l := range d.allDeconzDevices {
 				if l.Type == GroupDeconzDeviceType {
 					if fmt.Sprint(l.Group.ID) == message.ID {
-						log.WithField("Group", l.Group.Name).Debug("Deconz Websocket changed event for group")
+						log.WithFields(log.Fields{
+							"ID":   l.Group.ID,
+							"Name": l.Group.Name}).Debug("Deconz Websocket changed event for group")
 						l.stateChangeHandler(&message.State)
 						break
 					}
@@ -168,7 +172,9 @@ func (d *Deconz) websocketReceiveHandler(ws *websocket.Conn) {
 				if l.Type == SensorDeconzDeviceType {
 					if fmt.Sprint(l.Sensor.ID) == message.ID {
 						// Send to all devices which handles this sensor
-						log.WithField("sensor", l.Sensor.Name).Debug("Deconz, Websocket changed event for sensor")
+						log.WithFields(log.Fields{
+							"ID":   l.Sensor.ID,
+							"Name": l.Sensor.Name}).Debug("Deconz, Websocket changed event for sensor")
 						l.stateChangeHandler(&message.State)
 					}
 				}

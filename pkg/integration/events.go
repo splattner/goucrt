@@ -122,7 +122,10 @@ func (i *Integration) sendEntityAvailable(e interface{}) {
 		e,
 	}
 
-	i.sendEventMessage(&res, websocket.TextMessage)
+	// Only send event when connected, otherwise we assume this is still during setup e.g. discovering of entities
+	if i.deviceState == ConnectedDeviceState {
+		i.sendEventMessage(&res, websocket.TextMessage)
+	}
 }
 
 func (i *Integration) sendDeviceStateEvent() {

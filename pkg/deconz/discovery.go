@@ -1,11 +1,6 @@
 package deconz
 
 import (
-	"fmt"
-
-	deconzgroup "github.com/jurgen-kluft/go-conbee/groups"
-	deconzlight "github.com/jurgen-kluft/go-conbee/lights"
-	deconzsensor "github.com/jurgen-kluft/go-conbee/sensors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -18,11 +13,8 @@ func (d *Deconz) StartDiscovery(enableGroups bool) {
 		return
 	}
 
-	deconzHost := d.host + ":" + fmt.Sprint(d.port)
-
 	// Lights
-	dl := deconzlight.New(deconzHost, d.apikey)
-	allLights, err := dl.GetAllLights()
+	allLights, err := d.GetAllLights()
 	if err != nil {
 		log.WithError(err).Debug("Error getting all Lights from Deconz")
 	}
@@ -35,8 +27,7 @@ func (d *Deconz) StartDiscovery(enableGroups bool) {
 
 	// Groups
 	if enableGroups {
-		dg := deconzgroup.New(deconzHost, d.apikey)
-		allGroups, err := dg.GetAllGroups()
+		allGroups, err := d.GetAllGroups()
 		if err != nil {
 			log.WithError(err).Debug("Error getting all Groups from Deconz")
 		}
@@ -49,12 +40,11 @@ func (d *Deconz) StartDiscovery(enableGroups bool) {
 	}
 
 	// Sensors
-	ds := deconzsensor.New(deconzHost, d.apikey)
-	allSensors, err := ds.GetAllSensors()
+	allSensors, err := d.GetAllSensors()
 	if err != nil {
 		log.WithError(err).Debug("Error getting all Sensors from Deconz")
 	}
-	log.WithField("sonsors", allSensors).Trace("Deconz Discovery")
+	log.WithField("sesors", allSensors).Trace("Deconz Discovery")
 	for _, sensor := range allSensors {
 		d.sensorDiscovery(sensor)
 	}
@@ -64,7 +54,7 @@ func (d *Deconz) StartDiscovery(enableGroups bool) {
 	log.Info("Deconz, Device Discovery finished")
 }
 
-func (d *Deconz) groupsDiscovery(group deconzgroup.Group) {
+func (d *Deconz) groupsDiscovery(group DeconzGroup) {
 
 	log.WithFields(log.Fields{
 		"Name": group.Name,
@@ -84,7 +74,7 @@ func (d *Deconz) groupsDiscovery(group deconzgroup.Group) {
 	}
 }
 
-func (d *Deconz) lightsDiscovery(light deconzlight.Light) {
+func (d *Deconz) lightsDiscovery(light DeconzLight) {
 	log.WithFields(log.Fields{
 		"Name":     light.Name,
 		"Type":     light.Type,
@@ -98,15 +88,13 @@ func (d *Deconz) lightsDiscovery(light deconzlight.Light) {
 		deconzDevice.Type = LightDeconzDeviceType
 		deconzDevice.Light = light
 
-		log.WithField("Name", light.Name).Debug("Deconz, Lights discovered")
-
 		deconzDevice.NewDeconzDevice(d)
 
 	}
 
 }
 
-func (d *Deconz) sensorDiscovery(sensor deconzsensor.Sensor) {
+func (d *Deconz) sensorDiscovery(sensor DeconzSensor) {
 
 	log.WithFields(log.Fields{
 		"Name":     sensor.Name,

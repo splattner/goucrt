@@ -165,7 +165,16 @@ func (i *Integration) AddEntity(e interface{}) error {
 func (i *Integration) RemoveEntity(entity interface{}) error {
 	// Search if entity is available
 
-	_, ix, err := i.GetEntityById(i.getEntityId(entity))
+	return i.RemoveEntityByID(i.getEntityId(entity))
+
+}
+
+// Remove an Entity from the Integration
+// Send Entity Removed Event to RT
+func (i *Integration) RemoveEntityByID(entity_id string) error {
+	// Search if entity is available
+
+	entity, ix, err := i.GetEntityById(entity_id)
 	if err == nil {
 
 		i.Entities[ix] = i.Entities[len(i.Entities)-1] // Copy last element to index i.

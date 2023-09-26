@@ -38,7 +38,7 @@ type DeconzState struct {
 	Sat    *uint8    `json:"sat,omitempty"`    //
 	CT     *uint16   `json:"ct,omitempty"`     // min = 154, max = 500
 	XY     []float32 `json:"xy,omitempty"`
-	Alert  string    `json:"alert,omitempty"`
+	Alert  *string   `json:"alert,omitempty"`
 
 	// Light
 	Reachable      *bool   `json:"reachable,omitempty"`
@@ -47,12 +47,41 @@ type DeconzState struct {
 	TransitionTime *uint16 `json:"transitiontime,omitempty"`
 
 	// Group
-	AllOn bool `json:"all_on,omitempty"`
-	AnyOn bool `json:"any_on,omitempty"`
+	AllOn *bool `json:"all_on,omitempty"`
+	AnyOn *bool `json:"any_on,omitempty"`
 
 	// Sensor
-	ButtonEvent int     `json:"buttonevent,omitempty"`
+	ButtonEvent *int    `json:"buttonevent,omitempty"`
 	Humidity    *uint16 `json:"humidity,omitempty"`
 	Temperature *int16  `json:"temperature,omitempty"`
 	Pressure    *int16  `json:"pressure,omitempty"`
+}
+
+func (state *DeconzState) SetOn(OnOff bool) {
+	state.On = new(bool)
+	*state.On = OnOff
+}
+
+func (state *DeconzState) SetCT(Bri int, CT int) {
+	state.Bri = new(uint8)
+	*state.Bri = uint8(Bri)
+	state.CT = new(uint16)
+	*state.CT = uint16(CT)
+}
+
+func (state *DeconzState) SetXY(x, y float32) {
+	state.XY = make([]float32, 2, 2)
+	state.XY[0] = x
+	state.XY[1] = y
+}
+
+type ApiResponse struct {
+	Success map[string]interface{} `json:"success"`
+	Error   *ApiResponseError      `json:"error"`
+}
+
+type ApiResponseError struct {
+	Type        uint   `json:"type"`
+	Address     string `json:"address"`
+	Description string `json:"description"`
 }

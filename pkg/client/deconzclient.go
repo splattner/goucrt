@@ -183,18 +183,18 @@ func (c *DeconzClient) configureDeconz() {
 	c.deconz.SetDeviceRemoveHandler(c.handleRemoveDevice)
 
 	// TODO, enable groups as setup_data
-	go c.deconz.StartDiscovery(true)
+	c.deconz.StartDiscovery(true)
 
 }
 
 func (c *DeconzClient) handleNewSensorDeviceDiscovered(device *deconz.DeconzDevice) {
 
 	var sensor *entities.SensorEntity
-	if device.Sensor.State.Temperature > 0 {
+	if device.Sensor.State.Temperature != nil {
 		sensor = entities.NewSensorEntity(fmt.Sprintf("sensor%d", device.GetID()), entities.LanguageText{En: device.GetName()}, "", entities.TemperaturSensorDeviceClass)
 	}
 
-	if device.Sensor.State.Humidity > 0 {
+	if device.Sensor.State.Humidity != nil {
 		sensor = entities.NewSensorEntity(fmt.Sprintf("sensor%d", device.GetID()), entities.LanguageText{En: device.GetName()}, "", entities.HumiditySensorDeviceClass)
 	}
 
@@ -204,20 +204,26 @@ func (c *DeconzClient) handleNewSensorDeviceDiscovered(device *deconz.DeconzDevi
 			log.WithFields(log.Fields{
 				"ID":    device.GetID(),
 				"State": state,
-			}).Debug("Sensor changed")
+			}).Trace("Sensor changed")
 
 			attributes := make(map[string]interface{})
 
 			switch sensor.DeviceClass {
 			case entities.TemperaturSensorDeviceClass:
-				attributes["value"] = state.Temperature
+				if state.Temperature != nil {
+					attributes["value"] = *state.Temperature / int16(100.0)
+				}
 
 			case entities.HumiditySensorDeviceClass:
-				attributes["value"] = state.Humidity
+				if state.Humidity != nil {
+					attributes["value"] = *state.Humidity / uint16(100)
+				}
 
 			}
 
-			sensor.SetAttributes(attributes)
+			if attributes["value"] != nil {
+				sensor.SetAttributes(attributes)
+			}
 
 		})
 
@@ -259,9 +265,42 @@ func (c *DeconzClient) handleNewLightDeviceDiscovered(device *deconz.DeconzDevic
 	// Add commands
 	light.AddCommand(entities.OnLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
 
-		if err := device.TurnOn(); err != nil {
-			return 404
+		// NO param set, so just turn on
+		if len(params) == 0 {
+			if err := device.TurnOn(); err != nil {
+				return 404
+			}
+		} else {
+
+			if params["brightness"] != nil {
+				//bri, _ := strconv.ParseFloat(params["brightness"].(string), 32)
+				if err := device.SetBrightness(float32(params["brightness"].(float64))); err != nil {
+					return 404
+				}
+			}
+
+			if params["hue"] != nil {
+				hue, _ := strconv.ParseFloat(params["hue"].(string), 32)
+				if err := device.SetHue(float32(hue)); err != nil {
+					return 404
+				}
+			}
+
+			if params["saturation"] != nil {
+				saturation, _ := strconv.ParseFloat(params["saturation"].(string), 32)
+				if err := device.SetSaturation(float32(saturation)); err != nil {
+					return 404
+				}
+			}
+
+			if params["color_temperature:44"] != nil {
+				ct, _ := strconv.ParseFloat(params["color_temperature:44"].(string), 32)
+				if err := device.SetColorTemp(float32(ct)); err != nil {
+					return 404
+				}
+			}
 		}
+
 		return 200
 	})
 
@@ -313,9 +352,19 @@ func (c *DeconzClient) handleNewLightDeviceDiscovered(device *deconz.DeconzDevic
 
 func (c *DeconzClient) handleNewGroupDeviceDiscovered(device *deconz.DeconzDevice) {
 	group := entities.NewLightEntity(fmt.Sprintf("group%d", device.GetID()), entities.LanguageText{En: device.GetName()}, "")
-	// Group only allows for on/off -> basic switch, no dimming
+
 	group.AddFeature(entities.OnOffLightEntityFeatures)
 	group.AddFeature(entities.ToggleLightEntityFeatures)
+	group.AddFeature(entities.DimLightEntityFeatures)
+
+	if *device.Group.Action.CT > 0 {
+		switch device.Group.Action.ColorMode {
+		case "ct":
+			group.AddFeature(entities.ColorTemperatureLightEntityFeatures)
+		case "hs":
+			group.AddFeature(entities.ColorLightEntityFeatures)
+		}
+	}
 
 	// Set initial attribute
 	if group.HasAttribute(entities.StateLightEntityAttribute) {
@@ -326,12 +375,47 @@ func (c *DeconzClient) handleNewGroupDeviceDiscovered(device *deconz.DeconzDevic
 		}
 	}
 
-	// Commands
+	if group.HasAttribute(entities.BrightnessLightEntityAttribute) {
+		group.Attributes[string(entities.BrightnessLightEntityAttribute)] = device.Group.Action.Bri
+	}
 
+	// Commands
 	group.AddCommand(entities.OnLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
 
-		if err := device.TurnOn(); err != nil {
-			return 404
+		// NO param set, so just turn on
+		if len(params) == 0 {
+			if err := device.TurnOn(); err != nil {
+				return 404
+			}
+		} else {
+
+			if params["brightness"] != nil {
+				//bri, _ := strconv.ParseFloat(params["brightness"].(string), 32)
+				if err := device.SetBrightness(float32(params["brightness"].(float64))); err != nil {
+					return 404
+				}
+			}
+
+			if params["hue"] != nil {
+				hue, _ := strconv.ParseFloat(params["hue"].(string), 32)
+				if err := device.SetHue(float32(hue)); err != nil {
+					return 404
+				}
+			}
+
+			if params["saturation"] != nil {
+				saturation, _ := strconv.ParseFloat(params["saturation"].(string), 32)
+				if err := device.SetSaturation(float32(saturation)); err != nil {
+					return 404
+				}
+			}
+
+			if params["color_temperature:44"] != nil {
+				ct, _ := strconv.ParseFloat(params["color_temperature:44"].(string), 32)
+				if err := device.SetColorTemp(float32(ct)); err != nil {
+					return 404
+				}
+			}
 		}
 		return 200
 	})
@@ -362,10 +446,16 @@ func (c *DeconzClient) handleNewGroupDeviceDiscovered(device *deconz.DeconzDevic
 		attributes := make(map[string]interface{})
 
 		if group.HasAttribute(entities.StateLightEntityAttribute) {
-			if *&state.AnyOn {
+			if *state.AnyOn {
 				attributes[string(entities.StateLightEntityAttribute)] = entities.OnLightEntityState
 			} else {
 				attributes[string(entities.StateLightEntityAttribute)] = entities.OffLightEntityState
+			}
+		}
+
+		if group.HasAttribute(entities.BrightnessLightEntityAttribute) {
+			if state.Bri != nil {
+				group.Attributes[string(entities.BrightnessLightEntityAttribute)] = state.Bri
 			}
 		}
 
@@ -405,16 +495,24 @@ func (c *DeconzClient) handleRemoveDevice(device *deconz.DeconzDevice) {
 
 	switch device.Type {
 	case deconz.SensorDeconzDeviceType:
-
+		c.IntegrationDriver.RemoveEntityByID(fmt.Sprintf("sensor%d", device.GetID()))
 	case deconz.LightDeconzDeviceType:
-		light := entities.NewLightEntity(fmt.Sprintf("light%d", device.GetID()), entities.LanguageText{En: device.GetName()}, "")
-		c.IntegrationDriver.RemoveEntity(light)
-
+		c.IntegrationDriver.RemoveEntityByID(fmt.Sprintf("light%d", device.GetID()))
 	case deconz.GroupDeconzDeviceType:
-		group := entities.NewLightEntity(fmt.Sprintf("group%d", device.GetID()), entities.LanguageText{En: device.GetName()}, "")
-		c.IntegrationDriver.RemoveEntity(group)
+		c.IntegrationDriver.RemoveEntityByID(fmt.Sprintf("group%d", device.GetID()))
 	}
 
+}
+
+// Start the Denon Listen Loop
+// disconnect when finished
+func (c *DeconzClient) startDenonListenLoop() {
+	defer func() {
+		// disconnect and let RT make a new connection again
+		c.messages <- "disconnect"
+	}()
+
+	c.deconz.StartandListenLoop()
 }
 
 // Callen on RT connect
@@ -434,7 +532,7 @@ func (c *DeconzClient) deconzClientLoop() {
 	if c.deconz != nil {
 		c.configureDeconz()
 
-		go c.deconz.StartandListenLoop()
+		go c.startDenonListenLoop()
 
 	} else {
 		return
