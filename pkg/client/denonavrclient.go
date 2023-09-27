@@ -97,7 +97,7 @@ func (c *DenonAVRClient) initDenonAVRClient() {
 
 }
 
-func (c *DenonAVRClient) denonHandleSetup() {
+func (c *DenonAVRClient) denonHandleSetup(setup_data integration.SetupData) {
 	//event_type: SETUP with state: SETUP is a progress event to keep the process running,
 	// If the setup process takes more than a few seconds,
 	// the integration should send driver_setup_change events with state: SETUP to the Remote Two

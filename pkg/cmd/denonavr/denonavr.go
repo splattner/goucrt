@@ -15,7 +15,7 @@ func NewCommand(rootCmd *cobra.Command) *cobra.Command {
 
 	var command = &cobra.Command{
 		Use:   "denonavr",
-		Short: "Denon AVR",
+		Short: "Start Denon AVR Ingegration",
 		Long:  "Denon AVR Integration for a Unfolded Circle Remote Two",
 		Run: func(c *cobra.Command, args []string) {
 

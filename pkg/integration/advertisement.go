@@ -6,7 +6,7 @@ import (
 	"github.com/grandcat/zeroconf"
 )
 
-// TODO: not working?
+// Start Advertising the integration with mDNS
 func (i *Integration) startAdvertising() {
 	log.Info("Start advertising UC Integration with mDNS")
 
@@ -14,7 +14,7 @@ func (i *Integration) startAdvertising() {
 		"name=" + i.Metadata.Name.En,
 		"developer=" + i.Metadata.Developer.Name,
 		"ver=" + i.Metadata.Version,
-		"ws_path=/ws",
+		"ws_path=" + i.Config["websocketPath"].(string),
 	}
 
 	server, err := zeroconf.Register(i.Metadata.DriverId, "_uc-integration._tcp", "local.", i.Config["listenport"].(int), txt, nil)
@@ -25,6 +25,7 @@ func (i *Integration) startAdvertising() {
 	i.mdns = server
 }
 
+// Stop mDNS advertisement
 func (i *Integration) stopAdvertising() {
 	if i.mdns != nil {
 		log.Info("Stop advertising UC Integration")

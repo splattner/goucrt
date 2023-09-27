@@ -241,6 +241,9 @@ func (i *Integration) handleCommand(entity interface{}, req *EntityCommandReq) i
 
 	case *entities.CoverEntity:
 		return e.HandleCommand(cmd_id, params)
+
+	case *entities.SensorEntity:
+		// Sensor do not have commands
 	}
 
 	return 404

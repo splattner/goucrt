@@ -21,7 +21,7 @@ type Client struct {
 	// Here you can add entities if they are already known
 	initFunc func()
 	// Called by RemoteTwo when the integration is added and setup started
-	setupFunc func()
+	setupFunc func(integration.SetupData)
 	// Handles connect/disconnect calls from RemoteTwo
 	clientLoopFunc        func()
 	setDriverUserDataFunc func(map[string]string, bool)
@@ -87,7 +87,7 @@ func (c *Client) HandleConnection(e *integration.ConnectEvent) {
 func (c *Client) HandleSetup(setup_data integration.SetupData) {
 
 	if c.setupFunc != nil {
-		c.setupFunc()
+		c.setupFunc(setup_data)
 	}
 
 }

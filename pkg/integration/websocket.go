@@ -50,7 +50,7 @@ func (i *Integration) wsEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func (i *Integration) wsReader(ws *websocket.Conn) {
-	log.Debug("Start Websocket read loop")
+	log.WithField("RemoteAddr", ws.RemoteAddr().String()).Debug("Start Websocket read loop")
 	ws.SetReadLimit(maxMessageSize)
 	ws.SetReadDeadline(time.Now().Add(pongWait))
 	ws.SetPongHandler(func(string) error {
@@ -102,7 +102,7 @@ func (i *Integration) wsReader(ws *websocket.Conn) {
 }
 
 func (i *Integration) wsWriter(ws *websocket.Conn) {
-	log.Debug("Start Websocket write loop")
+	log.WithField("RemoteAddr", ws.RemoteAddr().String()).Debug("Start Websocket write loop")
 	ticker := time.NewTicker(pingPeriod)
 
 	defer func() {

@@ -11,6 +11,8 @@ const (
 	UnkownEntityState                  = "UNKNOWN"
 )
 
+// Generic Remote Two Entity
+// See https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/README.md for details
 type Entity struct {
 	Id string `json:"entity_id"`
 	EntityType

@@ -45,6 +45,7 @@ func (i *Integration) sendEventMessage(res *interface{}, messageType int) error 
 
 }
 
+// Handle events received from the Remote
 func (i *Integration) handleEvent(req *RequestMessage, p []byte) interface{} {
 
 	var res interface{}

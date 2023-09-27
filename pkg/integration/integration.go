@@ -113,7 +113,7 @@ func (i *Integration) SetHandleSetDriverUserDataFunction(f func(map[string]strin
 	i.handleSetDriverUserDataFunction = f
 }
 
-// Send the Driver Setup State to Remote two
+// Set and then Send the Driver Setup State to Remote two
 func (i *Integration) SetDriverSetupState(event_Type DriverSetupEventType, state DriverSetupState, err DriverSetupError, requireUserAction *RequireUserAction) {
 
 	log.WithFields(log.Fields{
