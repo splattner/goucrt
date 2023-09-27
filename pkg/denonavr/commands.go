@@ -1,19 +1,19 @@
 package denonavr
 
-func (d *DenonAVR) SetMoni1Out() int {
-	status, _ := d.sendCommandToDevice(DenonCommandCursorControl, "MONI1")
+func (d *DenonAVR) SetMoni1Out() error {
+	_, err := d.sendCommandToDevice(DenonCommandCursorControl, "MONI1")
 
-	return status
+	return err
 }
 
-func (d *DenonAVR) SetMoni2Out() int {
-	status, _ := d.sendCommandToDevice(DenonCommandCursorControl, "MONI1")
+func (d *DenonAVR) SetMoni2Out() error {
+	_, err := d.sendCommandToDevice(DenonCommandCursorControl, "MONI1")
 
-	return status
+	return err
 }
 
-func (d *DenonAVR) SetMoniAutoOut() int {
-	status, _ := d.sendCommandToDevice(DenonCommandCursorControl, "MONIAUTO")
+func (d *DenonAVR) SetMoniAutoOut() error {
+	_, err := d.sendCommandToDevice(DenonCommandCursorControl, "MONIAUTO")
 
-	return status
+	return err
 }

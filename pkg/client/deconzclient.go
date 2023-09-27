@@ -306,22 +306,8 @@ func (c *DeconzClient) handleNewLightDeviceDiscovered(device *deconz.DeconzDevic
 		return 200
 	})
 
-	light.AddCommand(entities.OffLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
-
-		if err := device.TurnOff(); err != nil {
-			return 404
-		}
-		return 200
-	})
-
-	light.AddCommand(entities.ToggleLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
-		if device.IsOn() {
-			device.TurnOff()
-		} else {
-			device.TurnOn()
-		}
-		return 200
-	})
+	light.MapCommand(entities.OffLightEntityCommand, device.TurnOff)
+	light.MapCommand(entities.ToggleLightEntityCommand, device.Toggle)
 
 	// Set the Handle State Change function
 	device.SetHandleChangeStateFunc(func(state *deconz.DeconzState) {

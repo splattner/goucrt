@@ -137,18 +137,9 @@ func (c *DenonAVRClient) configureDenon() {
 		// Configure the Entity Change Func
 
 		// Buttons
-
-		c.moni1Button.AddCommand(entities.PushButtonEntityCommand, func(button entities.ButtonEntity) int {
-			return c.denon.SetMoni1Out()
-		})
-
-		c.moni2Button.AddCommand(entities.PushButtonEntityCommand, func(button entities.ButtonEntity) int {
-			return c.denon.SetMoni2Out()
-		})
-
-		c.moniAutoButton.AddCommand(entities.PushButtonEntityCommand, func(button entities.ButtonEntity) int {
-			return c.denon.SetMoniAutoOut()
-		})
+		c.moni1Button.MapCommand(entities.PushButtonEntityCommand, c.denon.SetMoni1Out)
+		c.moni2Button.MapCommand(entities.PushButtonEntityCommand, c.denon.SetMoni2Out)
+		c.moniAutoButton.MapCommand(entities.PushButtonEntityCommand, c.denon.SetMoniAutoOut)
 
 		// Media Player
 

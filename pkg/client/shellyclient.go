@@ -181,29 +181,9 @@ func (c *ShellyClient) handleNewDeviceDiscovered(device *shelly.ShellyDevice) {
 	shellySwitch.AddFeature(entities.OnOffSwitchEntityyFeatures)
 	shellySwitch.AddFeature(entities.ToggleSwitchEntityCommand)
 
-	shellySwitch.AddCommand(entities.OnSwitchEntityCommand, func(entity entities.SwitchsEntity, params map[string]interface{}) int {
-
-		if err := device.TurnOn(); err != nil {
-			return 404
-		}
-		return 200
-	})
-
-	shellySwitch.AddCommand(entities.OffSwitchEntityCommand, func(entity entities.SwitchsEntity, params map[string]interface{}) int {
-
-		if err := device.TurnOff(); err != nil {
-			return 404
-		}
-		return 200
-	})
-
-	shellySwitch.AddCommand(entities.ToggleLightEntityCommand, func(entity entities.SwitchsEntity, params map[string]interface{}) int {
-
-		if err := device.Toggle(); err != nil {
-			return 404
-		}
-		return 200
-	})
+	shellySwitch.MapCommand(entities.OnSwitchEntityCommand, device.TurnOn)
+	shellySwitch.MapCommand(entities.OffSwitchEntityCommand, device.TurnOff)
+	shellySwitch.MapCommand(entities.ToggleLightEntityCommand, device.Toggle)
 
 	device.AddMsgReceivedFunc("relay/0", func(msg []byte) {
 

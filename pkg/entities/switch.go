@@ -65,6 +65,29 @@ func (e *SwitchsEntity) AddCommand(command SwitchEntityCommand, function func(Sw
 
 }
 
+func (e *SwitchsEntity) MapCommandWithParams(command SwitchEntityCommand, f func(map[string]interface{}) error) {
+
+	e.AddCommand(command, func(entity SwitchsEntity, params map[string]interface{}) int {
+
+		if err := f(params); err != nil {
+			return 404
+		}
+		return 200
+	})
+}
+
+func (e *SwitchsEntity) MapCommand(command SwitchEntityCommand, f func() error) {
+
+	e.AddCommand(command, func(entity SwitchsEntity, params map[string]interface{}) int {
+
+		if err := f(); err != nil {
+			return 404
+		}
+		return 200
+	})
+
+}
+
 // Call the registred function for this entity_command
 func (e *SwitchsEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
 	if e.Commands[cmd_id] != nil {

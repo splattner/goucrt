@@ -58,6 +58,18 @@ func (e *ButtonEntity) AddCommand(command ButtonEntityCommand, function func(But
 	e.Commands[string(command)] = function
 }
 
+// Map a Light EntityCommand to a function call without params
+func (e *ButtonEntity) MapCommand(command ButtonEntityCommand, f func() error) {
+
+	e.AddCommand(command, func(entity ButtonEntity) int {
+
+		if err := f(); err != nil {
+			return 404
+		}
+		return 200
+	})
+}
+
 // Call the registred function for this entity_command
 func (e *ButtonEntity) HandleCommand(cmd_id string) int {
 

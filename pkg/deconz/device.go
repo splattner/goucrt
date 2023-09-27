@@ -119,6 +119,16 @@ func (d *DeconzDevice) TurnOff() error {
 
 	return d.setState()
 }
+func (d *DeconzDevice) Toggle() error {
+
+	if d.IsOn() {
+		d.TurnOff()
+	} else {
+		d.TurnOn()
+	}
+
+	return d.setState()
+}
 
 func (d *DeconzDevice) IsOn() bool {
 	switch d.Type {
