@@ -40,6 +40,7 @@ func (i *Integration) wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Unfolded Circle Remote connected")
+	i.Remote.ExitStandBy()
 
 	// Start reading those messages
 	go i.wsReader(ws)

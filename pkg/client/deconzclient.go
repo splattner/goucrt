@@ -25,8 +25,6 @@ type DeconzClient struct {
 func NewDeconzClient(i *integration.Integration) *DeconzClient {
 	client := DeconzClient{}
 
-	i.Config["ignoreEntitySubscription"] = true
-
 	client.IntegrationDriver = i
 	// Start without a connection
 	client.DeviceState = integration.DisconnectedDeviceState
@@ -103,7 +101,7 @@ func (c *DeconzClient) handleSetDriverUserData(user_data map[string]string, conf
 
 	log.Debug("Deconz handle set driver user data")
 
-	// confirm seens to be set to false always, maybe just the presence of the field tells be,
+	// confirm seems to be set to false always, maybe just the presence of the field tells me,
 	// confirmation was sent?
 	if len(user_data) == 0 {
 		// Get a new Denon API Key
@@ -202,6 +200,8 @@ func (c *DeconzClient) handleNewSensorDeviceDiscovered(device *deconz.DeconzDevi
 	if device.Sensor.State.Humidity != nil {
 		sensor = entities.NewSensorEntity(fmt.Sprintf("sensor%d", device.GetID()), entities.LanguageText{En: device.GetName()}, "", entities.HumiditySensorDeviceClass)
 	}
+
+	// Currently no other sensors are implemeted
 
 	if sensor != nil {
 
