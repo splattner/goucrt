@@ -20,16 +20,21 @@ var (
 )
 
 type DeconzLight struct {
-	Name         string      `json:"name"`
-	ID           int         `json:"id,omitempty"`
-	ETag         string      `json:"etag,omitempty"`
-	State        DeconzState `json:"state,omitempty"`
-	HasColor     bool        `json:"hascolor,omitempty"`
-	Type         string      `json:"type,omitempty"`
-	Manufacturer string      `json:"manufacturer,omitempty"`
-	ModelID      string      `json:"modelid,omitempty"`
-	UniqueID     string      `json:"uniqueid,omitempty"`
-	SWVersion    string      `json:"swversion,omitempty"`
+	Name              string      `json:"name"`
+	ID                int         `json:"id,omitempty"`
+	ETag              string      `json:"etag,omitempty"`
+	State             DeconzState `json:"state,omitempty"`
+	HasColor          bool        `json:"hascolor,omitempty"`
+	Type              string      `json:"type,omitempty"`
+	ModelID           string      `json:"modelid,omitempty"`
+	UniqueID          string      `json:"uniqueid,omitempty"`
+	SWVersion         string      `json:"swversion,omitempty"`
+	LastAnnounced     string      `json:"lastannounced,omitempty"`
+	LastSeen          string      `json:"lastseen,omitempty"`
+	ManufacturerName  string      `json:"manufacturername,omitempty"`
+	ColorCapabilities int         `json:"colorcapabilities,omitempty"`
+	Ctmax             int         `json:"ctmax,omitempty"`
+	Ctmin             int         `json:"ctmin,omitempty"`
 }
 
 func (d *DeconzDevice) GetLightState(lightID int) (DeconzLight, error) {

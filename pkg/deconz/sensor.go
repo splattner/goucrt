@@ -8,8 +8,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-
-	"github.com/jurgen-kluft/go-conbee/conbee"
 )
 
 var (
@@ -41,10 +39,6 @@ type DeconzSensorConfig struct {
 	SunsetOffset  int16  `json:"sunsetoffset,omitempty"`
 }
 
-func (s *DeconzSensor) setDefaults() {
-	s.Config.Reachable = true
-}
-
 func (d *DeconzDevice) GetSensor(sensorID int) (DeconzSensor, error) {
 	var ll DeconzSensor
 	url := fmt.Sprintf(getSensorURL, fmt.Sprintf("%s:%d", d.deconz.host, d.deconz.port), d.deconz.apikey, sensorID)
@@ -70,7 +64,7 @@ func (d *DeconzDevice) GetSensor(sensorID int) (DeconzSensor, error) {
 	return ll, err
 }
 
-func (d *DeconzDevice) UpdateSensor(sensorID int, sensorName string) ([]conbee.ApiResponse, error) {
+func (d *DeconzDevice) UpdateSensor(sensorID int, sensorName string) ([]ApiResponse, error) {
 	url := fmt.Sprintf(getSensorURL, fmt.Sprintf("%s:%d", d.deconz.host, d.deconz.port), d.deconz.apikey, sensorID)
 	data := fmt.Sprintf("{\"name\": \"%s\"}", sensorName)
 	postbody := strings.NewReader(data)
@@ -89,7 +83,7 @@ func (d *DeconzDevice) UpdateSensor(sensorID int, sensorName string) ([]conbee.A
 	if err != nil {
 		return nil, err
 	}
-	var apiResponse []conbee.ApiResponse
+	var apiResponse []ApiResponse
 	err = json.Unmarshal(contents, &apiResponse)
 	if err != nil {
 		return nil, err

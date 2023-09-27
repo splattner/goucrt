@@ -1,9 +1,6 @@
 package deconz
 
 import (
-	deconzgroup "github.com/jurgen-kluft/go-conbee/groups"
-	deconzlight "github.com/jurgen-kluft/go-conbee/lights"
-	deconzsensor "github.com/jurgen-kluft/go-conbee/sensors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -79,7 +76,7 @@ func (d *Deconz) removeDevice(allDevices interface{}) {
 	var toRemove []*DeconzDevice
 
 	switch allDevices := allDevices.(type) {
-	case []deconzsensor.Sensor:
+	case []DeconzSensor:
 
 		// Loop trought the existing devices
 		for _, dd := range d.allDeconzDevices {
@@ -103,7 +100,7 @@ func (d *Deconz) removeDevice(allDevices interface{}) {
 			}
 		}
 
-	case []deconzlight.Light:
+	case []DeconzLight:
 		// Loop trought the existing devices
 		for _, dd := range d.allDeconzDevices {
 			if dd.Type == LightDeconzDeviceType {
@@ -125,7 +122,7 @@ func (d *Deconz) removeDevice(allDevices interface{}) {
 			}
 		}
 
-	case []deconzgroup.Group:
+	case []DeconzGroup:
 		// Loop trought the existing devices
 		for _, dd := range d.allDeconzDevices {
 			if dd.Type == GroupDeconzDeviceType {

@@ -100,8 +100,17 @@ func (e *LightEntity) HandleCommand(cmd_id string, params map[string]interface{}
 	return 404
 }
 
+// Check if an Attribute is available
 func (e *LightEntity) HasAttribute(attribute LightEntityAttributes) bool {
 	_, ok := e.Attributes[string(attribute)]
 
 	return ok
+}
+
+// Update an Attribute if its available
+func (e *LightEntity) UpdateAttribute(attribute LightEntityAttributes, value interface{}) {
+
+	if e.HasAttribute(attribute) {
+		e.Attributes[string(attribute)] = value
+	}
 }

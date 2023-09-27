@@ -70,14 +70,6 @@ func (d *Deconz) StartandListenLoop() {
 				log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Could not send Ping message")
 				return
 			}
-			// case <-time.After(time.Duration(1) * time.Millisecond * 1000):
-			// 	// Send an echo packet every second
-			// 	err := conn.WriteMessage(websocket.TextMessage, []byte("Hello from vdcd-brige!"))
-			// 	if err != nil {
-			// 		log.WithError(err).Debug("Deconz, Error during writing to websocket")
-			// 		return
-			// 	}
-
 		}
 	}
 }
@@ -129,6 +121,7 @@ func (d *Deconz) websocketReceiveHandler(ws *websocket.Conn) {
 				message.State.Reachable != nil ||
 				message.State.ColorMode != "" ||
 				message.State.ColorLoopSpeed != nil {
+				// only if some state acually changed
 
 				for _, l := range d.allDeconzDevices {
 					if l.Type == LightDeconzDeviceType {
@@ -136,6 +129,7 @@ func (d *Deconz) websocketReceiveHandler(ws *websocket.Conn) {
 							log.WithFields(log.Fields{
 								"ID":   l.Light.ID,
 								"Name": l.Light.Name}).Debug("Deconz Websocket changed event for light")
+							l.updateState(&message.State)
 							l.stateChangeHandler(&message.State)
 							break
 						}
@@ -155,6 +149,7 @@ func (d *Deconz) websocketReceiveHandler(ws *websocket.Conn) {
 						log.WithFields(log.Fields{
 							"ID":   l.Group.ID,
 							"Name": l.Group.Name}).Debug("Deconz Websocket changed event for group")
+						l.updateState(&message.State)
 						l.stateChangeHandler(&message.State)
 						break
 					}
@@ -175,6 +170,7 @@ func (d *Deconz) websocketReceiveHandler(ws *websocket.Conn) {
 						log.WithFields(log.Fields{
 							"ID":   l.Sensor.ID,
 							"Name": l.Sensor.Name}).Debug("Deconz, Websocket changed event for sensor")
+						l.updateState(&message.State)
 						l.stateChangeHandler(&message.State)
 					}
 				}

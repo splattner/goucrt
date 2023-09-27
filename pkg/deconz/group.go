@@ -171,7 +171,7 @@ func (d *DeconzDevice) setGroupState() error {
 
 	_, err := d.SetGroupState(d.Group.ID, d.Group.Action)
 	if err != nil {
-		log.Debugln("Deconz, SetGroupState Error", err)
+		log.WithError(err).Debug("Deconz, SetGroupState Error")
 		return err
 	}
 

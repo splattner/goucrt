@@ -4,6 +4,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Get All Lights, all Groupd, all Sensors
+// Add them to the available devices
 func (d *Deconz) StartDiscovery(enableGroups bool) {
 
 	log.WithField("DeCONZ Host", d.host).Info("Starting Deconz device discovery")
@@ -54,6 +56,7 @@ func (d *Deconz) StartDiscovery(enableGroups bool) {
 	log.Info("Deconz, Device Discovery finished")
 }
 
+// Handle a new discovered group
 func (d *Deconz) groupsDiscovery(group DeconzGroup) {
 
 	log.WithFields(log.Fields{
@@ -74,6 +77,7 @@ func (d *Deconz) groupsDiscovery(group DeconzGroup) {
 	}
 }
 
+// Handle a new discovered light
 func (d *Deconz) lightsDiscovery(light DeconzLight) {
 	log.WithFields(log.Fields{
 		"Name":     light.Name,
@@ -94,6 +98,7 @@ func (d *Deconz) lightsDiscovery(light DeconzLight) {
 
 }
 
+// Handle a new discovered sensor
 func (d *Deconz) sensorDiscovery(sensor DeconzSensor) {
 
 	log.WithFields(log.Fields{
@@ -106,6 +111,8 @@ func (d *Deconz) sensorDiscovery(sensor DeconzSensor) {
 	// See https://dresden-elektronik.github.io/deconz-rest-doc/endpoints/sensors/#supported-sensor-types-and-states
 	switch sensor.Type {
 	case "ZHAOpenClose", "ZHATemperature", "ZHAHumidity", "ZHAPressure":
+		// Currently we only look at those
+		// Todo: Maybee this can be done more generic by looking the State and figure out what we can use?
 		deconzDevice := new(DeconzDevice)
 		deconzDevice.Type = SensorDeconzDeviceType
 		deconzDevice.Sensor = sensor

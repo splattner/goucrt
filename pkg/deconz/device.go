@@ -90,8 +90,12 @@ func (d *DeconzDevice) TurnOn() error {
 
 	switch d.Type {
 	case LightDeconzDeviceType:
+		// Reset State
+		d.Light.State = DeconzState{}
 		d.Light.State.SetOn(true)
 	case GroupDeconzDeviceType:
+		// Reset State
+		d.Group.Action = DeconzState{}
 		d.Group.Action.SetOn(true)
 	}
 
@@ -104,8 +108,12 @@ func (d *DeconzDevice) TurnOff() error {
 
 	switch d.Type {
 	case LightDeconzDeviceType:
+		// Reset State
+		d.Light.State = DeconzState{}
 		d.Light.State.SetOn(false)
 	case GroupDeconzDeviceType:
+		// Reset State
+		d.Group.Action = DeconzState{}
 		d.Group.Action.SetOn(false)
 	}
 
@@ -121,6 +129,20 @@ func (d *DeconzDevice) IsOn() bool {
 	}
 
 	return false
+}
+
+func (d *DeconzDevice) GetBrightness() uint {
+
+	var brightness uint
+
+	switch d.Type {
+	case LightDeconzDeviceType:
+		brightness = uint(*d.Light.State.Bri)
+	case GroupDeconzDeviceType:
+		brightness = uint(*d.Group.Action.Bri)
+	}
+
+	return brightness
 }
 
 func (d *DeconzDevice) SetBrightness(brightness float32) error {
@@ -171,6 +193,43 @@ func (d *DeconzDevice) SetColorTemp(ct float32) error {
 	return d.setState()
 }
 
+func (d *DeconzDevice) GetColorTemp() int {
+
+	var ct int
+	switch d.Type {
+	case LightDeconzDeviceType:
+		ct = int(*d.Light.State.CT)
+	case GroupDeconzDeviceType:
+		ct = int(*d.Group.Action.CT)
+	}
+
+	return ct
+
+}
+
+func (d *DeconzDevice) GetColorTempInPercent() int {
+
+	ct := (float64(d.GetColorTemp()-153) / float64(500-153)) * 100
+
+	return int(ct)
+
+}
+
+func (d *DeconzDevice) GetHueConverted() int {
+
+	var converted float32
+
+	switch d.Type {
+	case LightDeconzDeviceType:
+		converted = float32(*d.Light.State.Hue) / 65535 * 360
+	case GroupDeconzDeviceType:
+		converted = float32(*d.Group.Action.Hue) / 65535 * 360
+	}
+
+	return int(converted)
+
+}
+
 func (d *DeconzDevice) SetHue(hue float32) error {
 
 	converted := uint16(hue)
@@ -187,6 +246,20 @@ func (d *DeconzDevice) SetHue(hue float32) error {
 	}
 
 	return d.setState()
+}
+
+func (d *DeconzDevice) GetSaturation() uint {
+
+	var saturation uint
+
+	switch d.Type {
+	case LightDeconzDeviceType:
+		saturation = uint(*d.Light.State.Sat)
+	case GroupDeconzDeviceType:
+		saturation = uint(*d.Group.Action.Sat)
+	}
+
+	return saturation
 }
 
 func (d *DeconzDevice) SetSaturation(saturation float32) error {
@@ -217,5 +290,92 @@ func (d *DeconzDevice) setState() error {
 	}
 
 	return fmt.Errorf("Device Type not found")
+
+}
+
+// Update the local State with a new State (e.g. sent by Websocket Evnt)
+func (d *DeconzDevice) updateState(newState *DeconzState) {
+
+	switch d.Type {
+	case LightDeconzDeviceType:
+		if newState.Bri != nil {
+			d.Light.State.Bri = newState.Bri
+		}
+		if newState.Sat != nil {
+			d.Light.State.Sat = newState.Sat
+		}
+
+		if newState.Hue != nil {
+			d.Light.State.Hue = newState.Hue
+		}
+
+		if newState.CT != nil {
+			d.Light.State.CT = newState.CT
+		}
+
+		if newState.On != nil {
+			d.Light.State.On = newState.On
+		}
+
+		if newState.ColorLoopSpeed != nil {
+			d.Light.State.ColorLoopSpeed = newState.ColorLoopSpeed
+		}
+
+		//Effect is no pointer
+		d.Light.State.Effect = newState.Effect
+
+		if newState.Reachable != nil {
+			d.Light.State.Reachable = newState.Reachable
+		}
+
+		if newState.XY != nil {
+			d.Light.State.XY = newState.XY
+		}
+
+		if newState.TransitionTime != nil {
+			d.Light.State.TransitionTime = newState.TransitionTime
+		}
+
+	case GroupDeconzDeviceType:
+		if newState.Bri != nil {
+			d.Group.Action.Bri = newState.Bri
+		}
+		if newState.Sat != nil {
+			d.Group.Action.Sat = newState.Sat
+		}
+
+		if newState.Hue != nil {
+			d.Group.Action.Hue = newState.Hue
+		}
+
+		if newState.CT != nil {
+			d.Group.Action.CT = newState.CT
+		}
+
+		if newState.On != nil {
+			d.Group.Action.On = newState.On
+		}
+
+		if newState.ColorLoopSpeed != nil {
+			d.Group.Action.ColorLoopSpeed = newState.ColorLoopSpeed
+		}
+
+		// Effect is no pointer
+		d.Group.Action.Effect = newState.Effect
+
+		if newState.Reachable != nil {
+			d.Group.Action.Reachable = newState.Reachable
+		}
+
+		if newState.XY != nil {
+			d.Group.Action.XY = newState.XY
+		}
+
+		if newState.TransitionTime != nil {
+			d.Light.State.TransitionTime = newState.TransitionTime
+		}
+
+	case SensorDeconzDeviceType:
+	}
 
 }

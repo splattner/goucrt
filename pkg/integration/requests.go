@@ -215,9 +215,19 @@ func (i *Integration) handleSetupDriverRequest(req *SetupDriverMessageReq) *Resp
 func (i *Integration) handleSubscribeEventRequest(req *SubscribeEventMessageReq) *SubscribeEventMessage {
 
 	// Add entities to SubscribedEntities if not already in there
-	for _, e := range i.Entities {
-		entity_id := i.getEntityId(e)
-		if req.MsgData.EntityIds == nil || slices.Contains(req.MsgData.EntityIds, entity_id) {
+	if req.MsgData.EntityIds == nil {
+		// Subscribe to all available entities
+		for _, e := range i.Entities {
+			entity_id := i.getEntityId(e)
+			if !slices.Contains(i.SubscribedEntities, entity_id) {
+				log.WithField("entity_id", entity_id).Info("RT subscribed to entity")
+				i.SubscribedEntities = append(i.SubscribedEntities, entity_id)
+
+			}
+		}
+
+	} else {
+		for _, entity_id := range req.MsgData.EntityIds {
 			if !slices.Contains(i.SubscribedEntities, entity_id) {
 				log.WithField("entity_id", entity_id).Info("RT subscribed to entity")
 				i.SubscribedEntities = append(i.SubscribedEntities, entity_id)
@@ -240,7 +250,7 @@ func (i *Integration) handleSubscribeEventRequest(req *SubscribeEventMessageReq)
 func (i *Integration) handleUnsubscribeEventsRequest(req *UnubscribeEventMessageReq) *UnubscribeEventMessage {
 
 	for ix, e := range i.SubscribedEntities {
-		if req.MsgData.EntityIds == nil || slices.Contains(i.SubscribedEntities, e) {
+		if req.MsgData.EntityIds == nil || slices.Contains(req.MsgData.EntityIds, e) {
 			log.WithField("entity_id", e).Info("RT subscribed from entity")
 
 			i.SubscribedEntities[ix] = i.SubscribedEntities[len(i.SubscribedEntities)-1] // Copy last element to index i.
