@@ -241,6 +241,30 @@ func (e *MediaPlayerEntity) AddCommand(command MediaPlayerEntityCommand, functio
 
 }
 
+// Map a Light EntityCommand to a function call with params
+func (e *MediaPlayerEntity) MapCommandWithParams(command MediaPlayerEntityCommand, f func(map[string]interface{}) error) {
+
+	e.AddCommand(command, func(entity MediaPlayerEntity, params map[string]interface{}) int {
+
+		if err := f(params); err != nil {
+			return 404
+		}
+		return 200
+	})
+}
+
+// Map a Light EntityCommand to a function call without params
+func (e *MediaPlayerEntity) MapCommand(command MediaPlayerEntityCommand, f func() error) {
+
+	e.AddCommand(command, func(entity MediaPlayerEntity, params map[string]interface{}) int {
+
+		if err := f(); err != nil {
+			return 404
+		}
+		return 200
+	})
+}
+
 // Call the registred function for this entity_command
 func (e *MediaPlayerEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
 	if e.Commands[cmd_id] != nil {

@@ -9,23 +9,23 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/splattner/goucrt/pkg/entities"
 	"github.com/splattner/goucrt/pkg/integration"
-	"github.com/splattner/goucrt/pkg/shelly"
+	"github.com/splattner/goucrt/pkg/tasmota"
 )
 
-// Shelly Implementation
-type ShellyClient struct {
+// Tasmota Implementation
+type TasmotaClient struct {
 	Client
-	shelly *shelly.Shelly
+	tasmota *tasmota.Tasmota
 }
 
-func NewShellyClient(i *integration.Integration) *ShellyClient {
-	client := ShellyClient{}
+func NewTasmotaClient(i *integration.Integration) *TasmotaClient {
+	tasmota := TasmotaClient{}
 
-	client.IntegrationDriver = i
+	tasmota.IntegrationDriver = i
 	// Start without a connection
-	client.DeviceState = integration.DisconnectedDeviceState
+	tasmota.DeviceState = integration.DisconnectedDeviceState
 
-	client.messages = make(chan string)
+	tasmota.messages = make(chan string)
 
 	ipaddr := integration.SetupDataSchemaSettings{
 		Id: "mqtt_ipaddr",
@@ -76,12 +76,12 @@ func NewShellyClient(i *integration.Integration) *ShellyClient {
 	}
 
 	metadata := integration.DriverMetadata{
-		DriverId: "shelly",
+		DriverId: "tasmota",
 		Developer: integration.Developer{
 			Name: "Sebastian Plattner",
 		},
 		Name: integration.LanguageText{
-			En: "Shelly",
+			En: "Tasmota",
 		},
 		Version: "0.0.1",
 		SetupDataSchema: integration.SetupDataSchema{
@@ -94,31 +94,31 @@ func NewShellyClient(i *integration.Integration) *ShellyClient {
 		Icon: "",
 	}
 
-	client.IntegrationDriver.SetMetadata(&metadata)
+	tasmota.IntegrationDriver.SetMetadata(&metadata)
 
 	// set the client specific functions
-	client.initFunc = client.initShellyClient
-	client.setupFunc = client.shellyHandleSetup
-	client.clientLoopFunc = client.shellyClientLoop
+	tasmota.initFunc = tasmota.initTasmotaClient
+	tasmota.setupFunc = tasmota.tasmotaHandleSetup
+	tasmota.clientLoopFunc = tasmota.tasmotaClientLoop
 	//client.setDriverUserDataFunc = client.handleSetDriverUserData
 
-	return &client
+	return &tasmota
 }
 
-func (c *ShellyClient) initShellyClient() {
+func (c *TasmotaClient) initTasmotaClient() {
 
 }
 
-func (c *ShellyClient) shellyHandleSetup(setup_data integration.SetupData) {
+func (c *TasmotaClient) tasmotaHandleSetup(setup_data integration.SetupData) {
 	// Finish the setup
 	// Nothing to configure
 	// Setup Data already persistet by integration Driver
 	c.IntegrationDriver.SetDriverSetupState(integration.StopEvent, integration.OkState, "", nil)
 }
 
-func (c *ShellyClient) setupShelly() {
+func (c *TasmotaClient) setupTasmota() {
 
-	if c.shelly == nil {
+	if c.tasmota == nil {
 
 		if c.IntegrationDriver.SetupData["mqtt_ipaddr"] != "" {
 
@@ -144,20 +144,21 @@ func (c *ShellyClient) setupShelly() {
 			}
 
 			mqttClient := mqtt.NewClient(opts)
-			c.shelly = shelly.NewShelly(mqttClient)
-			c.shelly.SetDeviceDiscoveredHandler(c.handleNewDeviceDiscovered)
+			c.tasmota = tasmota.NewTasmota(mqttClient)
+			c.tasmota.SetDeviceDiscoveredHandler(c.handleNewDeviceDiscovered)
+
 		} else {
-			log.Error("Cannot setup Shelly Client, missing setupData")
+			log.Error("Cannot setup Tasmota Client, missing setupData")
 		}
 	}
 
 }
 
-func (c *ShellyClient) startShelly() {
+func (c *TasmotaClient) startTasmota() {
 
-	log.Debug("Start and connect Shelly")
+	log.Debug("Start and connect Tamota")
 
-	if err := c.shelly.Start(); err != nil {
+	if err := c.tasmota.Start(); err != nil {
 		c.setDeviceState(integration.ErrorDeviceState)
 	}
 
@@ -165,68 +166,108 @@ func (c *ShellyClient) startShelly() {
 	// Set Device state to connected when connection is established
 	c.setDeviceState(integration.ConnectedDeviceState)
 
-	c.shelly.StartDiscovery()
+	c.tasmota.StartDiscovery()
 
 }
 
-func (c *ShellyClient) handleNewDeviceDiscovered(device *shelly.ShellyDevice) {
+func (c *TasmotaClient) handleNewDeviceDiscovered(device *tasmota.TasmotaDevice) {
 	log.WithFields(log.Fields{
-		"ID":          device.Id,
+		"Topic":       device.Topic,
 		"IP Address":  device.IPAddress,
 		"MAC Address": device.MACAddress,
-	}).Debug("New Shelly Device discovered")
+	}).Debug("New Tasmota Device discovered")
 
-	shellySwitch := entities.NewSwitchEntity(device.Id, entities.LanguageText{En: "Shelly " + device.Id}, "")
-	shellySwitch.AddFeature(entities.OnOffSwitchEntityyFeatures)
-	shellySwitch.AddFeature(entities.ToggleSwitchEntityCommand)
+	var tasmotaDevice interface{}
 
-	shellySwitch.MapCommand(entities.OnSwitchEntityCommand, device.TurnOn)
-	shellySwitch.MapCommand(entities.OffSwitchEntityCommand, device.TurnOff)
-	shellySwitch.MapCommand(entities.ToggleLightEntityCommand, device.Toggle)
+	switch device.LightSubtype {
+	case 0:
+		// Sonoff Basic
+		switchEntity := entities.NewSwitchEntity(device.Topic, entities.LanguageText{En: "Tasmota " + device.FriendlyName[0]}, "")
+		switchEntity.AddFeature(entities.OnOffSwitchEntityyFeatures)
+		switchEntity.AddFeature(entities.ToggleSwitchEntityCommand)
 
-	device.AddMsgReceivedFunc("relay/0", func(msg []byte) {
+		switchEntity.MapCommand(entities.OnSwitchEntityCommand, device.TurnOn)
+		switchEntity.MapCommand(entities.OffSwitchEntityCommand, device.TurnOff)
+		switchEntity.MapCommand(entities.ToggleLightEntityCommand, device.Toggle)
 
-		attributes := make(map[string]interface{})
+		device.AddMsgReceivedFunc("RESULT", func(msg []byte) {
 
-		switch string(msg) {
-		case "on":
-			attributes[string(entities.StateSwitchEntityyAttribute)] = entities.OnSwitchtEntityState
-		case "off":
-			attributes[string(entities.StateSwitchEntityyAttribute)] = entities.OffSwitchtEntityState
-		}
+			attributes := make(map[string]interface{})
 
-		shellySwitch.SetAttributes(attributes)
-	})
+			switch string(msg) {
+			case "on":
+				attributes[string(entities.StateSwitchEntityyAttribute)] = entities.OnSwitchtEntityState
+			case "off":
+				attributes[string(entities.StateSwitchEntityyAttribute)] = entities.OffSwitchtEntityState
+			}
 
-	c.IntegrationDriver.AddEntity(shellySwitch)
+			switchEntity.SetAttributes(attributes)
+		})
+
+		tasmotaDevice = switchEntity
+
+	case 4:
+		// RGBW
+		lightEntity := entities.NewLightEntity(device.Topic, entities.LanguageText{En: "Tasmota " + device.FriendlyName[0]}, "")
+
+		lightEntity.AddFeature(entities.OnOffLightEntityFeatures)
+		lightEntity.AddFeature(entities.ToggleLightEntityFeatures)
+		lightEntity.AddFeature(entities.DimLightEntityFeatures)
+		lightEntity.AddFeature(entities.ColorLightEntityFeatures)
+
+		lightEntity.MapCommand(entities.OnLightEntityCommand, device.TurnOn)
+		lightEntity.MapCommand(entities.OffLightEntityCommand, device.TurnOff)
+		lightEntity.MapCommand(entities.ToggleLightEntityCommand, device.Toggle)
+
+		device.AddMsgReceivedFunc("RESULT", func(msg []byte) {
+
+			attributes := make(map[string]interface{})
+
+			switch string(msg) {
+			case "on":
+				attributes[string(entities.StateLightEntityAttribute)] = entities.OnLightEntityState
+			case "off":
+				attributes[string(entities.StateLightEntityAttribute)] = entities.OffLightEntityState
+			}
+
+			lightEntity.SetAttributes(attributes)
+		})
+
+		tasmotaDevice = lightEntity
+
+	}
+
+	if tasmotaDevice != nil {
+		c.IntegrationDriver.AddEntity(tasmotaDevice)
+	}
 
 }
 
-func (c *ShellyClient) handleRemoveDevice(device *shelly.ShellyDevice) {
+func (c *TasmotaClient) handleRemoveDevice(device *tasmota.TasmotaDevice) {
 	log.WithFields(log.Fields{
-		"ID":          device.Id,
+		"Topic":       device.Topic,
 		"IP Address":  device.IPAddress,
 		"MAC Address": device.MACAddress,
-	}).Debug("New Shelly Device not available anymore")
+	}).Debug("Tasmota Device not available anymore")
 }
 
 // Callen on RT connect
-func (c *ShellyClient) shellyClientLoop() {
+func (c *TasmotaClient) tasmotaClientLoop() {
 
 	defer func() {
-		c.shelly.StopDiscovery()
-		c.shelly.Stop()
+		c.tasmota.StopDiscovery()
+		c.tasmota.Stop()
 		c.setDeviceState(integration.DisconnectedDeviceState)
 	}()
 
-	if c.shelly == nil {
-		c.setupShelly()
+	if c.tasmota == nil {
+		c.setupTasmota()
 	} else {
 		return
 	}
 
-	if c.shelly != nil {
-		c.startShelly()
+	if c.tasmota != nil {
+		c.startTasmota()
 	} else {
 		return
 	}

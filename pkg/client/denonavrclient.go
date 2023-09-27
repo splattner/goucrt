@@ -234,24 +234,9 @@ func (c *DenonAVRClient) configureDenon() {
 		}()
 
 		// Add Commands
-		c.mediaPlayer.AddCommand(entities.OnMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
-			log.WithField("entityId", mediaPlayer.Id).Debug("OnMediaPlayerEntityCommand called")
-			return c.denon.TurnOn()
-
-		})
-
-		c.mediaPlayer.AddCommand(entities.OffMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
-			log.WithField("entityId", mediaPlayer.Id).Debug("OffMediaPlayerEntityCommand called")
-			return c.denon.TurnOff()
-
-		})
-
-		c.mediaPlayer.AddCommand(entities.ToggleMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
-			log.WithField("entityId", mediaPlayer.Id).Debug("ToggleMediaPlayerEntityCommand called")
-
-			return c.denon.TogglePower()
-
-		})
+		c.mediaPlayer.MapCommand(entities.OnMediaPlayerEntityCommand, c.denon.TurnOn)
+		c.mediaPlayer.MapCommand(entities.OffMediaPlayerEntityCommand, c.denon.TurnOff)
+		c.mediaPlayer.MapCommand(entities.ToggleMediaPlayerEntityCommand, c.denon.TogglePower)
 
 		c.mediaPlayer.AddCommand(entities.VolumeMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
 			log.WithField("entityId", mediaPlayer.Id).Debug("VolumeMediaPlayerEntityCommand called")
@@ -260,34 +245,18 @@ func (c *DenonAVRClient) configureDenon() {
 			if v, err := strconv.ParseFloat(params["volume"].(string), 64); err == nil {
 				volume = v
 			}
-			return c.denon.SetVolume(volume)
+			if err := c.denon.SetVolume(volume); err != nil {
+				return 404
+			}
+			return 200
 		})
 
 		// Volume commands
-		c.mediaPlayer.AddCommand(entities.VolumeUpMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
-			log.WithField("entityId", mediaPlayer.Id).Debug("VolumeUpMediaPlayerEntityCommand called")
-			return c.denon.SetVolumeUp()
-		})
-
-		c.mediaPlayer.AddCommand(entities.VolumeDownMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
-			log.WithField("entityId", mediaPlayer.Id).Debug("VolumeDownMediaPlayerEntityCommand called")
-			return c.denon.SetVolumeDown()
-		})
-
-		c.mediaPlayer.AddCommand(entities.MuteMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
-			log.WithField("entityId", mediaPlayer.Id).Debug("MuteMediaPlayerEntityCommand called")
-			return c.denon.MainZoneMute()
-		})
-
-		c.mediaPlayer.AddCommand(entities.UnmuteMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
-			log.WithField("entityId", mediaPlayer.Id).Debug("UnmuteMediaPlayerEntityCommand called")
-			return c.denon.MainZoneUnMute()
-		})
-
-		c.mediaPlayer.AddCommand(entities.MuteToggleMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
-			log.WithField("entityId", mediaPlayer.Id).Debug("MuteToggleMediaPlayerEntityCommand called")
-			return c.denon.MainZoneMuteToggle()
-		})
+		c.mediaPlayer.MapCommand(entities.VolumeUpMediaPlayerEntityCommand, c.denon.SetVolumeUp)
+		c.mediaPlayer.MapCommand(entities.VolumeDownMediaPlayerEntityCommand, c.denon.SetVolumeDown)
+		c.mediaPlayer.MapCommand(entities.MuteMediaPlayerEntityCommand, c.denon.MainZoneMute)
+		c.mediaPlayer.MapCommand(entities.UnmuteMediaPlayerEntityCommand, c.denon.MainZoneUnMute)
+		c.mediaPlayer.MapCommand(entities.MuteToggleMediaPlayerEntityCommand, c.denon.MainZoneMuteToggle)
 
 		// Source commands
 		c.mediaPlayer.AddCommand(entities.SelectSourcMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {

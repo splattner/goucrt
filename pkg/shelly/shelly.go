@@ -28,17 +28,37 @@ func (s *Shelly) SetDeviceDiscoveredHandler(f func(*ShellyDevice)) {
 	s.handleDeviceDiscoveredFunc = f
 }
 
-func (s *Shelly) SetupDiscovery() {
+func (s *Shelly) Start() error {
+	// Connect to MQTT Broker
+	if token := s.mqttClient.Connect(); token.Wait() && token.Error() != nil {
+		log.WithError(token.Error()).Error("MQTT connect failed")
 
+		return token.Error()
+	}
+
+	return nil
+}
+
+func (s *Shelly) Stop() {
+	if s.mqttClient.IsConnected() {
+		s.mqttClient.Disconnect(0)
+	}
+}
+
+func (s *Shelly) StartDiscovery() {
 	log.Info(("Starting Shelly Device discovery"))
 
 	s.subscribeMqttTopic("shellies/announce", s.mqttDiscoverCallback())
 	s.subscribeMqttTopic("shellies/+/info", s.mqttDiscoverCallback())
-
+	s.publishMqttCommand("shellies/command", "announce")
 }
 
-func (s *Shelly) StartDiscovery() {
-	s.publishMqttCommand("shellies/command", "announce")
+func (s *Shelly) StopDiscovery() {
+	log.Info(("Stop Shelly Device discovery"))
+
+	s.unsubscribeMqttTopic("shellies/announce")
+	s.unsubscribeMqttTopic("shellies/+/info")
+
 }
 
 func (s *Shelly) mqttDiscoverCallback() mqtt.MessageHandler {

@@ -1,4 +1,4 @@
-package shelly
+package tasmota
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (e *Shelly) publishMqttCommand(topic string, value interface{}) error {
+func (e *Tasmota) publishMqttCommand(topic string, value interface{}) error {
 	if token := e.mqttClient.Publish(topic, 0, false, fmt.Sprintf("%v", value)); token.Wait() && token.Error() != nil {
 		log.WithError(token.Error()).Error("MQTT publish failed")
 		return token.Error()
@@ -15,7 +15,7 @@ func (e *Shelly) publishMqttCommand(topic string, value interface{}) error {
 	return nil
 }
 
-func (e *Shelly) subscribeMqttTopic(topic string, callback mqtt.MessageHandler) {
+func (e *Tasmota) subscribeMqttTopic(topic string, callback mqtt.MessageHandler) {
 
 	log.WithField("topic", topic).Debug("MQTT Subscribe to topic")
 	if token := e.mqttClient.Subscribe(topic, 0, callback); token.Wait() && token.Error() != nil {
@@ -23,7 +23,7 @@ func (e *Shelly) subscribeMqttTopic(topic string, callback mqtt.MessageHandler) 
 	}
 }
 
-func (e *Shelly) unsubscribeMqttTopic(topic string) {
+func (e *Tasmota) unsubscribeMqttTopic(topic string) {
 
 	log.WithField("topic", topic).Debug("MQTT Unsubscribe to topic")
 	if token := e.mqttClient.Unsubscribe(topic); token.Wait() && token.Error() != nil {

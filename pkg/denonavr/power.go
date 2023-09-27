@@ -1,20 +1,20 @@
 package denonavr
 
-func (d *DenonAVR) TurnOn() int {
+func (d *DenonAVR) TurnOn() error {
 	d.sendCommandToDevice(DenonCommandPower, "ON")
-	status, _ := d.sendCommandToDevice(DennonCommandZoneMain, "ON")
+	_, err := d.sendCommandToDevice(DennonCommandZoneMain, "ON")
 
-	return status
+	return err
 }
 
-func (d *DenonAVR) TurnOff() int {
+func (d *DenonAVR) TurnOff() error {
 	d.sendCommandToDevice(DenonCommandPower, "STANDBY")
-	status, _ := d.sendCommandToDevice(DennonCommandZoneMain, "OFF")
+	_, err := d.sendCommandToDevice(DennonCommandZoneMain, "OFF")
 
-	return status
+	return err
 }
 
-func (d *DenonAVR) TogglePower() int {
+func (d *DenonAVR) TogglePower() error {
 
 	if d.IsOn() {
 		return d.TurnOn()

@@ -23,7 +23,7 @@ func (d *DenonAVR) GetVolume() float64 {
 
 }
 
-func (d *DenonAVR) SetVolume(volume float64) int {
+func (d *DenonAVR) SetVolume(volume float64) error {
 
 	// The Volume command need the following
 	// 10.5 -> MV105
@@ -37,25 +37,25 @@ func (d *DenonAVR) SetVolume(volume float64) int {
 		convertedVolume = strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", volume), "0"), ".")
 	}
 
-	status, _ := d.sendCommandToDevice(DenonCommandVolume, convertedVolume)
+	_, err := d.sendCommandToDevice(DenonCommandVolume, convertedVolume)
 
-	return status
+	return err
 
 }
 
-func (d *DenonAVR) MainZoneMute() int {
+func (d *DenonAVR) MainZoneMute() error {
 
-	status, _ := d.sendCommandToDevice(DenonCommandMute, "ON")
-	return status
+	_, err := d.sendCommandToDevice(DenonCommandMute, "ON")
+	return err
 }
 
-func (d *DenonAVR) MainZoneUnMute() int {
+func (d *DenonAVR) MainZoneUnMute() error {
 
-	status, _ := d.sendCommandToDevice(DenonCommandMute, "OFF")
-	return status
+	_, err := d.sendCommandToDevice(DenonCommandMute, "OFF")
+	return err
 }
 
-func (d *DenonAVR) MainZoneMuteToggle() int {
+func (d *DenonAVR) MainZoneMuteToggle() error {
 
 	if d.MainZoneMuted() {
 		return d.MainZoneUnMute()
@@ -74,14 +74,14 @@ func (d *DenonAVR) MainZoneMuted() bool {
 	}
 }
 
-func (d *DenonAVR) SetVolumeUp() int {
+func (d *DenonAVR) SetVolumeUp() error {
 
 	newVolume := d.GetVolume() + DenonVolumeStep
 	return d.SetVolume(newVolume)
 
 }
 
-func (d *DenonAVR) SetVolumeDown() int {
+func (d *DenonAVR) SetVolumeDown() error {
 
 	newVolume := d.GetVolume() - DenonVolumeStep
 	return d.SetVolume(newVolume)
