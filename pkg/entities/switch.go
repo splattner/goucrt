@@ -60,7 +60,7 @@ func (e *SwitchsEntity) AddFeature(feature SwitchEntityFeatures) {
 }
 
 // Register a function for the Entity command
-func (e *SwitchsEntity) AddCommand(command LightEntityCommand, function func(SwitchsEntity, map[string]interface{}) int) {
+func (e *SwitchsEntity) AddCommand(command SwitchEntityCommand, function func(SwitchsEntity, map[string]interface{}) int) {
 	e.Commands[string(command)] = function
 
 }

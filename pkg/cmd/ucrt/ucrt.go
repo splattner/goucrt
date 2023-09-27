@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/splattner/goucrt/pkg/cmd/deconz"
 	"github.com/splattner/goucrt/pkg/cmd/denonavr"
+	"github.com/splattner/goucrt/pkg/cmd/shelly"
 )
 
 func NewCommand(name string) *cobra.Command {
@@ -29,6 +30,7 @@ func NewCommand(name string) *cobra.Command {
 	rootCmd.AddCommand(
 		denonavr.NewCommand(rootCmd),
 		deconz.NewCommand(rootCmd),
+		shelly.NewCommand(rootCmd),
 	)
 
 	return rootCmd

@@ -12,6 +12,7 @@ Currently this repository implements a driver for the following devices:
 
 * Denon Audio/Video Reveiver
 * [DeCONZ](https://dresden-elektronik.github.io/deconz-rest-doc/)
+* [Shelly](https://www.shelly.com/)
 
 ## Device / Clients
 
@@ -31,6 +32,10 @@ Run with `ucrt deconz`
 
 This client currently implements [`Light` entities](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/entity_light.md) for discovered DeCONZ Lights and Groups and [`Sensor` entitites](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/entity_sensor.md) for selected DeCONZ sensors.
 
+### Shelly
+
+This client currently implements [`Switch` entities](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/switch_light.md) for discovered Shelly Devices. It uses MQTT to discover and control Shelly devices.
+
 ## How to use
 
 ```bash
@@ -41,9 +46,10 @@ Usage:
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
-  deconz      Deconz
-  denonavr    Denon AVR
+  deconz      Start Deconz Ingegration
+  denonavr    Start Denon AVR Ingegration
   help        Help about any command
+  shelly      Start Shelly Ingegration
 
 Flags:
       --debug                         Enable debug log level
@@ -58,6 +64,7 @@ Flags:
       --websocketPath string          path where this integration is available for websocket connections (default "/ws")
 
 Use "ucrt [command] --help" for more information about a command.
+
 
 ```
 
