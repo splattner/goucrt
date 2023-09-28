@@ -279,8 +279,7 @@ func (c *DeconzClient) handleNewLightDeviceDiscovered(device *deconz.DeconzDevic
 			}
 
 			if params["hue"] != nil {
-				hue_converted, _ := strconv.ParseFloat(params["hue"].(string), 32)
-				hue := hue_converted / 360 * 65535
+				hue := params["hue"].(float64) / 360 * 65535
 				if err := device.SetHue(float32(hue)); err != nil {
 					return 404
 				}
