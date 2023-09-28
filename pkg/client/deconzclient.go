@@ -535,7 +535,9 @@ func (c *DeconzClient) startDenonListenLoop() {
 func (c *DeconzClient) deconzClientLoop() {
 
 	defer func() {
-		c.deconz.Stop()
+		if c.deconz != nil {
+			c.deconz.Stop()
+		}
 		c.setDeviceState(integration.DisconnectedDeviceState)
 	}()
 
