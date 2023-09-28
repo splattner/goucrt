@@ -74,6 +74,8 @@ func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
 
 func (c *DenonAVRClient) initDenonAVRClient() {
 
+	log.Debug("Initialize DenonAVR CLient")
+
 	// Media Player
 	c.mediaPlayer = entities.NewMediaPlayerEntity("mediaplayer", entities.LanguageText{En: "Denon AVR"}, "", entities.ReceiverMediaPlayerDeviceClass)
 	c.mediaPlayer.AddFeature(entities.OnOffMediaPlayerEntityFeatures)
@@ -316,11 +318,11 @@ func (c *DenonAVRClient) denonClientLoop() {
 		log.WithFields(log.Fields{
 			"Denon IP": c.denon.Host}).Info("Start Denon AVR Client Loop")
 		go c.denon.StartListenLoop()
-	}
 
-	// Handle connection to device this integration shall control
-	// Set Device state to connected when connection is established
-	c.setDeviceState(integration.ConnectedDeviceState)
+		// Handle connection to device this integration shall control
+		// Set Device state to connected when connection is established
+		c.setDeviceState(integration.ConnectedDeviceState)
+	}
 
 	// Run Client Loop to handle entity changes from device
 	for {
