@@ -51,7 +51,7 @@ func NewCommand(name string) *cobra.Command {
 	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug log level")
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 
-	rootCmd.PersistentFlags().String("ucconfighome", "./", "Configuration directory to save the user configuration from the driver setup")
+	rootCmd.PersistentFlags().String("ucconfighome", "./ucconfig/", "Configuration directory to save the user configuration from the driver setup")
 	viper.BindPFlag("ucconfighome", rootCmd.PersistentFlags().Lookup("ucconfighome"))
 	viper.BindEnv("ucconfighome", "UC_CONFIG_HOME")
 

@@ -24,7 +24,7 @@ COPY --from=build-env /go/bin/ucrt /app/
 
 WORKDIR /app
 
-RUN adduser -D nonroot
+RUN adduser -D nonroot && mkdir /app/ucconfig && chown nonroot /app/ucconfig
 USER nonroot
 
 ENTRYPOINT [ "/app/ucrt" ]
