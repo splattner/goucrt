@@ -47,7 +47,7 @@ func NewIntegration(config Config) (*Integration, error) {
 
 	i := Integration{
 		Config:        config,
-		listenAddress: fmt.Sprintf(":%d", config["listenport"].(int)),
+		listenAddress: fmt.Sprintf(":%d", config.ListenPort),
 		deviceState:   DisconnectedDeviceState,
 		DeviceId:      "", // I think device_id is not yet implemented in Remote TV, used for multi-device integrati
 
@@ -79,15 +79,15 @@ func (i *Integration) Run() error {
 		return fmt.Errorf("Metadata not set")
 	}
 
-	http.HandleFunc(i.Config["websocketPath"].(string), i.wsEndpoint)
+	http.HandleFunc(i.Config.WebsocketPath, i.wsEndpoint)
 
 	//MDNS
-	if i.Config["enableMDNS"].(bool) {
+	if !i.Config.DisableMDNS {
 		go i.startAdvertising()
 	}
 
 	// Register the integration
-	if i.Config["enableRegistration"].(bool) && i.Config["registrationPin"].(string) != "" {
+	if i.Config.EnableRegistration && i.Config.RegistrationPin != "" {
 		go i.registerIntegration()
 	}
 
@@ -135,7 +135,7 @@ func (i *Integration) SetDriverSetupState(event_Type DriverSetupEventType, state
 // TODO: handle location via ENV's
 func (i *Integration) LoadSetupData() {
 
-	file, err := os.ReadFile(i.Metadata.DriverId + ".json")
+	file, err := os.ReadFile(i.Config.ConfigHome + i.Metadata.DriverId + ".json")
 	if err != nil {
 		log.WithError(err).Info("Cannot read setupDataFile")
 		i.SetupData = make(SetupData)
@@ -151,5 +151,5 @@ func (i *Integration) PersistSetupData() {
 
 	log.WithField("SetupData", i.SetupData).Info("Persist setup data")
 	file, _ := json.MarshalIndent(i.SetupData, "", " ")
-	_ = os.WriteFile(i.Metadata.DriverId+".json", file, 0644)
+	_ = os.WriteFile(i.Config.ConfigHome+i.Metadata.DriverId+".json", file, 0644)
 }

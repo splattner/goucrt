@@ -14,10 +14,10 @@ func (i *Integration) startAdvertising() {
 		"name=" + i.Metadata.Name.En,
 		"developer=" + i.Metadata.Developer.Name,
 		"ver=" + i.Metadata.Version,
-		"ws_path=" + i.Config["websocketPath"].(string),
+		"ws_path=" + i.Config.WebsocketPath,
 	}
 
-	server, err := zeroconf.Register(i.Metadata.DriverId, "_uc-integration._tcp", "local.", i.Config["listenport"].(int), txt, nil)
+	server, err := zeroconf.Register(i.Metadata.DriverId, "_uc-integration._tcp", "local.", i.Config.ListenPort, txt, nil)
 	if err != nil {
 		panic(err)
 	}

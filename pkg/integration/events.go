@@ -202,7 +202,7 @@ func (i *Integration) SendEntityChangeEvent(e interface{}) {
 	log.WithField("subscribedEtities", i.SubscribedEntities).Debug("Currently subscribed entities")
 
 	// Only send the event when remote is subscribed to
-	if (i.Config["ignoreEntitySubscription"] != nil && i.Config["ignoreEntitySubscription"].(bool)) || slices.Contains(i.SubscribedEntities, entity_id) {
+	if i.Config.IgnoreEntitySubscription || slices.Contains(i.SubscribedEntities, entity_id) {
 
 		var res interface{}
 		now := time.Now()

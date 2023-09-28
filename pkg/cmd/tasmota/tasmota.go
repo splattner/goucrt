@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/splattner/goucrt/pkg/client"
 	"github.com/splattner/goucrt/pkg/cmd"
 	"github.com/splattner/goucrt/pkg/integration"
@@ -28,25 +29,8 @@ func NewCommand(rootCmd *cobra.Command) *cobra.Command {
 				log.SetLevel(log.InfoLevel)
 			}
 
-			var config = make(integration.Config)
-
-			listenPort, _ := rootCmd.Flags().GetInt("listenPort")
-			enableMDNS, _ := rootCmd.Flags().GetBool("mdns")
-			enableRegistration, _ := rootCmd.Flags().GetBool("registration")
-			registrationUsername, _ := rootCmd.Flags().GetString("registrationUsername")
-			registrationPin, _ := rootCmd.Flags().GetString("registrationPin")
-			websocketPath, _ := rootCmd.Flags().GetString("websocketPath")
-			remoteTwoIP, _ := rootCmd.Flags().GetString("remoteTwoIP")
-			remoteTwoPort, _ := rootCmd.Flags().GetInt("remoteTwoPort")
-
-			config["listenport"] = listenPort
-			config["enableMDNS"] = enableMDNS
-			config["enableRegistration"] = enableRegistration
-			config["registrationUsername"] = registrationUsername
-			config["registrationPin"] = registrationPin
-			config["remoteTwoIP"] = remoteTwoIP
-			config["remoteTwoPort"] = remoteTwoPort
-			config["websocketPath"] = websocketPath
+			var config integration.Config
+			viper.Unmarshal(&config)
 
 			i, err := integration.NewIntegration(config)
 			cmd.CheckError(err)

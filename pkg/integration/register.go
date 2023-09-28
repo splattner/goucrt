@@ -35,8 +35,8 @@ type DriverRegistration struct {
 func (i *Integration) registerIntegration() {
 
 	// Use configured IP for registration instead of Remote Two discovery
-	if i.Config["remoteTwoIP"].(string) != "" && i.Config["remoteTwoPort"].(int) > 0 {
-		i.registerWithRemoteTwo(i.Config["remoteTwoIP"].(string), i.Config["remoteTwoPort"].(int))
+	if i.Config.RegistrationPin != "" && i.Config.RemoteTwoPort > 0 {
+		i.registerWithRemoteTwo(i.Config.RemoteTwoHost, i.Config.RemoteTwoPort)
 	} else {
 
 		entries := make(chan *zeroconf.ServiceEntry)
@@ -78,7 +78,7 @@ func (i *Integration) registerIntegration() {
 func (i *Integration) registerWithRemoteTwo(remoteTwoIP string, remoteTwoPort int) {
 
 	myip := GetLocalIP()
-	driverURL := "ws://" + myip + i.listenAddress + i.Config["websocketPath"].(string)
+	driverURL := "ws://" + myip + i.listenAddress + i.Config.WebsocketPath
 	remoteTwoURL := "http://" + remoteTwoIP + ":" + fmt.Sprint(remoteTwoPort)
 
 	driverRegistration := DriverRegistration{
@@ -107,7 +107,7 @@ func (i *Integration) registerWithRemoteTwo(remoteTwoIP string, remoteTwoPort in
 	req.Header.Set("Content-Type", "application/json")
 
 	// Authentication wit the Remote Two
-	credentials := b64.StdEncoding.EncodeToString([]byte(i.Config["registrationUsername"].(string) + ":" + i.Config["registrationPin"].(string)))
+	credentials := b64.StdEncoding.EncodeToString([]byte(i.Config.RegistrationUsername + ":" + i.Config.RegistrationPin))
 	req.Header.Set("Authorization", "Basic "+credentials)
 
 	// send the request
