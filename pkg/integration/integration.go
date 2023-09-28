@@ -46,8 +46,9 @@ type Integration struct {
 func NewIntegration(config Config) (*Integration, error) {
 
 	i := Integration{
-		Config:        config,
-		listenAddress: fmt.Sprintf(":%d", config.ListenPort),
+		Config: config,
+		// TODO: for the moment, only IPv4, as somehow the behaviour seems strange when both.. not investigatet though
+		listenAddress: fmt.Sprintf("0.0.0.0:%d", config.ListenPort),
 		deviceState:   DisconnectedDeviceState,
 		DeviceId:      "", // I think device_id is not yet implemented in Remote TV, used for multi-device integrati
 
@@ -92,6 +93,7 @@ func (i *Integration) Run() error {
 	}
 
 	log.Debug("Listen for new Websocket connection")
+
 	log.Fatal(http.ListenAndServe(i.listenAddress, nil))
 
 	return nil
