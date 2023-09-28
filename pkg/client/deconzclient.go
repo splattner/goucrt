@@ -541,8 +541,6 @@ func (c *DeconzClient) deconzClientLoop() {
 
 	if c.deconz == nil {
 		c.setupDeconz()
-	} else {
-		return
 	}
 
 	if c.deconz != nil {

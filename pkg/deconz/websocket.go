@@ -27,7 +27,9 @@ const (
 // Stop the listen Loop
 func (d *Deconz) Stop() {
 
-	d.controlChannel <- "stop"
+	if d.controlChannel != nil {
+		d.controlChannel <- "stop"
+	}
 
 }
 
