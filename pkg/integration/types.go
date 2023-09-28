@@ -211,7 +211,7 @@ type SetupData map[string]string
 // Set required data to configure the integration driver or continue the setup process.
 type SetDriverUserDataRequest struct {
 	CommonReq
-	MsgData SetDriverUserData `json:"msg_data`
+	MsgData SetDriverUserData `json:"msg_data"`
 }
 
 type SetDriverUserData struct {
@@ -316,7 +316,7 @@ type EntityChangeEvent struct {
 }
 
 type EntityChangeData struct {
-	DeviceId   string                 `json:"device_id`
+	DeviceId   string                 `json:"device_id"`
 	EntityType string                 `json:"entity_type"`
 	EntityId   string                 `json:"entity_id"`
 	Attributes map[string]interface{} `json:"attributes"`

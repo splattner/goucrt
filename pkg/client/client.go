@@ -45,8 +45,9 @@ func (c *Client) InitClient() {
 
 	// Pass function to the integration driver that is called when the remote want to setup the driver
 	c.IntegrationDriver.SetHandleSetupFunction(c.HandleSetup)
-	// Pass function to the integration driver that is called when the remote want to setup the driver
+	// Pass function to the integration driver that is called when the remote want to connect the driver
 	c.IntegrationDriver.SetHandleConnectionFunction(c.HandleConnection)
+	// Pass function to the integration driver that is called when the remote want to send data from required user input page
 	c.IntegrationDriver.SetHandleSetDriverUserDataFunction(c.HandleSetDriverUserDataFunction)
 
 	// Call setup Function if its set

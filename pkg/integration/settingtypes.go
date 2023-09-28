@@ -53,7 +53,7 @@ type SettingTypeDropdown struct {
 
 type SettingTypeDropdowDefinition struct {
 	Value string                              `json:"value"`
-	Items []SettingTypeDropdowItemsDefinition `json:"items`
+	Items []SettingTypeDropdowItemsDefinition `json:"items"`
 }
 type SettingTypeDropdowItemsDefinition struct {
 	Id    string       `json:"id"`
