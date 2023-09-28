@@ -64,9 +64,27 @@ Flags:
       --websocketPath string          path where this integration is available for websocket connections (default "/ws")
 
 Use "ucrt [command] --help" for more information about a command.
-
-
 ```
+
+### Configuration
+
+
+#### Environment Variables
+
+The following environment variables exist in addition to the configuration file:
+
+| Variable                     | Values               |Description |
+|------------------------------|----------------------|--------------------------------------------------------------------------------|
+| UC_CONFIG_HOME               | _directory path_     | Configuration directory to save the user configuration from the driver setup.<br>Default: current directory |
+| UC_DISABLE_MDNS_PUBLISH      | `true` / `false`     | Disables mDNS service advertisement.<br>Default: `false` |
+| UC_INTEGRATION_LISTEN_PORT | `int` | The port this integration is listening for websocket connection from the remote.<br> Default: `8080` |
+| UC_INTEGRATION_WEBSOCKET_PATH | `string` | Path where this integration is available for websocket connections.<br> Default: `/ws` |
+| UC_RT_HOST | `string` | IP Address of your Remote Two instance (disables Remote Two discovery via mDNS for registration) |
+| UC_RT_PORT | `int` | Port of your Remote Two instance (disables Remote Two discovery via mDNS for registration) |
+| UC_ENABLE_REGISTRATION | `string` | Enable driver registration on the Remote Two instead of mDNS advertisement.<br> Default: `false` |
+| UC_REGISTRATION_USERNAME | `string` | Username of the RemoteTwo for driver registration.<br> Default: `web-configurator` |
+| UC_REGISTRATION_PIN | `string` | Pin of the RemoteTwo for driver registration |
+
 
 ## Development
 
@@ -107,7 +125,7 @@ go build .
 ### Docker
 
 ```bash
-docker build -f build/Dockerfile -t splattner/goucrt
+docker build -f build/Dockerfile -t  ghcr.io/splattner/goucrt:latest
 ```
 
 ## License
