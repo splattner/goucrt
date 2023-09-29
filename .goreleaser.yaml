@@ -46,3 +46,15 @@ dockers:
   - "--label=org.opencontainers.image.revision={{.FullCommit}}"
   - "--label=org.opencontainers.image.version={{.Version}}"
   extra_files: *dockers_extra_files
+docker_manifests:
+- name_template: "ghcr.io/splattner/goucrt:v{{ .Version }}"
+  image_templates: &ghcr
+    - "ghcr.io/splattner/goucrt:v{{ .Version }}-amd64"
+    - "ghcr.io/splattner/goucrt:v{{ .Version }}-arm64"
+
+  # For prereleases, updating `latest` and the floating tags of the major version does not make sense.
+  # Only the image for the exact version should be pushed.
+- name_template: "{{ if not .Prerelease }}ghcr.io/splattner/goucrt:v{{ .Major }}{{ end }}"
+  image_templates: *ghcr
+- name_template: "{{ if not .Prerelease }}ghcr.io/splattner/goucrt:v{{ end }}"
+  image_templates: *ghcr
