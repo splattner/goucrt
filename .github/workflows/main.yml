@@ -43,8 +43,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Build docker images
-        run: make docker-build -e IMG_TAG=${GITHUB_REF#refs/heads/}
+      - name: Build docker images amd64
+        run: make docker-build-amd64 -e IMG_TAG=${GITHUB_REF#refs/heads/}
+
+      - name: Build docker images arm64
+        run: make docker-build-arm64 -e IMG_TAG=${GITHUB_REF#refs/heads/}
 
       - name: Log into registry ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'
@@ -62,5 +65,4 @@ jobs:
         uses: mathieudutour/github-tag-action@v6.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          dry_run: true
           default_bump: false
