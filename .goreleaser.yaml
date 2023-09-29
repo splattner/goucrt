@@ -72,7 +72,7 @@ docker_signs:
     output: true
     args:
     - 'sign'
-    - '${artifact}'
+    - '${digest}'
     - "--yes" # needed on cosign 2.0.0+
 
 # signs the checksum file
