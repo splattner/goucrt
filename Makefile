@@ -54,7 +54,7 @@ docker-build: $(BIN_FILENAME) ## Build the docker image
 
 .PHONY: docker-push
 docker-push: ## Push the docker image
-	docker push $(GOUCR_GHCR_IMG)
+	docker push $(GOUCRT_GHCR_IMG)
 
 build-clean:
 	rm -rf dist/ bin/ cover.out $(BIN_FILENAME) $(WORK_DIR)
