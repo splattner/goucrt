@@ -125,6 +125,40 @@ go build .
 docker build -f build/Dockerfile -t  ghcr.io/splattner/goucrt:latest
 ```
 
+## Verifying
+
+### Checksum
+
+### Checksums
+
+```shell
+wget https://github.com/splattner/goucrt/releases/download/v0.1.3/goucrt_0.1.3_checksums.txt
+cosign verify-blob \
+  --certificate-identity 'https://github.com/splattner/goucrt/.github/workflows/release.yaml@refs/tags/v0.1.3' \
+  --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
+  --cert https://github.com/splattner/goucrt/releases/download/v0.1.3/goucrt_0.1.3_checksums.txt.pem \
+  --signature https://github.com/splattner/goucrt/releases/download/v0.1.3/goucrt_0.1.3_checksums.txt.sig \
+  ./goucrt_0.1.3_checksums.txt
+```
+
+You can then download any file you want from the release, and verify it with, for example:
+
+```shell
+wget https://github.com/splattner/goucrt/releases/download/v0.1.3/goucrt_0.1.3_linux_amd64.tar.gz.sbom
+wget https://github.com/splattner/goucrt/releases/download/v0.1.3/goucrt_0.1.3_linux_amd64.tar.gz
+sha256sum --ignore-missing -c checksums.txt
+```
+
+And both should say "OK".
+
+You can then inspect the `.sbom` file to see the entire dependency tree of the binary.
+
+### Docker image
+
+```shell
+cosign verify ghcr.io/splattner/goucrt:v0.1.3 --certificate-identity 'https://github.com/splattner/goucrt/.github/workflows/release.yaml@refs/tags/v0.1.3' --certificate-oidc-issuer 'https://token.actions.githubusercontent.com'
+```
+
 ## License
 
 This project is licensed under the [**Mozilla Public License 2.0**](https://choosealicense.com/licenses/mpl-2.0/).
