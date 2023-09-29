@@ -1,8 +1,8 @@
 IMG_TAG ?= latest
 
 GOUCRT_MAIN_GO ?= cmd/ucrt/ucrt.go
-GOUCRT__GOOS ?= linux
-GOUCRT__GOARCH ?= amd64
+GOUCRT_GOOS ?= linux
+GOUCRT_GOARCH ?= amd64
 
 CURDIR ?= $(shell pwd)
 BIN_FILENAME ?= $(CURDIR)/$(PROJECT_ROOT_DIR)/ucrt
