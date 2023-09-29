@@ -25,7 +25,7 @@ test: ## Run tests
 	go test ./... -coverprofile cover.out
 
 .PHONY: build
-build: generate fmt vet $(BIN_FILENAME) docs-update-usage ## Build manager binary
+build: fmt vet $(BIN_FILENAME)
 
 
 .PHONY: fmt
@@ -45,19 +45,11 @@ lint: fmt vet golangci-lint ## Invokes all linting targets
 golangci-lint: $(golangci_bin) ## Run golangci linters
 	$(golangci_bin) run --timeout 5m --out-format colored-line-number ./...
 
-.PHONY: docker-build-amd64
-docker-build-amd64: $(BIN_FILENAME) ## Build the docker image
+.PHONY: docker-build
+docker-build: $(BIN_FILENAME) ## Build the docker image
 	docker build . \
 	    -f build/Dockerfile \
 		--tag $(GOUCRT_GHCR_IMG) \
-		--platform linux/amd64
-
-.PHONY: docker-build-arm64
-docker-build-arm64: $(BIN_FILENAME) ## Build the docker image
-	docker build . \
-	    -f build/Dockerfile \
-		--tag $(GOUCRT_GHCR_IMG) \
-		--platform linux/arm64
 
 
 .PHONY: docker-push
