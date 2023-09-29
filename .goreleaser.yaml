@@ -1,0 +1,48 @@
+# This is an example .goreleaser.yml file with some sensible defaults.
+# Make sure to check the documentation at https://goreleaser.com
+
+# The lines bellow are called `modelines`. See `:help modeline`
+# Feel free to remove those if you don't want/need to use them.
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod tidy
+    # you may remove this if you don't need go generate
+    - go generate ./...
+
+builds:
+  - main: ./cmd/ucrt
+    binary: ucrt
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+    - amd64
+    - arm64
+
+dockers:
+- image_templates:
+  - "ghcr.io/splattner/goucrt:v{{ .Version }}-amd64"
+  dockerfile: "./build/Dockerfile"
+  goarch: amd64
+  use: buildx
+  build_flag_templates:
+  - "--platform=linux/amd64"
+  - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+  - "--label=org.opencontainers.image.version={{.Version}}"
+  extra_files: &dockers_extra_files
+  - go.mod
+- image_templates:
+  - "ghcr.io/splattner/goucrt:v{{ .Version }}-arm64"
+  dockerfile: "./build/Dockerfile"
+  goarch: arm64
+  use: buildx
+  build_flag_templates:
+  - "--platform=linux/arm64"
+  - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+  - "--label=org.opencontainers.image.version={{.Version}}"
+  extra_files: *dockers_extra_files

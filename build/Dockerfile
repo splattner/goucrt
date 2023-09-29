@@ -1,14 +1,3 @@
-FROM golang:1.21 AS build-env
-
-WORKDIR /go/src/app
-COPY ./ .
-
-RUN ls -al
-
-RUN go get -d -v ./...
-RUN go install -v ./...
-
-
 FROM alpine:3
 
 LABEL maintainer "Sebastian Plattner"
@@ -20,7 +9,7 @@ LABEL org.opencontainers.image.licenses MPL-2.0
 
 RUN apk --no-cache add libc6-compat
 
-COPY --from=build-env /go/bin/ucrt /app/
+COPY ucrt /app/
 
 WORKDIR /app
 
