@@ -10,11 +10,15 @@ env:
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
 
+permissions:
+  contents: write
+  packages: write
+
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+
 
     steps:
       - name: Checkout repository
