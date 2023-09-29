@@ -69,3 +69,12 @@ func NewSensorEntity(id string, name LanguageText, area string, deviceClass Sens
 
 	return &sensorEntity
 }
+
+func (e *SensorEntity) UpdateEntity(newEntity SensorEntity) error {
+
+	e.Name = newEntity.Name
+	e.Area = newEntity.Area
+	e.Attributes["unit"] = newEntity.Attributes["unit"]
+
+	return nil
+}

@@ -194,7 +194,7 @@ func (i *Integration) handleAbortDriverSetupEvent(e *AbortDriverSetupEvent) {
 // Emitted when an attribute of an entity changes, e.g. is switched off.
 // Either after an entity_command or if the entity is updated manually through a user or an external system.
 // This keeps the Remote Two in sync with the real state of the entity without the need of constant polling.
-func (i *Integration) SendEntityChangeEvent(e interface{}) {
+func (i *Integration) SendEntityChangeEvent(e interface{}, a *map[string]interface{}) {
 
 	entity_id := i.getEntityId(e)
 
@@ -205,19 +205,30 @@ func (i *Integration) SendEntityChangeEvent(e interface{}) {
 	if i.Config.IgnoreEntitySubscription || slices.Contains(i.SubscribedEntities, entity_id) {
 
 		var res interface{}
-		now := time.Now()
+
+		// UTC time for event timestamp
+		loc, _ := time.LoadLocation("UTC")
+		now := time.Now().In(loc)
+		timeformat := "2006-01-02T15:04:05.999999999Z"
 
 		device_id := i.getDeviceId(e)
 
 		entity_type := i.getEntityType(e)
-		attributes := i.getEntityAttributes(e)
+
+		var attributes map[string]interface{}
+		//if attributes is set, only send thos
+		if a == nil {
+			attributes = i.getEntityAttributes(e)
+		} else {
+			attributes = *a
+		}
 
 		res = EntityChangeEvent{
 			CommonEvent{
 				Kind: "event",
 				Msg:  "entity_change",
 				Cat:  "ENTITY",
-				Ts:   now.Format(time.RFC3339),
+				Ts:   now.Format(timeformat),
 			},
 			EntityChangeData{
 				DeviceId:   device_id,

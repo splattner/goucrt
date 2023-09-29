@@ -115,7 +115,7 @@ func (d *DenonAVR) GetSoundModeList() []string {
 
 	var soundModeList []string
 
-	for mode, _ := range SOUND_MODE_MAPPING {
+	for mode := range SOUND_MODE_MAPPING {
 		soundModeList = append(soundModeList, mode)
 	}
 

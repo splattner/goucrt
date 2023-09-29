@@ -39,9 +39,9 @@ type DeconzSensorConfig struct {
 	SunsetOffset  int16  `json:"sunsetoffset,omitempty"`
 }
 
-func (d *DeconzDevice) GetSensor(sensorID int) (DeconzSensor, error) {
+func (d *Deconz) GetSensor(sensorID int) (DeconzSensor, error) {
 	var ll DeconzSensor
-	url := fmt.Sprintf(getSensorURL, fmt.Sprintf("%s:%d", d.deconz.host, d.deconz.port), d.deconz.apikey, sensorID)
+	url := fmt.Sprintf(getSensorURL, fmt.Sprintf("%s:%d", d.host, d.port), d.apikey, sensorID)
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return ll, err

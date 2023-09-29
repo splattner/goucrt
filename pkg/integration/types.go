@@ -316,7 +316,7 @@ type EntityChangeEvent struct {
 }
 
 type EntityChangeData struct {
-	DeviceId   string                 `json:"device_id"`
+	DeviceId   string                 `json:"device_id,omitempty"`
 	EntityType string                 `json:"entity_type"`
 	EntityId   string                 `json:"entity_id"`
 	Attributes map[string]interface{} `json:"attributes"`

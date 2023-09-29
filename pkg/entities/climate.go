@@ -44,7 +44,7 @@ const (
 
 type ClimateEntity struct {
 	Entity
-	Commands map[string]func(ClimateEntity, map[string]interface{}) int `json:"-"`
+	Commands map[ClimateEntityCommand]func(ClimateEntity, map[string]interface{}) int `json:"-"`
 }
 
 func NewClimateEntity(id string, name LanguageText, area string) *ClimateEntity {
@@ -56,10 +56,21 @@ func NewClimateEntity(id string, name LanguageText, area string) *ClimateEntity 
 
 	climateEntity.EntityType.Type = "climate"
 
-	climateEntity.Commands = make(map[string]func(ClimateEntity, map[string]interface{}) int)
+	climateEntity.Commands = make(map[ClimateEntityCommand]func(ClimateEntity, map[string]interface{}) int)
 	climateEntity.Attributes = make(map[string]interface{})
 
 	return &climateEntity
+}
+
+func (e *ClimateEntity) UpdateEntity(newEntity ClimateEntity) error {
+
+	e.Name = newEntity.Name
+	e.Area = newEntity.Area
+	e.Commands = newEntity.Commands
+	e.Features = newEntity.Features
+	e.Attributes = newEntity.Attributes
+
+	return nil
 }
 
 // Add a Feature to this Climat Entity
@@ -84,14 +95,14 @@ func (e *ClimateEntity) AddFeature(feature ClimateEntityFeatures) {
 
 // Register a function for the Entity command
 func (e *ClimateEntity) AddCommand(command ClimateEntityCommand, function func(ClimateEntity, map[string]interface{}) int) {
-	e.Commands[string(command)] = function
+	e.Commands[command] = function
 
 }
 
 // Call the registred function for this entity_command
 func (e *ClimateEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
-	if e.Commands[cmd_id] != nil {
-		return e.Commands[cmd_id](*e, params)
+	if e.Commands[ClimateEntityCommand(cmd_id)] != nil {
+		return e.Commands[ClimateEntityCommand(cmd_id)](*e, params)
 	}
 
 	return 404

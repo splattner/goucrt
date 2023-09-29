@@ -113,27 +113,21 @@ func (i *Integration) getEntityAttributes(entity interface{}) map[string]interfa
 	// Ugly.. I guess but I don't know how better
 	switch e := entity.(type) {
 	case *entities.Entity:
-		attributes = e.Attributes
+		attributes = e.GetAttribute()
 	case *entities.ButtonEntity:
-		attributes = e.Attributes
-
+		attributes = e.GetAttribute()
 	case *entities.LightEntity:
-		attributes = e.Attributes
-
+		attributes = e.GetAttribute()
 	case *entities.SwitchsEntity:
-		attributes = e.Attributes
-
+		attributes = e.GetAttribute()
 	case *entities.MediaPlayerEntity:
-		attributes = e.Attributes
-
+		attributes = e.GetAttribute()
 	case *entities.SensorEntity:
-		attributes = e.Attributes
-
+		attributes = e.GetAttribute()
 	case *entities.ClimateEntity:
-		attributes = e.Attributes
-
+		attributes = e.GetAttribute()
 	case *entities.CoverEntity:
-		attributes = e.Attributes
+		attributes = e.GetAttribute()
 	}
 
 	return attributes
@@ -147,7 +141,7 @@ func (i *Integration) AddEntity(e interface{}) error {
 	log.WithField("entity_id", entity_id).Debug("Add a new entity to the integration")
 
 	// Search if entity is already added
-	_, _, err := i.GetEntityById(entity_id)
+	existingEntity, _, err := i.GetEntityById(entity_id)
 	if err != nil {
 		// Entity not found, so add id
 		i.setEntityChangeFunc(e, i.SendEntityChangeEvent)
@@ -157,7 +151,36 @@ func (i *Integration) AddEntity(e interface{}) error {
 		return nil
 	}
 
-	return fmt.Errorf("this entity is already added")
+	// else update the existing entity
+	return i.UpdateEntity(existingEntity, e)
+}
+
+// Update an existing entity with a new entity
+func (i *Integration) UpdateEntity(entity interface{}, newEntity interface{}) error {
+	switch e := entity.(type) {
+	case *entities.ButtonEntity:
+		return e.UpdateEntity(newEntity.(entities.ButtonEntity))
+
+	case *entities.LightEntity:
+		return e.UpdateEntity(newEntity.(entities.LightEntity))
+
+	case *entities.SwitchsEntity:
+		return e.UpdateEntity(newEntity.(entities.SwitchsEntity))
+
+	case *entities.MediaPlayerEntity:
+		return e.UpdateEntity(newEntity.(entities.MediaPlayerEntity))
+
+	case *entities.SensorEntity:
+		return e.UpdateEntity(newEntity.(entities.SensorEntity))
+
+	case *entities.ClimateEntity:
+		return e.UpdateEntity(newEntity.(entities.ClimateEntity))
+
+	case *entities.CoverEntity:
+		return e.UpdateEntity(newEntity.(entities.CoverEntity))
+	}
+
+	return nil
 }
 
 // Remove an Entity from the Integration
@@ -250,7 +273,7 @@ func (i *Integration) handleCommand(entity interface{}, req *EntityCommandReq) i
 }
 
 // Call the correct HandleCommand function depending on the entity type
-func (i *Integration) setEntityChangeFunc(entity interface{}, f func(interface{})) {
+func (i *Integration) setEntityChangeFunc(entity interface{}, f func(interface{}, *map[string]interface{})) {
 
 	// Ugly.. I guess but I don't know how better
 	switch e := entity.(type) {

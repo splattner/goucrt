@@ -116,7 +116,7 @@ const (
 type MediaPlayerEntity struct {
 	Entity
 	DeviceClass MediaPlayerDeviceClass
-	Commands    map[string]func(MediaPlayerEntity, map[string]interface{}) int `json:"-"`
+	Commands    map[MediaPlayerEntityCommand]func(MediaPlayerEntity, map[string]interface{}) int `json:"-"`
 }
 
 func NewMediaPlayerEntity(id string, name LanguageText, area string, deviceClass MediaPlayerDeviceClass) *MediaPlayerEntity {
@@ -129,10 +129,21 @@ func NewMediaPlayerEntity(id string, name LanguageText, area string, deviceClass
 
 	mediaPlayerEntity.EntityType.Type = "media_player"
 
-	mediaPlayerEntity.Commands = make(map[string]func(MediaPlayerEntity, map[string]interface{}) int)
+	mediaPlayerEntity.Commands = make(map[MediaPlayerEntityCommand]func(MediaPlayerEntity, map[string]interface{}) int)
 	mediaPlayerEntity.Attributes = make(map[string]interface{})
 
 	return &mediaPlayerEntity
+}
+
+func (e *MediaPlayerEntity) UpdateEntity(newEntity MediaPlayerEntity) error {
+
+	e.Name = newEntity.Name
+	e.Area = newEntity.Area
+	e.Commands = newEntity.Commands
+	e.Features = newEntity.Features
+	e.Attributes = newEntity.Attributes
+
+	return nil
 }
 
 // Register a function for the Entity command
@@ -237,7 +248,7 @@ func (e *MediaPlayerEntity) AddFeature(feature MediaPlayerEntityFeatures) {
 
 // Register a function for the Entity command
 func (e *MediaPlayerEntity) AddCommand(command MediaPlayerEntityCommand, function func(MediaPlayerEntity, map[string]interface{}) int) {
-	e.Commands[string(command)] = function
+	e.Commands[command] = function
 
 }
 
@@ -267,8 +278,8 @@ func (e *MediaPlayerEntity) MapCommand(command MediaPlayerEntityCommand, f func(
 
 // Call the registred function for this entity_command
 func (e *MediaPlayerEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
-	if e.Commands[cmd_id] != nil {
-		return e.Commands[cmd_id](*e, params)
+	if e.Commands[MediaPlayerEntityCommand(cmd_id)] != nil {
+		return e.Commands[MediaPlayerEntityCommand(cmd_id)](*e, params)
 	}
 
 	return 404

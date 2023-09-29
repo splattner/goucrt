@@ -41,7 +41,7 @@ const (
 
 type CoverEntity struct {
 	Entity
-	Commands map[string]func(CoverEntity, map[string]interface{}) int `json:"-"`
+	Commands map[CoverEntityCommand]func(CoverEntity, map[string]interface{}) int `json:"-"`
 }
 
 func NewCoverEntity(id string, name LanguageText, area string) *CoverEntity {
@@ -53,10 +53,22 @@ func NewCoverEntity(id string, name LanguageText, area string) *CoverEntity {
 
 	coverEntity.EntityType.Type = "cover"
 
-	coverEntity.Commands = make(map[string]func(CoverEntity, map[string]interface{}) int)
+	coverEntity.Commands = make(map[CoverEntityCommand]func(CoverEntity, map[string]interface{}) int)
 	coverEntity.Attributes = make(map[string]interface{})
 
 	return &coverEntity
+}
+
+func (e *CoverEntity) UpdateEntity(newEntity CoverEntity) error {
+
+	e.Name = newEntity.Name
+	e.Area = newEntity.Area
+	e.Commands = newEntity.Commands
+	e.Features = newEntity.Features
+	e.Attributes = newEntity.Attributes
+
+	return nil
+
 }
 
 // Register a function for the Entity command
@@ -89,14 +101,14 @@ func (e *CoverEntity) AddFeature(feature CoverEntityFeatures) {
 
 // Register a function for the Entity command
 func (e *CoverEntity) AddCommand(command CoverEntityCommand, function func(CoverEntity, map[string]interface{}) int) {
-	e.Commands[string(command)] = function
+	e.Commands[command] = function
 
 }
 
 // Call the registred function for this entity_command
 func (e *CoverEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
-	if e.Commands[cmd_id] != nil {
-		return e.Commands[cmd_id](*e, params)
+	if e.Commands[CoverEntityCommand(cmd_id)] != nil {
+		return e.Commands[CoverEntityCommand(cmd_id)](*e, params)
 	}
 
 	return 404

@@ -141,6 +141,22 @@ func (d *DeconzDevice) IsOn() bool {
 	return false
 }
 
+func (d *DeconzDevice) HasColor() bool {
+	switch d.Type {
+	case LightDeconzDeviceType:
+		return d.Light.HasColor
+	case GroupDeconzDeviceType:
+		for _, light := range d.Group.Lights {
+			if light.HasColor() {
+				return true
+			}
+		}
+		return false
+	}
+
+	return false
+}
+
 func (d *DeconzDevice) GetBrightness() uint {
 
 	var brightness uint
@@ -382,7 +398,15 @@ func (d *DeconzDevice) updateState(newState *DeconzState) {
 		}
 
 		if newState.TransitionTime != nil {
-			d.Light.State.TransitionTime = newState.TransitionTime
+			d.Group.Action.TransitionTime = newState.TransitionTime
+		}
+
+		if newState.AllOn != nil {
+			d.Group.State.AnyOn = newState.AnyOn
+		}
+
+		if newState.AllOn != nil {
+			d.Group.State.AllOn = newState.AllOn
 		}
 
 	case SensorDeconzDeviceType:

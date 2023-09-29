@@ -10,8 +10,10 @@ type LightEntityAttributes string
 type LightEntityCommand string
 
 const (
-	OnLightEntityState  LightEntityState = "ON"
-	OffLightEntityState                  = "OFF"
+	OnLightEntityState          LightEntityState = "ON"
+	OffLightEntityState                          = "OFF"
+	UnavailableLightEntityState                  = "UNAVAILABLE"
+	UnknownLightEntityState                      = "UNKNOWN"
 )
 
 const (
@@ -38,7 +40,7 @@ const (
 
 type LightEntity struct {
 	Entity
-	Commands map[string]func(LightEntity, map[string]interface{}) int `json:"-"`
+	Commands map[LightEntityCommand]func(LightEntity, map[string]interface{}) int `json:"-"`
 }
 
 func NewLightEntity(id string, name LanguageText, area string) *LightEntity {
@@ -55,10 +57,21 @@ func NewLightEntity(id string, name LanguageText, area string) *LightEntity {
 
 	lightEntity.EntityType.Type = "light"
 
-	lightEntity.Commands = make(map[string]func(LightEntity, map[string]interface{}) int)
+	lightEntity.Commands = make(map[LightEntityCommand]func(LightEntity, map[string]interface{}) int)
 	lightEntity.Attributes = make(map[string]interface{})
 
 	return &lightEntity
+}
+
+func (e *LightEntity) UpdateEntity(newEntity LightEntity) error {
+
+	e.Name = newEntity.Name
+	e.Area = newEntity.Area
+	e.Commands = newEntity.Commands
+	e.Features = newEntity.Features
+	e.Attributes = newEntity.Attributes
+
+	return nil
 }
 
 // Register a function for the Entity command
@@ -87,7 +100,7 @@ func (e *LightEntity) AddFeature(feature LightEntityFeatures) {
 
 // Register a function for the Entity command
 func (e *LightEntity) AddCommand(command LightEntityCommand, function func(LightEntity, map[string]interface{}) int) {
-	e.Commands[string(command)] = function
+	e.Commands[command] = function
 
 }
 
@@ -117,8 +130,8 @@ func (e *LightEntity) MapCommand(command LightEntityCommand, f func() error) {
 
 // Call the registred function for this entity_command
 func (e *LightEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
-	if e.Commands[cmd_id] != nil {
-		return e.Commands[cmd_id](*e, params)
+	if e.Commands[LightEntityCommand(cmd_id)] != nil {
+		return e.Commands[LightEntityCommand(cmd_id)](*e, params)
 	}
 
 	return 404

@@ -27,12 +27,13 @@ type DeconzGroup struct {
 	Name             string         `json:"name,omitempty"`
 	Hidden           bool           `json:"hidden,omitempty"`
 	Action           DeconzState    `json:"action,omitempty"`
-	Lights           []string       `json:"lights,omitempty"`
+	LightIDs         []string       `json:"lights,omitempty"`
 	LightSequence    []string       `json:"lightsequence,omitempty"`
 	MultiDeviceIDs   []string       `json:"multideviceids,omitempty"`
 	DeviceMembership []string       `json:"devicemembership,omitempty"`
 	Scenes           []scenes.Scene `json:"scenes,omitempty"`
 	State            DeconzState    `json:"state,omitempty"`
+	Lights           []*DeconzDevice
 }
 
 // Return all Groups from DeCONZ Rest API
@@ -58,6 +59,23 @@ func (d *Deconz) GetAllGroups() ([]DeconzGroup, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		// Get State of all Lights in this group
+		group.Lights = make([]*DeconzDevice, len(group.LightIDs))
+		for i, id := range group.LightIDs {
+			lightid, _ := strconv.Atoi(id)
+			light, err := d.GetLight(lightid)
+
+			if err != nil {
+				return nil, err
+			}
+			lightDevice, err := d.GetDeviceByID(light.ID)
+			if err != nil {
+				return nil, err
+			}
+			group.Lights[i] = lightDevice
+		}
+
 		groups = append(groups, group)
 	}
 
@@ -66,9 +84,9 @@ func (d *Deconz) GetAllGroups() ([]DeconzGroup, error) {
 	return groups, err
 }
 
-func (d *DeconzDevice) GetGroupAttrs(groupID int) (DeconzGroup, error) {
+func (d *Deconz) GetGroup(groupID int) (DeconzGroup, error) {
 	var gg DeconzGroup
-	url := fmt.Sprintf(getGroupAttrsURL, fmt.Sprintf("%s:%d", d.deconz.host, d.deconz.port), d.deconz.apikey, groupID)
+	url := fmt.Sprintf(getGroupAttrsURL, fmt.Sprintf("%s:%d", d.host, d.port), d.apikey, groupID)
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return gg, err
@@ -92,16 +110,11 @@ func (d *DeconzDevice) GetGroupAttrs(groupID int) (DeconzGroup, error) {
 	return gg, err
 }
 
-func (d *DeconzDevice) SetGroupAttrs(groupID int, group DeconzGroup) ([]ApiResponse, error) {
+func (d *DeconzDevice) SetGroupAttrs() ([]ApiResponse, error) {
 	var apiResponse []ApiResponse
-	url := fmt.Sprintf(setGroupAttrsURL, fmt.Sprintf("%s:%d", d.deconz.host, d.deconz.port), d.deconz.apikey, groupID)
-	gg := DeconzGroup{}
-	gg.Name = group.Name
-	gg.Lights = group.Lights
-	gg.Hidden = group.Hidden
-	gg.LightSequence = group.LightSequence
-	gg.MultiDeviceIDs = group.MultiDeviceIDs
-	jsonData, err := json.Marshal(&gg)
+	url := fmt.Sprintf(setGroupAttrsURL, fmt.Sprintf("%s:%d", d.deconz.host, d.deconz.port), d.deconz.apikey, d.Group.ID)
+
+	jsonData, err := json.Marshal(&d.Group)
 	if err != nil {
 		return apiResponse, err
 	}
@@ -125,13 +138,13 @@ func (d *DeconzDevice) SetGroupAttrs(groupID int, group DeconzGroup) ([]ApiRespo
 	return apiResponse, err
 }
 
-func (d *DeconzDevice) SetGroupState(groupID int, state DeconzState) ([]ApiResponse, error) {
+func (d *DeconzDevice) SetGroupState() ([]ApiResponse, error) {
 
-	log.WithFields(log.Fields{"ID": groupID, "State": state}).Debug("Set Group State")
+	log.WithFields(log.Fields{"ID": d.Group.ID, "State": d.Group.Action}).Debug("Set Group State")
 
 	var apiResponse []ApiResponse
-	url := fmt.Sprintf(setGroupStateURL, fmt.Sprintf("%s:%d", d.deconz.host, d.deconz.port), d.deconz.apikey, groupID)
-	jsonData, err := json.Marshal(&state)
+	url := fmt.Sprintf(setGroupStateURL, fmt.Sprintf("%s:%d", d.deconz.host, d.deconz.port), d.deconz.apikey, d.Group.ID)
+	jsonData, err := json.Marshal(&d.Group.Action)
 	if err != nil {
 		return apiResponse, err
 	}
@@ -164,12 +177,7 @@ func (d *DeconzDevice) newDeconzGroupDevice() {
 
 func (d *DeconzDevice) setGroupState() error {
 
-	log.WithFields(log.Fields{
-		"ID":    d.Group.ID,
-		"State": d.Group.Action,
-	}).Info("Deconz, call SetGroupState")
-
-	_, err := d.SetGroupState(d.Group.ID, d.Group.Action)
+	_, err := d.SetGroupState()
 	if err != nil {
 		log.WithError(err).Debug("Deconz, SetGroupState Error")
 		return err

@@ -83,7 +83,7 @@ func NewDeconzClient(i *integration.Integration) *DeconzClient {
 			},
 			Settings: []integration.SetupDataSchemaSettings{ipaddr, port, websocketport},
 		},
-		Icon: "",
+		Icon: "custom:deconz.png",
 	}
 
 	client.IntegrationDriver.SetMetadata(&metadata)
@@ -247,7 +247,7 @@ func (c *DeconzClient) handleNewLightDeviceDiscovered(device *deconz.DeconzDevic
 	light.AddFeature(entities.DimLightEntityFeatures)
 	light.UpdateAttribute(entities.BrightnessLightEntityAttribute, device.GetBrightness())
 
-	if device.Light.HasColor {
+	if device.HasColor() {
 		switch device.Light.State.ColorMode {
 		case "ct":
 			light.AddFeature(entities.ColorTemperatureLightEntityFeatures)
@@ -313,12 +313,17 @@ func (c *DeconzClient) handleNewLightDeviceDiscovered(device *deconz.DeconzDevic
 		log.WithFields(log.Fields{
 			"ID":   device.GetID(),
 			"Type": device.Type,
-		}).Debug("Handle State Change")
+		}).Debug("Handle State Change for this Light")
 
 		attributes := make(map[string]interface{})
 
 		if light.HasAttribute(entities.StateLightEntityAttribute) {
-			attributes[string(entities.StateLightEntityAttribute)] = mapOnState[*state.On]
+			if state.Reachable != nil && !*state.Reachable {
+				attributes[string(entities.StateLightEntityAttribute)] = entities.UnavailableLightEntityState
+			} else {
+				attributes[string(entities.StateLightEntityAttribute)] = mapOnState[*state.On]
+			}
+
 		}
 
 		if light.HasAttribute(entities.HueLightEntityAttribute) {
@@ -366,14 +371,21 @@ func (c *DeconzClient) handleNewGroupDeviceDiscovered(device *deconz.DeconzDevic
 	group.AddFeature(entities.DimLightEntityFeatures)
 	group.UpdateAttribute(entities.BrightnessLightEntityAttribute, device.GetBrightness())
 
-	switch device.Group.Action.ColorMode {
-	case "ct":
-		group.AddFeature(entities.ColorTemperatureLightEntityFeatures)
-		group.UpdateAttribute(entities.ColorTemperatureLightEntityAttribute, device.GetColorTempInPercent())
-	case "hs":
-		group.AddFeature(entities.ColorLightEntityFeatures)
-		group.UpdateAttribute(entities.HueLightEntityAttribute, device.GetHueConverted())
-		group.UpdateAttribute(entities.SaturationLightEntityAttribute, device.GetSaturation())
+	if device.HasColor() {
+		for _, light := range device.Group.Lights {
+			if light.HasColor() {
+				switch light.Light.State.ColorMode {
+				case "ct":
+					group.AddFeature(entities.ColorTemperatureLightEntityFeatures)
+					group.UpdateAttribute(entities.ColorTemperatureLightEntityAttribute, light.GetColorTempInPercent())
+				case "hs":
+					group.AddFeature(entities.ColorLightEntityFeatures)
+					group.UpdateAttribute(entities.HueLightEntityAttribute, light.GetHueConverted())
+					group.UpdateAttribute(entities.SaturationLightEntityAttribute, light.GetSaturation())
+				}
+			}
+		}
+
 	}
 
 	// Commands
@@ -394,15 +406,14 @@ func (c *DeconzClient) handleNewGroupDeviceDiscovered(device *deconz.DeconzDevic
 			}
 
 			if params["hue"] != nil {
-				hue_converted, _ := strconv.ParseFloat(params["hue"].(string), 32)
-				hue := hue_converted / 360 * 65535
+				hue := params["hue"].(float64) / 360 * 65535
 				if err := device.SetHue(float32(hue)); err != nil {
 					return 404
 				}
 			}
 
 			if params["saturation"] != nil {
-				if err := device.SetSaturation(float32(params["saturation"].(uint))); err != nil {
+				if err := device.SetSaturation(float32(params["saturation"].(float64))); err != nil {
 					return 404
 				}
 			}
@@ -440,37 +451,43 @@ func (c *DeconzClient) handleNewGroupDeviceDiscovered(device *deconz.DeconzDevic
 		log.WithFields(log.Fields{
 			"ID":   device.GetID(),
 			"Type": device.Type,
-		}).Debug("Handle State Change")
+		}).Debug("Handle State Change for this Group")
 
 		attributes := make(map[string]interface{})
 
 		if group.HasAttribute(entities.StateLightEntityAttribute) {
-			attributes[string(entities.StateLightEntityAttribute)] = mapOnState[*state.AnyOn]
+			attributes[string(entities.StateLightEntityAttribute)] = mapOnState[*device.Group.State.AnyOn]
+
+			// if off, then just update this and leave the rest
+			if !*device.Group.State.AnyOn {
+				group.SetAttributes(attributes)
+				return
+			}
 
 		}
 
 		if group.HasAttribute(entities.BrightnessLightEntityAttribute) {
 			if state.Bri != nil {
-				group.Attributes[string(entities.BrightnessLightEntityAttribute)] = *state.Bri
+				attributes[string(entities.BrightnessLightEntityAttribute)] = *state.Bri
 			}
 		}
 
 		if group.HasAttribute(entities.HueLightEntityAttribute) {
 			if state.Hue != nil {
-				group.Attributes[string(entities.HueLightEntityAttribute)] = device.GetHueConverted()
+				attributes[string(entities.HueLightEntityAttribute)] = device.GetHueConverted()
 			}
 		}
 
 		if group.HasAttribute(entities.SaturationLightEntityAttribute) {
 			if state.Sat != nil {
 				// Todo mapping
-				group.Attributes[string(entities.SaturationLightEntityAttribute)] = *state.Sat
+				attributes[string(entities.SaturationLightEntityAttribute)] = *state.Sat
 			}
 		}
 
 		if group.HasAttribute(entities.ColorTemperatureLightEntityAttribute) {
 			if state.CT != nil {
-				group.Attributes[string(entities.ColorTemperatureLightEntityAttribute)] = device.GetColorTempInPercent()
+				attributes[string(entities.ColorTemperatureLightEntityAttribute)] = device.GetColorTempInPercent()
 			}
 		}
 
@@ -533,10 +550,13 @@ func (c *DeconzClient) startDenonListenLoop() {
 // Callen on RT connect
 func (c *DeconzClient) deconzClientLoop() {
 
+	ticker := time.NewTicker(5 * time.Minute)
+
 	defer func() {
 		if c.deconz != nil {
 			c.deconz.Stop()
 		}
+		ticker.Stop()
 		c.setDeviceState(integration.DisconnectedDeviceState)
 	}()
 
@@ -560,13 +580,18 @@ func (c *DeconzClient) deconzClientLoop() {
 	// Run Client Loop to handle entity changes from device
 	for {
 		select {
+		case <-ticker.C:
+			// Run Discovery again
+			c.deconz.StartDiscovery(true)
 		case msg := <-c.messages:
 
 			switch msg {
 			case "disconnect":
 				return
+			case "discovery":
+				// Run Discovery again
+				c.deconz.StartDiscovery(true)
 			}
-
 		}
 	}
 

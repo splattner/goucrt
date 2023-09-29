@@ -18,7 +18,7 @@ func (d *Deconz) StartDiscovery(enableGroups bool) {
 	// Lights
 	allLights, err := d.GetAllLights()
 	if err != nil {
-		log.WithError(err).Debug("Error getting all Lights from Deconz")
+		log.WithError(err).Error("Error getting all Lights from Deconz")
 	}
 	log.WithField("lights", allLights).Trace("Deconz Discovery")
 	for _, light := range allLights {
@@ -31,7 +31,7 @@ func (d *Deconz) StartDiscovery(enableGroups bool) {
 	if enableGroups {
 		allGroups, err := d.GetAllGroups()
 		if err != nil {
-			log.WithError(err).Debug("Error getting all Groups from Deconz")
+			log.WithError(err).Error("Error getting all Groups from Deconz")
 		}
 		log.WithField("groups", allGroups).Trace("Deconz Discovery")
 		for _, group := range allGroups {
@@ -44,7 +44,7 @@ func (d *Deconz) StartDiscovery(enableGroups bool) {
 	// Sensors
 	allSensors, err := d.GetAllSensors()
 	if err != nil {
-		log.WithError(err).Debug("Error getting all Sensors from Deconz")
+		log.WithError(err).Error("Error getting all Sensors from Deconz")
 	}
 	log.WithField("sesors", allSensors).Trace("Deconz Discovery")
 	for _, sensor := range allSensors {

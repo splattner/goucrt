@@ -16,13 +16,13 @@ const (
 type Entity struct {
 	Id string `json:"entity_id"`
 	EntityType
-	DeviceId               string                 `json:"device_id,omitempty"`
-	Features               []interface{}          `json:"features"`
-	Name                   LanguageText           `json:"name"`
-	Area                   string                 `json:"area,omitempty"`
-	DeviceClass            string                 `json:"-"`
-	Attributes             map[string]interface{} `json:"-"`
-	handleEntityChangeFunc func(interface{})      `json:"-"`
+	DeviceId               string                                     `json:"device_id,omitempty"`
+	Features               []interface{}                              `json:"features"`
+	Name                   LanguageText                               `json:"name"`
+	Area                   string                                     `json:"area,omitempty"`
+	DeviceClass            string                                     `json:"-"`
+	Attributes             map[string]interface{}                     `json:"-"`
+	handleEntityChangeFunc func(interface{}, *map[string]interface{}) `json:"-"`
 }
 
 type EntityType struct {
@@ -34,6 +34,19 @@ type EntityStateData struct {
 	EntityType
 	EntityId   string                 `json:"entity_id"`
 	Attributes map[string]interface{} `json:"attributes"`
+}
+
+func (e *Entity) HasFeature(feature interface{}) bool {
+	for _, f := range e.Features {
+		if f == feature {
+			return true
+		}
+	}
+	return false
+}
+
+func (e *Entity) GetAttribute() map[string]interface{} {
+	return e.Attributes
 }
 
 // Add an attribute if not already available
@@ -64,7 +77,7 @@ func (e *Entity) GetEntityState() *EntityStateData {
 // Register the function that is called when a Attribute change
 // This normally is set by the integration when the entity is added
 // To send entity_change events to Remote two
-func (e *Entity) SetHandleEntityChangeFunc(f func(interface{})) {
+func (e *Entity) SetHandleEntityChangeFunc(f func(interface{}, *map[string]interface{})) {
 	e.handleEntityChangeFunc = f
 }
 
@@ -81,7 +94,6 @@ func (e *Entity) SetAttributes(attributes map[string]interface{}) {
 
 	// Handle the entity Change
 	if e.handleEntityChangeFunc != nil {
-		e.handleEntityChangeFunc(e)
+		e.handleEntityChangeFunc(e, &attributes)
 	}
-
 }

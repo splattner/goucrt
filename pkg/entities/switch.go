@@ -27,7 +27,7 @@ const (
 
 type SwitchsEntity struct {
 	Entity
-	Commands map[string]func(SwitchsEntity, map[string]interface{}) int `json:"-"`
+	Commands map[SwitchEntityCommand]func(SwitchsEntity, map[string]interface{}) int `json:"-"`
 }
 
 func NewSwitchEntity(id string, name LanguageText, area string) *SwitchsEntity {
@@ -39,10 +39,21 @@ func NewSwitchEntity(id string, name LanguageText, area string) *SwitchsEntity {
 
 	switchEntity.EntityType.Type = "switch"
 
-	switchEntity.Commands = make(map[string]func(SwitchsEntity, map[string]interface{}) int)
+	switchEntity.Commands = make(map[SwitchEntityCommand]func(SwitchsEntity, map[string]interface{}) int)
 	switchEntity.Attributes = make(map[string]interface{})
 
 	return &switchEntity
+}
+
+func (e *SwitchsEntity) UpdateEntity(newEntity SwitchsEntity) error {
+
+	e.Name = newEntity.Name
+	e.Area = newEntity.Area
+	e.Commands = newEntity.Commands
+	e.Features = newEntity.Features
+	e.Attributes = newEntity.Attributes
+
+	return nil
 }
 
 // Register a function for the Entity command
@@ -61,7 +72,7 @@ func (e *SwitchsEntity) AddFeature(feature SwitchEntityFeatures) {
 
 // Register a function for the Entity command
 func (e *SwitchsEntity) AddCommand(command SwitchEntityCommand, function func(SwitchsEntity, map[string]interface{}) int) {
-	e.Commands[string(command)] = function
+	e.Commands[command] = function
 
 }
 
@@ -90,8 +101,8 @@ func (e *SwitchsEntity) MapCommand(command SwitchEntityCommand, f func() error) 
 
 // Call the registred function for this entity_command
 func (e *SwitchsEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
-	if e.Commands[cmd_id] != nil {
-		return e.Commands[cmd_id](*e, params)
+	if e.Commands[SwitchEntityCommand(cmd_id)] != nil {
+		return e.Commands[SwitchEntityCommand(cmd_id)](*e, params)
 	}
 
 	return 404

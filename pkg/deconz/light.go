@@ -37,9 +37,9 @@ type DeconzLight struct {
 	Ctmin             int         `json:"ctmin,omitempty"`
 }
 
-func (d *DeconzDevice) GetLightState(lightID int) (DeconzLight, error) {
+func (d *Deconz) GetLight(lightID int) (DeconzLight, error) {
 	var ll DeconzLight
-	url := fmt.Sprintf(getLightStateURL, fmt.Sprintf("%s:%d", d.deconz.host, d.deconz.port), d.deconz.apikey, lightID)
+	url := fmt.Sprintf(getLightStateURL, fmt.Sprintf("%s:%d", d.host, d.port), d.apikey, lightID)
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return ll, err
@@ -62,9 +62,9 @@ func (d *DeconzDevice) GetLightState(lightID int) (DeconzLight, error) {
 	return ll, err
 }
 
-func (d *DeconzDevice) SetLightAttrs(lightID int, lightName string) ([]ApiResponse, error) {
-	url := fmt.Sprintf(setLightAttrsURL, fmt.Sprintf("%s:%d", d.deconz.host, d.deconz.port), d.deconz.apikey, lightID)
-	data := fmt.Sprintf("{\"name\": \"%s\"}", lightName)
+func (d *DeconzDevice) SetLightAttrs() ([]ApiResponse, error) {
+	url := fmt.Sprintf(setLightAttrsURL, fmt.Sprintf("%s:%d", d.deconz.host, d.deconz.port), d.deconz.apikey, d.Light.ID)
+	data := fmt.Sprintf("{\"name\": \"%s\"}", d.Light.Name)
 	postbody := strings.NewReader(data)
 	request, err := http.NewRequest("PUT", url, postbody)
 	if err != nil {
@@ -89,9 +89,9 @@ func (d *DeconzDevice) SetLightAttrs(lightID int, lightName string) ([]ApiRespon
 	return apiResponse, err
 }
 
-func (d *DeconzDevice) SetLightState(lightID int, state *DeconzState) ([]ApiResponse, error) {
-	url := fmt.Sprintf(setLightStateURL, fmt.Sprintf("%s:%d", d.deconz.host, d.deconz.port), d.deconz.apikey, lightID)
-	stateJSON, err := json.Marshal(&state)
+func (d *DeconzDevice) SetLightState() ([]ApiResponse, error) {
+	url := fmt.Sprintf(setLightStateURL, fmt.Sprintf("%s:%d", d.deconz.host, d.deconz.port), d.deconz.apikey, d.Light.ID)
+	stateJSON, err := json.Marshal(&d.Light.State)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func (d *DeconzDevice) setLightState() error {
 		"State": d.Light.State,
 	}).Info("Deconz, call SetGroupState")
 
-	_, err := d.SetLightState(d.Light.ID, &d.Light.State)
+	_, err := d.SetLightState()
 	if err != nil {
 		log.Debugln("Deconz, SetLightState Error", err)
 		return err

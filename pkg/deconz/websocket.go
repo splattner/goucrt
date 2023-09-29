@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
+	"k8s.io/utils/strings/slices"
 )
 
 const (
@@ -137,7 +138,27 @@ func (d *Deconz) websocketReceiveHandler(ws *websocket.Conn) {
 						}
 
 					}
+				}
 
+				// Workaround to also update groups when no group change event was received
+				for _, device := range d.allDeconzDevices {
+					if device.Type == GroupDeconzDeviceType {
+						group, err := d.GetGroup(device.GetID())
+						if err != nil {
+							continue
+						}
+						// Only update if the group accually contains the light this message was for
+						if slices.Contains(group.LightIDs, message.ID) {
+							log.WithFields(log.Fields{
+								"Group ID": group.ID,
+								"Light ID": message.ID}).Debug("Also Update the group this light belongs to")
+
+							device.updateState(&group.Action)
+							device.updateState(&group.State)
+							device.stateChangeHandler(&group.Action)
+						}
+
+					}
 				}
 			}
 		}

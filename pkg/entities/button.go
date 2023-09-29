@@ -23,7 +23,7 @@ const (
 
 type ButtonEntity struct {
 	Entity
-	Commands map[string]func(ButtonEntity) int `json:"-"`
+	Commands map[ButtonEntityCommand]func(ButtonEntity) int `json:"-"`
 }
 
 func NewButtonEntity(id string, name LanguageText, area string) *ButtonEntity {
@@ -35,7 +35,7 @@ func NewButtonEntity(id string, name LanguageText, area string) *ButtonEntity {
 
 	buttonEntity.EntityType.Type = "button"
 
-	buttonEntity.Commands = make(map[string]func(ButtonEntity) int)
+	buttonEntity.Commands = make(map[ButtonEntityCommand]func(ButtonEntity) int)
 	buttonEntity.Attributes = make(map[string]interface{})
 
 	// PressButtonEntityyFeatures is always present even if not specified
@@ -47,6 +47,17 @@ func NewButtonEntity(id string, name LanguageText, area string) *ButtonEntity {
 	return &buttonEntity
 }
 
+func (e *ButtonEntity) UpdateEntity(newEntity ButtonEntity) error {
+
+	e.Name = newEntity.Name
+	e.Area = newEntity.Area
+	e.Commands = newEntity.Commands
+	e.Features = newEntity.Features
+	e.Attributes = newEntity.Attributes
+
+	return nil
+}
+
 // Add a feature to this Button
 func (e *ButtonEntity) AddFeature(feature ButtonEntityFeatures) {
 	e.Features = append(e.Features, feature)
@@ -55,7 +66,7 @@ func (e *ButtonEntity) AddFeature(feature ButtonEntityFeatures) {
 
 // Register a function for the Entity command
 func (e *ButtonEntity) AddCommand(command ButtonEntityCommand, function func(ButtonEntity) int) {
-	e.Commands[string(command)] = function
+	e.Commands[command] = function
 }
 
 // Map a Light EntityCommand to a function call without params
@@ -73,8 +84,8 @@ func (e *ButtonEntity) MapCommand(command ButtonEntityCommand, f func() error) {
 // Call the registred function for this entity_command
 func (e *ButtonEntity) HandleCommand(cmd_id string) int {
 
-	if e.Commands[cmd_id] != nil {
-		return e.Commands[cmd_id](*e)
+	if e.Commands[ButtonEntityCommand(cmd_id)] != nil {
+		return e.Commands[ButtonEntityCommand(cmd_id)](*e)
 	}
 
 	return 404

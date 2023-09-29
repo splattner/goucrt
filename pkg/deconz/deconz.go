@@ -1,6 +1,8 @@
 package deconz
 
 import (
+	"fmt"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -157,4 +159,16 @@ func (d *Deconz) removeDevice(allDevices interface{}) {
 		}
 	}
 
+}
+
+func (d *Deconz) GetDeviceByID(id int) (*DeconzDevice, error) {
+	for _, device := range d.allDeconzDevices {
+
+		if device.GetID() == id {
+			return device, nil
+		}
+
+	}
+
+	return nil, fmt.Errorf("Device not found")
 }
