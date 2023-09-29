@@ -4,11 +4,8 @@ FROM golang:${GO_VERSION} AS build-env
 WORKDIR /go/src/app
 COPY ./ .
 
-RUN ls -al
-
 RUN go get -d -v ./...
 RUN go install -v ./...
-
 
 FROM alpine:3
 
