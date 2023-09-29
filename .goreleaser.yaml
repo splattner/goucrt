@@ -58,6 +58,8 @@ docker_manifests:
   image_templates: *ghcr
 - name_template: "{{ if not .Prerelease }}ghcr.io/splattner/goucrt:v{{ end }}"
   image_templates: *ghcr
+- name_template: "{{ if not .Prerelease }}ghcr.io/splattner/goucrt:latest{{ end }}"
+  image_templates: *ghcr
 
 sboms:
   - artifacts: archive
