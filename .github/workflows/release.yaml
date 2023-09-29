@@ -8,7 +8,8 @@ on:
 permissions:
     contents: write
     packages: write
-    
+    id-token: write # needed for keyless signing
+
 env:
     # Use docker.io for Docker Hub if empty
     REGISTRY: ghcr.io
@@ -25,6 +26,15 @@ jobs:
 
     - name: Determine Go version from go.mod
       run: echo "GO_VERSION=$(go mod edit -json | jq -r .Go)" >> $GITHUB_ENV
+
+    # Install the cosign tool except on PR
+    # https://github.com/sigstore/cosign-installer
+    - name: Install cosign
+      uses: sigstore/cosign-installer@11086d25041f77fe8fe7b9ea4e48e3b9192b8f19 # v3.1.2
+      with:
+        cosign-release: 'v2.1.1'
+
+    - uses: anchore/sbom-action/download-syft@v0.14.3 # installs syft
 
     - uses: actions/setup-go@v4
       with:
