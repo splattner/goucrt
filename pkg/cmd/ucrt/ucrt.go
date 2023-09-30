@@ -6,6 +6,8 @@ import (
 	"github.com/splattner/goucrt/pkg/cmd/deconz"
 	"github.com/splattner/goucrt/pkg/cmd/denonavr"
 	"github.com/splattner/goucrt/pkg/cmd/shelly"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func NewCommand(name string) *cobra.Command {
@@ -17,43 +19,81 @@ func NewCommand(name string) *cobra.Command {
 	}
 
 	rootCmd.PersistentFlags().IntP("listenPort", "l", 8080, "the port this integration is listening for websocket connection from the remote")
-	viper.BindPFlag("listenPort", rootCmd.PersistentFlags().Lookup("listenPort"))
-	viper.BindEnv("listenPort", "UC_INTEGRATION_LISTEN_PORT")
+	if err := viper.BindPFlag("listenPort", rootCmd.PersistentFlags().Lookup("listenPort")); err != nil {
+		log.WithError(err).Error(("Cannot bindPFplag"))
+	}
+	if err := viper.BindEnv("listenPort", "UC_INTEGRATION_LISTEN_PORT"); err != nil {
+		log.WithError(err).Error(("Cannot BindEnv"))
+	}
 
 	rootCmd.PersistentFlags().String("websocketPath", "/ws", "path where this integration is available for websocket connections")
-	viper.BindPFlag("websocketPath", rootCmd.PersistentFlags().Lookup("websocketPath"))
-	viper.BindEnv("websocketPath", "UC_INTEGRATION_WEBSOCKET_PATH")
+	if err := viper.BindPFlag("websocketPath", rootCmd.PersistentFlags().Lookup("websocketPath")); err != nil {
+		log.WithError(err).Error(("Cannot bindPFplag"))
+	}
+	if err := viper.BindEnv("websocketPath", "UC_INTEGRATION_WEBSOCKET_PATH"); err != nil {
+		log.WithError(err).Error(("Cannot BindEnv"))
+	}
 
 	rootCmd.PersistentFlags().Bool("disableMDNS", false, "Disable integration advertisement via mDNS")
-	viper.BindPFlag("disableMDNS", rootCmd.PersistentFlags().Lookup("disableMDNS"))
-	viper.BindEnv("disableMDNS", "UC_DISABLE_MDNS_PUBLISH")
+	if err := viper.BindPFlag("disableMDNS", rootCmd.PersistentFlags().Lookup("disableMDNS")); err != nil {
+		log.WithError(err).Error(("Cannot bindPFplag"))
+	}
+	if err := viper.BindEnv("disableMDNS", "UC_DISABLE_MDNS_PUBLISH"); err != nil {
+		log.WithError(err).Error(("Cannot BindEnv"))
+	}
 
 	rootCmd.PersistentFlags().String("remoteTwoIP", "", "IP Address of your Remote Two instance (disables Remote Two discovery)")
-	viper.BindPFlag("remoteTwoIP", rootCmd.PersistentFlags().Lookup("remoteTwoIP"))
-	viper.BindEnv("remoteTwoIP", "UC_RT_HOST")
+	if err := viper.BindPFlag("remoteTwoIP", rootCmd.PersistentFlags().Lookup("remoteTwoIP")); err != nil {
+		log.WithError(err).Error(("Cannot bindPFplag"))
+	}
+	if err := viper.BindEnv("remoteTwoIP", "UC_RT_HOST"); err != nil {
+		log.WithError(err).Error(("Cannot BindEnv"))
+	}
 
 	rootCmd.PersistentFlags().Int("remoteTwoPort", 80, "Port of your Remote Two instance (disables Remote Two discovery)")
-	viper.BindPFlag("remoteTwoPort", rootCmd.PersistentFlags().Lookup("remoteTwoPort"))
-	viper.BindEnv("remoteTwoPort", "UC_RT_PORT")
+	if err := viper.BindPFlag("remoteTwoPort", rootCmd.PersistentFlags().Lookup("remoteTwoPort")); err != nil {
+		log.WithError(err).Error(("Cannot bindPFplag"))
+	}
+	if err := viper.BindEnv("remoteTwoPort", "UC_RT_PORT"); err != nil {
+		log.WithError(err).Error(("Cannot BindEnv"))
+	}
 
 	rootCmd.PersistentFlags().Bool("registration", false, "Enable driver registration on the Remote Two instead of mDNS advertisement")
-	viper.BindPFlag("registration", rootCmd.PersistentFlags().Lookup("registration"))
-	viper.BindEnv("registration", "UC_ENABLE_REGISTRATION")
+	if err := viper.BindPFlag("registration", rootCmd.PersistentFlags().Lookup("registration")); err != nil {
+		log.WithError(err).Error(("Cannot bindPFplag"))
+	}
+	if err := viper.BindEnv("registration", "UC_ENABLE_REGISTRATION"); err != nil {
+		log.WithError(err).Error(("Cannot BindEnv"))
+	}
 
 	rootCmd.PersistentFlags().String("registrationUsername", "web-configurator", "Username of the RemoteTwo for driver registration")
-	viper.BindPFlag("registrationUsername", rootCmd.PersistentFlags().Lookup("registrationUsername"))
-	viper.BindEnv("registrationUsername", "UC_REGISTRATION_USERNAME")
+	if err := viper.BindPFlag("registrationUsername", rootCmd.PersistentFlags().Lookup("registrationUsername")); err != nil {
+		log.WithError(err).Error(("Cannot bindPFplag"))
+	}
+	if err := viper.BindEnv("registrationUsername", "UC_REGISTRATION_USERNAME"); err != nil {
+		log.WithError(err).Error(("Cannot BindEnv"))
+	}
 
 	rootCmd.PersistentFlags().String("registrationPin", "", "Pin of the RemoteTwo for driver registration")
-	viper.BindPFlag("registrationPin", rootCmd.PersistentFlags().Lookup("registrationPin"))
-	viper.BindEnv("registrationUsername", "UC_REGISTRATION_PIN")
+	if err := viper.BindPFlag("registrationPin", rootCmd.PersistentFlags().Lookup("registrationPin")); err != nil {
+		log.WithError(err).Error(("Cannot bindPFplag"))
+	}
+	if err := viper.BindEnv("registrationUsername", "UC_REGISTRATION_PIN"); err != nil {
+		log.WithError(err).Error(("Cannot BindEnv"))
+	}
 
 	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug log level")
-	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
+	if err := viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug")); err != nil {
+		log.WithError(err).Error(("Cannot bindPFplag"))
+	}
 
 	rootCmd.PersistentFlags().String("ucconfighome", "./ucconfig/", "Configuration directory to save the user configuration from the driver setup")
-	viper.BindPFlag("ucconfighome", rootCmd.PersistentFlags().Lookup("ucconfighome"))
-	viper.BindEnv("ucconfighome", "UC_CONFIG_HOME")
+	if err := viper.BindPFlag("ucconfighome", rootCmd.PersistentFlags().Lookup("ucconfighome")); err != nil {
+		log.WithError(err).Error(("Cannot bindPFplag"))
+	}
+	if err := viper.BindEnv("ucconfighome", "UC_CONFIG_HOME"); err != nil {
+		log.WithError(err).Error(("Cannot BindEnv"))
+	}
 
 	rootCmd.AddCommand(
 		denonavr.NewCommand(rootCmd),

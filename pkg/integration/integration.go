@@ -19,7 +19,7 @@ type Integration struct {
 
 	Metadata *DriverMetadata
 
-	authToken string
+	//authToken string
 
 	deviceState DState
 
@@ -142,7 +142,9 @@ func (i *Integration) LoadSetupData() {
 		log.WithError(err).Info("Cannot read setupDataFile")
 		i.SetupData = make(SetupData)
 	} else {
-		json.Unmarshal(file, &i.SetupData)
+		if err := json.Unmarshal(file, &i.SetupData); err != nil {
+			log.WithError(err).Error("Cannot unmarshall setSetupDataupdata")
+		}
 		log.WithField("SetupData", i.SetupData).Info("Read persisted setup data")
 	}
 }

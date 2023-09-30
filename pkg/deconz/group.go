@@ -40,18 +40,26 @@ type DeconzGroup struct {
 func (d *Deconz) GetAllGroups() ([]DeconzGroup, error) {
 	url := fmt.Sprintf(getAllGroupsURL, fmt.Sprintf("%s:%d", d.host, d.port), d.apikey)
 	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.WithError(err).Error("Cannot create new http Request")
+		return nil, err
+	}
 	client := http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
+		log.WithError(err).Error("Cannot Do the request")
 		return nil, err
 	}
 	defer response.Body.Close()
 	contents, err := io.ReadAll(response.Body)
 	if err != nil {
+		log.WithError(err).Error("Cannot Read the response body")
 		return nil, err
 	}
 	groupsMap := map[string]DeconzGroup{}
-	json.Unmarshal(contents, &groupsMap)
+	if err := json.Unmarshal(contents, &groupsMap); err != nil {
+		log.WithError(err).Error("Cannon unmarshall data into map[string]DeconzGroup")
+	}
 	groups := make([]DeconzGroup, 0, len(groupsMap))
 	for groupID, group := range groupsMap {
 		group.TID = groupID
@@ -134,7 +142,9 @@ func (d *DeconzDevice) SetGroupAttrs() ([]ApiResponse, error) {
 	if err != nil {
 		return apiResponse, err
 	}
-	json.Unmarshal(contents, &apiResponse)
+	if err := json.Unmarshal(contents, &apiResponse); err != nil {
+		log.WithError(err).Error("Cannon unmarshall data into []ApiResponse")
+	}
 	return apiResponse, err
 }
 

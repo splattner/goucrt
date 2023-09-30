@@ -17,29 +17,29 @@ type DenonZone string
 
 const (
 	DenonCommandPower         DenonCommand = "PW"
-	DennonCommandZoneMain                  = "ZM"
-	DenonCommandVolume                     = "MV"
-	DenonCommandMute                       = "MU"
-	DenonCommandSelectInput                = "SI"
-	DenonCommandCursorControl              = "MN"
-	DenonCommandNS                         = "NS"
-	DenonCommandMS                         = "MS"
-	DenonCommandVS                         = "VS"
+	DennonCommandZoneMain     DenonCommand = "ZM"
+	DenonCommandVolume        DenonCommand = "MV"
+	DenonCommandMute          DenonCommand = "MU"
+	DenonCommandSelectInput   DenonCommand = "SI"
+	DenonCommandCursorControl DenonCommand = "MN"
+	DenonCommandNS            DenonCommand = "NS"
+	DenonCommandMS            DenonCommand = "MS"
+	DenonCommandVS            DenonCommand = "VS"
 	DenonVolumeStep           float64      = 1
 )
 
 const (
 	MainZone DenonZone = "MAIN"
-	Zone2              = "Z2"
-	Zone3              = "Z3"
+	Zone2    DenonZone = "Z2"
+	Zone3    DenonZone = "Z3"
 )
 
 const (
 	STATUS_URL    string = "/goform/formMainZone_MainZoneXmlStatus.xml"
-	STATUS_Z2_URL        = "/goform/formZone2_Zone2XmlStatus.xml"
-	STATUS_Z3_URL        = "/goform/formZone3_Zone3XmlStatus.xml"
-	MAINZONE_URL         = "/goform/formMainZone_MainZoneXml.xml"
-	COMMAND_URL          = "/goform/formiPhoneAppDirect.xml"
+	STATUS_Z2_URL string = "/goform/formZone2_Zone2XmlStatus.xml"
+	STATUS_Z3_URL string = "/goform/formZone3_Zone3XmlStatus.xml"
+	MAINZONE_URL  string = "/goform/formMainZone_MainZoneXml.xml"
+	COMMAND_URL   string = "/goform/formiPhoneAppDirect.xml"
 )
 
 type DenonXML struct {
@@ -122,6 +122,9 @@ func (d *DenonAVR) getMainZoneDataFromDevice() {
 	}
 
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.WithError(err).Error("Cannot read response body")
+	}
 
 	if err := xml.Unmarshal(body, &d.mainZoneData); err != nil {
 		log.WithError(err).Info("Could not unmarshall")

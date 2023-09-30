@@ -8,9 +8,9 @@ type DState string
 
 const (
 	ConnectedDeviceState    DState = "CONNECTED"
-	ConnectingDeviceState          = "CONNECTING"
-	DisconnectedDeviceState        = "DISCONNECTED"
-	ErrorDeviceState               = "ERROR"
+	ConnectingDeviceState   DState = "CONNECTING"
+	DisconnectedDeviceState DState = "DISCONNECTED"
+	ErrorDeviceState        DState = "ERROR"
 )
 
 func (i *Integration) SetDeviceState(state DState) {

@@ -184,11 +184,11 @@ func (c *TasmotaClient) handleNewDeviceDiscovered(device *tasmota.TasmotaDevice)
 		// Sonoff Basic
 		switchEntity := entities.NewSwitchEntity(device.Topic, entities.LanguageText{En: "Tasmota " + device.FriendlyName[0]}, "")
 		switchEntity.AddFeature(entities.OnOffSwitchEntityyFeatures)
-		switchEntity.AddFeature(entities.ToggleSwitchEntityCommand)
+		switchEntity.AddFeature(entities.ToggleSwitchEntityyFeatures)
 
 		switchEntity.MapCommand(entities.OnSwitchEntityCommand, device.TurnOn)
 		switchEntity.MapCommand(entities.OffSwitchEntityCommand, device.TurnOff)
-		switchEntity.MapCommand(entities.ToggleLightEntityCommand, device.Toggle)
+		switchEntity.MapCommand(entities.ToggleSwitchEntityCommand, device.Toggle)
 
 		device.AddMsgReceivedFunc("RESULT", func(msg []byte) {
 
@@ -238,18 +238,20 @@ func (c *TasmotaClient) handleNewDeviceDiscovered(device *tasmota.TasmotaDevice)
 	}
 
 	if tasmotaDevice != nil {
-		c.IntegrationDriver.AddEntity(tasmotaDevice)
+		if err := c.IntegrationDriver.AddEntity(tasmotaDevice); err != nil {
+			log.WithError(err).Error("Cannot add Entity")
+		}
 	}
 
 }
 
-func (c *TasmotaClient) handleRemoveDevice(device *tasmota.TasmotaDevice) {
-	log.WithFields(log.Fields{
-		"Topic":       device.Topic,
-		"IP Address":  device.IPAddress,
-		"MAC Address": device.MACAddress,
-	}).Debug("Tasmota Device not available anymore")
-}
+// func (c *TasmotaClient) handleRemoveDevice(device *tasmota.TasmotaDevice) {
+// 	log.WithFields(log.Fields{
+// 		"Topic":       device.Topic,
+// 		"IP Address":  device.IPAddress,
+// 		"MAC Address": device.MACAddress,
+// 	}).Debug("Tasmota Device not available anymore")
+// }
 
 // Callen on RT connect
 func (c *TasmotaClient) tasmotaClientLoop() {
@@ -274,15 +276,13 @@ func (c *TasmotaClient) tasmotaClientLoop() {
 
 	// Run Client Loop to handle entity changes from device
 	for {
-		select {
-		case msg := <-c.messages:
+		msg := <-c.messages
 
-			switch msg {
-			case "disconnect":
-				return
-			}
-
+		switch msg {
+		case "disconnect":
+			return
 		}
+
 	}
 
 }

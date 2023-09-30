@@ -70,7 +70,7 @@ func (state *DeconzState) SetCT(Bri int, CT int) {
 }
 
 func (state *DeconzState) SetXY(x, y float32) {
-	state.XY = make([]float32, 2, 2)
+	state.XY = make([]float32, 2)
 	state.XY[0] = x
 	state.XY[1] = y
 }

@@ -53,9 +53,13 @@ func (i *Integration) wsEndpoint(w http.ResponseWriter, r *http.Request) {
 func (i *Integration) wsReader(ws *websocket.Conn) {
 	log.WithField("RemoteAddr", ws.RemoteAddr().String()).Debug("Start Websocket read loop")
 	ws.SetReadLimit(maxMessageSize)
-	ws.SetReadDeadline(time.Now().Add(pongWait))
+	if err := ws.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
+		log.WithError(err).Error("Cannot set readdeadline")
+	}
 	ws.SetPongHandler(func(string) error {
-		ws.SetReadDeadline(time.Now().Add(pongWait))
+		if err := ws.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
+			log.WithError(err).Error("Cannot set readdeadline")
+		}
 		return nil
 	})
 
@@ -141,7 +145,10 @@ func (i *Integration) wsWriter(ws *websocket.Conn) {
 			}
 
 		case <-ticker.C:
-			ws.SetWriteDeadline(time.Now().Add(writeWait))
+
+			if err := ws.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+				log.WithError(err).Error("Cannot set writedealine")
+			}
 			log.WithField("RemoteAddr", ws.RemoteAddr().String()).Debug("Send Ping Message")
 			if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
 				log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Could not send Ping message")

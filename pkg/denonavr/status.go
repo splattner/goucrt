@@ -51,6 +51,9 @@ func (d *DenonAVR) getZoneStatusFromDevice(url string) DenonStatus {
 	}
 
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.WithError(err).Error("Cannot read response body")
+	}
 
 	if err := xml.Unmarshal(body, &status); err != nil {
 		log.WithError(err).Info("Could not unmarshall")

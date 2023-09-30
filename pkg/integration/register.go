@@ -100,6 +100,9 @@ func (i *Integration) registerWithRemoteTwo(remoteTwoIP string, remoteTwoPort in
 		"DriverURL":  driverURL}).Info("Register Integration with Remote Two")
 
 	data, err := json.Marshal(driverRegistration)
+	if err != nil {
+		log.WithError(err).Error("Cannot unmarshal driverRegistration")
+	}
 	req, err := http.NewRequest("POST", remoteTwoURL+"/api/intg/drivers", bytes.NewReader(data))
 	if err != nil {
 		log.WithError(err).Fatal("impossible to build request")
@@ -133,7 +136,9 @@ func (i *Integration) registerWithRemoteTwo(remoteTwoIP string, remoteTwoPort in
 	//case http.StatusUnprocessableEntity:
 
 	case http.StatusCreated:
-		json.Unmarshal(resBody, &driverRegistration)
+		if err := json.Unmarshal(resBody, &driverRegistration); err != nil {
+			log.WithError(err).Error("Cannot unmarshall driverRegistration")
+		}
 
 		i.SetupData["driver_id"] = driverRegistration.DriverId
 		i.PersistSetupData()

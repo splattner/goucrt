@@ -50,7 +50,9 @@ func (s *Shelly) StartDiscovery() {
 
 	s.subscribeMqttTopic("shellies/announce", s.mqttDiscoverCallback())
 	s.subscribeMqttTopic("shellies/+/info", s.mqttDiscoverCallback())
-	s.publishMqttCommand("shellies/command", "announce")
+	if err := s.publishMqttCommand("shellies/command", "announce"); err != nil {
+		log.WithError(err).Error("Cannot publish MQTT Command")
+	}
 }
 
 func (s *Shelly) StopDiscovery() {

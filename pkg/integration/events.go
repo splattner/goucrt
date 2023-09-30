@@ -16,7 +16,10 @@ func (i *Integration) sendEventMessage(res *interface{}, messageType int) error 
 
 	// Unmarshal againinto Event Message for some fields
 	event := EventMessage{}
-	json.Unmarshal(msg, &event)
+	if err := json.Unmarshal(msg, &event); err != nil {
+		log.WithError(err).Error("Cannot unmarshal Event Message")
+		return err
+	}
 
 	if i.Remote.standby {
 		log.WithFields(log.Fields{
@@ -59,20 +62,29 @@ func (i *Integration) handleEvent(req *RequestMessage, p []byte) interface{} {
 
 	case "connect":
 		connectEvent := ConnectEvent{}
-		json.Unmarshal(p, &connectEvent)
+		if err := json.Unmarshal(p, &connectEvent); err != nil {
+			log.WithError(err).Error("Cannot unmarshal ConnectEvent")
+			return nil
+		}
 
 		i.handleConnectEvent(&connectEvent)
 
 	case "disconnect":
 		connectEvent := ConnectEvent{}
-		json.Unmarshal(p, &connectEvent)
-
+		if err := json.Unmarshal(p, &connectEvent); err != nil {
+			log.WithError(err).Error("Cannot unmarshal ConnectEvent")
+			return nil
+		}
 		i.handleConnectEvent(&connectEvent)
 
 	case "abort_driver_setup":
 
 		abortDriverSetupEvent := AbortDriverSetupEvent{}
-		json.Unmarshal(p, &abortDriverSetupEvent)
+
+		if err := json.Unmarshal(p, &abortDriverSetupEvent); err != nil {
+			log.WithError(err).Error("Cannot unmarshal AbortDriverSetupEvent")
+			return nil
+		}
 
 		i.handleAbortDriverSetupEvent(&abortDriverSetupEvent)
 
@@ -105,7 +117,9 @@ func (i *Integration) sendEntityRemoved(e interface{}) {
 		msg_data,
 	}
 
-	i.sendEventMessage(&res, websocket.TextMessage)
+	if err := i.sendEventMessage(&res, websocket.TextMessage); err != nil {
+		log.WithError(err).Error("Cannot send Event Message")
+	}
 }
 
 func (i *Integration) sendEntityAvailable(e interface{}) {
@@ -125,7 +139,9 @@ func (i *Integration) sendEntityAvailable(e interface{}) {
 
 	// Only send event when connected, otherwise we assume this is still during setup e.g. discovering of entities
 	if i.deviceState == ConnectedDeviceState {
-		i.sendEventMessage(&res, websocket.TextMessage)
+		if err := i.sendEventMessage(&res, websocket.TextMessage); err != nil {
+			log.WithError(err).Error("Cannot send Event Message")
+		}
 	}
 }
 
@@ -139,7 +155,9 @@ func (i *Integration) sendDeviceStateEvent() {
 		DeviceState{DeviceId: DeviceId{DeviceId: i.DeviceId}, State: string(i.deviceState)},
 	}
 
-	i.sendEventMessage(&res, websocket.TextMessage)
+	if err := i.sendEventMessage(&res, websocket.TextMessage); err != nil {
+		log.WithError(err).Error("Cannot send Event Message")
+	}
 }
 
 // Emitted for all driver setup flow state changes.
@@ -160,7 +178,9 @@ func (i *Integration) sendDriverSetupChangeEvent(eventType DriverSetupEventType,
 		}
 	}
 
-	i.sendEventMessage(&res, websocket.TextMessage)
+	if err := i.sendEventMessage(&res, websocket.TextMessage); err != nil {
+		log.WithError(err).Error("Cannot send Event Message")
+	}
 
 }
 
@@ -238,7 +258,9 @@ func (i *Integration) SendEntityChangeEvent(e interface{}, a *map[string]interfa
 			},
 		}
 
-		i.sendEventMessage(&res, websocket.TextMessage)
+		if err := i.sendEventMessage(&res, websocket.TextMessage); err != nil {
+			log.WithError(err).Error("Cannot send Event Message")
+		}
 	}
 
 }

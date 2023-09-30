@@ -12,19 +12,19 @@ const (
 
 const (
 	StateSensorEntityyAttribute  SensorEntityAttributes = "state"
-	ValueSensortEntityyAttribute                        = "value"
-	UnitSSensorntityyAttribute                          = "unit"
+	ValueSensortEntityyAttribute SensorEntityAttributes = "value"
+	UnitSSensorntityyAttribute   SensorEntityAttributes = "unit"
 )
 
 const (
 	CustomSensorDeviceClass     SensorDeviceClass = "custom"
-	BatterySensorDeviceClass                      = "battery"
-	CurrentSensorDeviceClass                      = "current"
-	EnegrySensorDeviceClass                       = "energy"
-	HumiditySensorDeviceClass                     = "humidity"
-	PowerSensorDeviceClass                        = "power"
-	TemperaturSensorDeviceClass                   = "temperatur"
-	VoltageSensorDeviceClass                      = "voltage"
+	BatterySensorDeviceClass    SensorDeviceClass = "battery"
+	CurrentSensorDeviceClass    SensorDeviceClass = "current"
+	EnegrySensorDeviceClass     SensorDeviceClass = "energy"
+	HumiditySensorDeviceClass   SensorDeviceClass = "humidity"
+	PowerSensorDeviceClass      SensorDeviceClass = "power"
+	TemperaturSensorDeviceClass SensorDeviceClass = "temperatur"
+	VoltageSensorDeviceClass    SensorDeviceClass = "voltage"
 )
 
 type SensorEntity struct {

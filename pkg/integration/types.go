@@ -62,24 +62,24 @@ type DriverSetupError string
 
 const (
 	SetupState          DriverSetupState = "SETUP"
-	WaitUserActionState                  = "WAIT_USER_ACTION"
-	OkState                              = "OK"
-	ErrorState                           = "ERROR"
+	WaitUserActionState DriverSetupState = "WAIT_USER_ACTION"
+	OkState             DriverSetupState = "OK"
+	ErrorState          DriverSetupState = "ERROR"
 )
 
 const (
 	StartEvent DriverSetupEventType = "START"
-	SetupEvent                      = "SETUP"
-	StopEvent                       = "STOP"
+	SetupEvent DriverSetupEventType = "SETUP"
+	StopEvent  DriverSetupEventType = "STOP"
 )
 
 const (
 	NoneError              DriverSetupError = "NONE"
-	NotFoundError                           = "NOT_FOUND"
-	ConnectionRefusedError                  = "CONNECTION_REFUSED"
-	AuthErrorError                          = "AUTHORIZATION_ERROR"
-	TimeoutError                            = "TIMEOUT"
-	OtherError                              = "OTHER"
+	NotFoundError          DriverSetupError = "NOT_FOUND"
+	ConnectionRefusedError DriverSetupError = "CONNECTION_REFUSED"
+	AuthErrorError         DriverSetupError = "AUTHORIZATION_ERROR"
+	TimeoutError           DriverSetupError = "TIMEOUT"
+	OtherError             DriverSetupError = "OTHER"
 )
 
 type AvailableEntityFilter struct {

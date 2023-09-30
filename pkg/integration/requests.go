@@ -17,66 +17,88 @@ func (i *Integration) handleRequest(req *RequestMessage, p []byte) {
 	switch req.Msg {
 	case "auth":
 		authRequiredReq := AuthRequestMessage{}
-		json.Unmarshal(p, &authRequiredReq)
+		if err := json.Unmarshal(p, &authRequiredReq); err != nil {
+			log.WithError(err).Error("Cannot unmarshall authRequiredReq")
+		}
 
 		// TODO
 		//res = i.handleAuthRequired(&authRequiredReq)
 
 	case "get_driver_version":
 		driverVersionReq := DriverVersionReq{}
-		json.Unmarshal(p, &driverVersionReq)
+		if err := json.Unmarshal(p, &driverVersionReq); err != nil {
+			log.WithError(err).Error("Cannot unmarshall DriverVersionReq")
+		}
 
 		res = i.handleGetDriverVersionRequest(&driverVersionReq)
 
 	case "get_driver_metadata":
 		driverMetadataReq := DriverMetadataReq{}
-		json.Unmarshal(p, &driverMetadataReq)
+		if err := json.Unmarshal(p, &driverMetadataReq); err != nil {
+			log.WithError(err).Error("Cannot unmarshall DriverMetadataReq")
+		}
 
 		res = i.handleGetDriverMetadataRequest(&driverMetadataReq)
 
 	case "get_device_state":
 		deviceStateMessageReq := DeviceStateMessageReq{}
-		json.Unmarshal(p, &deviceStateMessageReq)
+		if err := json.Unmarshal(p, &deviceStateMessageReq); err != nil {
+			log.WithError(err).Error("Cannot unmarshall deviceStateMessageReq")
+		}
 
 		i.handleGetDeviceStateRequest(&deviceStateMessageReq)
 
 	case "get_available_entities":
 		availableEntityMessageReq := AvailableEntityMessageReq{}
-		json.Unmarshal(p, &availableEntityMessageReq)
+		if err := json.Unmarshal(p, &availableEntityMessageReq); err != nil {
+			log.WithError(err).Error("Cannot unmarshall availableEntityMessageReq")
+		}
 
 		res = i.handleGetAvailableEntitiesRequest(&availableEntityMessageReq)
 	case "subscribe_events":
 		subscribeEventMessageReq := SubscribeEventMessageReq{}
-		json.Unmarshal(p, &subscribeEventMessageReq)
+		if err := json.Unmarshal(p, &subscribeEventMessageReq); err != nil {
+			log.WithError(err).Error("Cannot unmarshall subscribeEventMessageReq")
+		}
 
 		res = i.handleSubscribeEventRequest(&subscribeEventMessageReq)
 	case "unsubscribe_events":
 		unsubscribeEventMessageReq := UnubscribeEventMessageReq{}
-		json.Unmarshal(p, &unsubscribeEventMessageReq)
+		if err := json.Unmarshal(p, &unsubscribeEventMessageReq); err != nil {
+			log.WithError(err).Error("Cannot unmarshall unsubscribeEventMessageReq")
+		}
 
 		res = i.handleUnsubscribeEventsRequest(&unsubscribeEventMessageReq)
 
 	case "get_entity_states":
 		entityStatesReq := GetEntityStatesMessageReq{}
-		json.Unmarshal(p, &entityStatesReq)
+		if err := json.Unmarshal(p, &entityStatesReq); err != nil {
+			log.WithError(err).Error("Cannot unmarshall entityStatesReq")
+		}
 
 		res = i.handleGetEntityStatesRequest(&entityStatesReq)
 
 	case "entity_command":
 		entityCommandReq := EntityCommandReq{}
-		json.Unmarshal(p, &entityCommandReq)
+		if err := json.Unmarshal(p, &entityCommandReq); err != nil {
+			log.WithError(err).Error("Cannot unmarshall entityCommandReq")
+		}
 
 		res = i.handleEntityCommandRequest(&entityCommandReq)
 
 	case "setup_driver":
 		setupDriverReq := SetupDriverMessageReq{}
-		json.Unmarshal(p, &setupDriverReq)
+		if err := json.Unmarshal(p, &setupDriverReq); err != nil {
+			log.WithError(err).Error("Cannot unmarshall setupDriverReq")
+		}
 
 		res = i.handleSetupDriverRequest(&setupDriverReq)
 
 	case "set_driver_user_data":
 		setUserData := SetDriverUserDataRequest{}
-		json.Unmarshal(p, &setUserData)
+		if err := json.Unmarshal(p, &setUserData); err != nil {
+			log.WithError(err).Error("Cannot unmarshall setUserData")
+		}
 
 		res = i.handleSetDriverUserDataRequest(&setUserData)
 

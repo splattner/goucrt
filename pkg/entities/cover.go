@@ -7,36 +7,36 @@ type CoverEntityCommand string
 
 const (
 	OpeningCoverEntityState CoverEntityState = "OPENING"
-	OpenCoverEntityState                     = "OPEN"
-	ClosingCoverEntityState                  = "CLOSING"
-	CloseCoverEntityState                    = "CLOSED"
+	OpenCoverEntityState    CoverEntityState = "OPEN"
+	ClosingCoverEntityState CoverEntityState = "CLOSING"
+	CloseCoverEntityState   CoverEntityState = "CLOSED"
 )
 
 const (
 	OpenCoverEntityFeatures         CoverEntityFeatures = "open"
-	CloseCoverEntityFeatures                            = "close"
-	StopCoverEntityFeatures                             = "stop"
-	PositionCoverEntityFeatures                         = "position"
-	TiltCoverEntityFeatures                             = "tilt"
-	TiltStopCoverEntityFeatures                         = "tilt_stop"
-	TiltPositionCoverEntityFeatures                     = "tilt_position"
+	CloseCoverEntityFeatures        CoverEntityFeatures = "close"
+	StopCoverEntityFeatures         CoverEntityFeatures = "stop"
+	PositionCoverEntityFeatures     CoverEntityFeatures = "position"
+	TiltCoverEntityFeatures         CoverEntityFeatures = "tilt"
+	TiltStopCoverEntityFeatures     CoverEntityFeatures = "tilt_stop"
+	TiltPositionCoverEntityFeatures CoverEntityFeatures = "tilt_position"
 )
 
 const (
 	OpenCoverEntityCommand     CoverEntityCommand = "open"
-	CloseCoverEntityCommand                       = "close"
-	StopCoverEntityyommand                        = "stop"
-	PositionCoverEntityCommand                    = "position"
-	TiltCoverEntityCommand                        = "tilt"
-	TiltUpCoverEntityCommand                      = "tilt_up"
-	TiltDownCoverEntityCommand                    = "tilt_down"
-	TiltStopCoverEntityCommand                    = "tilt_stop"
+	CloseCoverEntityCommand    CoverEntityCommand = "close"
+	StopCoverEntityyommand     CoverEntityCommand = "stop"
+	PositionCoverEntityCommand CoverEntityCommand = "position"
+	TiltCoverEntityCommand     CoverEntityCommand = "tilt"
+	TiltUpCoverEntityCommand   CoverEntityCommand = "tilt_up"
+	TiltDownCoverEntityCommand CoverEntityCommand = "tilt_down"
+	TiltStopCoverEntityCommand CoverEntityCommand = "tilt_stop"
 )
 
 const (
 	StateCoverEntityAttribute        CoverEntityAttributes = "state"
-	PositionCoverEntityAttribute                           = "position"
-	TiltPositionCoverEntityAttribute                       = "tilt_position"
+	PositionCoverEntityAttribute     CoverEntityAttributes = "position"
+	TiltPositionCoverEntityAttribute CoverEntityAttributes = "tilt_position"
 )
 
 type CoverEntity struct {

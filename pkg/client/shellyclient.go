@@ -178,11 +178,11 @@ func (c *ShellyClient) handleNewDeviceDiscovered(device *shelly.ShellyDevice) {
 
 	shellySwitch := entities.NewSwitchEntity(device.Id, entities.LanguageText{En: "Shelly " + device.Id}, "")
 	shellySwitch.AddFeature(entities.OnOffSwitchEntityyFeatures)
-	shellySwitch.AddFeature(entities.ToggleSwitchEntityCommand)
+	shellySwitch.AddFeature(entities.ToggleSwitchEntityyFeatures)
 
 	shellySwitch.MapCommand(entities.OnSwitchEntityCommand, device.TurnOn)
 	shellySwitch.MapCommand(entities.OffSwitchEntityCommand, device.TurnOff)
-	shellySwitch.MapCommand(entities.ToggleLightEntityCommand, device.Toggle)
+	shellySwitch.MapCommand(entities.ToggleSwitchEntityCommand, device.Toggle)
 
 	device.AddMsgReceivedFunc("relay/0", func(msg []byte) {
 
@@ -198,17 +198,19 @@ func (c *ShellyClient) handleNewDeviceDiscovered(device *shelly.ShellyDevice) {
 		shellySwitch.SetAttributes(attributes)
 	})
 
-	c.IntegrationDriver.AddEntity(shellySwitch)
+	if err := c.IntegrationDriver.AddEntity(shellySwitch); err != nil {
+		log.WithError(err).Error("Cannot add Entity")
+	}
 
 }
 
-func (c *ShellyClient) handleRemoveDevice(device *shelly.ShellyDevice) {
-	log.WithFields(log.Fields{
-		"ID":          device.Id,
-		"IP Address":  device.IPAddress,
-		"MAC Address": device.MACAddress,
-	}).Debug("New Shelly Device not available anymore")
-}
+// func (c *ShellyClient) handleRemoveDevice(device *shelly.ShellyDevice) {
+// 	log.WithFields(log.Fields{
+// 		"ID":          device.Id,
+// 		"IP Address":  device.IPAddress,
+// 		"MAC Address": device.MACAddress,
+// 	}).Debug("New Shelly Device not available anymore")
+// }
 
 // Callen on RT connect
 func (c *ShellyClient) shellyClientLoop() {
@@ -233,15 +235,13 @@ func (c *ShellyClient) shellyClientLoop() {
 
 	// Run Client Loop to handle entity changes from device
 	for {
-		select {
-		case msg := <-c.messages:
+		msg := <-c.messages
 
-			switch msg {
-			case "disconnect":
-				return
-			}
-
+		switch msg {
+		case "disconnect":
+			return
 		}
+
 	}
 
 }
