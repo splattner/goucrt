@@ -67,6 +67,7 @@ docker-build-arm64: $(BIN_FILENAME_ARM64) ## Build the docker image linux/arm64
 .PHONY: docker-manifest
 docker-manifest: docker-manifest-create docker-manifest-push # Create and push docker manifest
 
+.PHONY:docker-manifest-create
 docker-manifest-create: ## Create the docker manifest
 	docker manifest create $(GOUCRT_GHCR_IMG) \
 	$(GOUCRT_GHCR_IMG)-amd64 \
