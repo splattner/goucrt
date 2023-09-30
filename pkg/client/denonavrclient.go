@@ -81,6 +81,7 @@ func (c *DenonAVRClient) initDenonAVRClient() {
 	c.mediaPlayer.AddFeature(entities.OnOffMediaPlayerEntityFeatures)
 	c.mediaPlayer.AddFeature(entities.ToggleMediaPlayerEntityyFeatures)
 	c.mediaPlayer.AddFeature(entities.VolumeMediaPlayerEntityyFeatures)
+	c.mediaPlayer.AddFeature(entities.VolumeUpDownMediaPlayerEntityFeatures)
 	c.mediaPlayer.AddFeature(entities.MuteMediaPlayerEntityFeatures)
 	c.mediaPlayer.AddFeature(entities.UnmuteMediaPlayerEntityFeatures)
 	c.mediaPlayer.AddFeature(entities.MuteToggleMediaPlayerEntityFeatures)
