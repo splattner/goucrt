@@ -7,12 +7,12 @@ type SwitchEntityCommand string
 
 const (
 	OnSwitchtEntityState  SwitchEntityState = "ON"
-	OffSwitchtEntityState                   = "OFF"
+	OffSwitchtEntityState SwitchEntityState = "OFF"
 )
 
 const (
 	OnOffSwitchEntityyFeatures  SwitchEntityFeatures = "on_off"
-	ToggleSwitchEntityyFeatures                      = "toggle"
+	ToggleSwitchEntityyFeatures SwitchEntityFeatures = "toggle"
 )
 
 const (
@@ -21,8 +21,8 @@ const (
 
 const (
 	OnSwitchEntityCommand     SwitchEntityCommand = "on"
-	OffSwitchEntityCommand                        = "off"
-	ToggleSwitchEntityCommand                     = "toggle"
+	OffSwitchEntityCommand    SwitchEntityCommand = "off"
+	ToggleSwitchEntityCommand SwitchEntityCommand = "toggle"
 )
 
 type SwitchsEntity struct {

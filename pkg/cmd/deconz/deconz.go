@@ -30,7 +30,9 @@ func NewCommand(rootCmd *cobra.Command) *cobra.Command {
 			}
 
 			var config integration.Config
-			viper.Unmarshal(&config)
+			if err := viper.Unmarshal(&config); err != nil {
+				log.WithError(err).Error("Cannot unmarshal config with viper")
+			}
 
 			i, err := integration.NewIntegration(config)
 			cmd.CheckError(err)

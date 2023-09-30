@@ -7,39 +7,39 @@ type ClimateEntityCommand string
 
 const (
 	OffClimateEntityState      ClimateEntityState = "OFF"
-	HeatClimateEntityState                        = "HEAT"
-	CoolClimateEntityState                        = "Cool"
-	HeatCoolClimateEntityState                    = "HEAT_COOL"
-	FanClimateEntityState                         = "FAN"
-	AutoClimateEntityState                        = "Auto"
+	HeatClimateEntityState     ClimateEntityState = "HEAT"
+	CoolClimateEntityState     ClimateEntityState = "Cool"
+	HeatCoolClimateEntityState ClimateEntityState = "HEAT_COOL"
+	FanClimateEntityState      ClimateEntityState = "FAN"
+	AutoClimateEntityStat      ClimateEntityState = "Auto"
 )
 
 const (
 	OnOffClimateEntityFeatures                 ClimateEntityFeatures = "on_off"
-	HeatClimateEntityFeatures                                        = "heat"
-	CoolClimateEntityFeatures                                        = "cool"
-	CurrentTemperatureClimateEntityFeatures                          = "current_temperature"
-	TargetTemperaturClimateEntityFeatures                            = "target_temperatur"
-	TargetTemperaturRangeClimateEntityFeatures                       = "target_temperature_range"
-	FanClimateEntityFeatures                                         = "fan"
+	HeatClimateEntityFeatures                  ClimateEntityFeatures = "heat"
+	CoolClimateEntityFeatures                  ClimateEntityFeatures = "cool"
+	CurrentTemperatureClimateEntityFeatures    ClimateEntityFeatures = "current_temperature"
+	TargetTemperaturClimateEntityFeatures      ClimateEntityFeatures = "target_temperatur"
+	TargetTemperaturRangeClimateEntityFeatures ClimateEntityFeatures = "target_temperature_range"
+	FanClimateEntityFeatures                   ClimateEntityFeatures = "fan"
 )
 
 const (
 	OnClimateEntityCommand                     ClimateEntityCommand = "on"
-	OffClimateEntityCommand                                         = "off"
-	HVACModeClimateEntityCommand                                    = "hvac_mode"
-	TargetTemperatureClimateEntityCommand                           = "target_temperature"
-	TargetTemperatureRangeClimateEntityCommand                      = "target_temperature_range"
-	FanModeClimateEntityCommand                                     = "fan_mode"
+	OffClimateEntityCommand                    ClimateEntityCommand = "off"
+	HVACModeClimateEntityCommand               ClimateEntityCommand = "hvac_mode"
+	TargetTemperatureClimateEntityCommand      ClimateEntityCommand = "target_temperature"
+	TargetTemperatureRangeClimateEntityCommand ClimateEntityCommand = "target_temperature_range"
+	FanModeClimateEntityCommand                ClimateEntityCommand = "fan_mode"
 )
 
 const (
 	StateClimateEntityAttribute                 ClimateEntityAttributes = "state"
-	CurrentTemperatureClimateEntityAttribute                            = "current_temperature"
-	TargetTemperatureClimateEntityAttribute                             = "target_temperature"
-	TargetTemperatureHighClimateEntityAttribute                         = "target_temperature_high"
-	TargetTemperatureLowClimateEntityAttribute                          = "target_temperature_low"
-	FanModeClimateEntityAttribute                                       = " fan_mode"
+	CurrentTemperatureClimateEntityAttribute    ClimateEntityAttributes = "current_temperature"
+	TargetTemperatureClimateEntityAttribute     ClimateEntityAttributes = "target_temperature"
+	TargetTemperatureHighClimateEntityAttribute ClimateEntityAttributes = "target_temperature_high"
+	TargetTemperatureLowClimateEntityAttribute  ClimateEntityAttributes = "target_temperature_low"
+	FanModeClimateEntityAttribute               ClimateEntityAttributes = " fan_mode"
 )
 
 type ClimateEntity struct {

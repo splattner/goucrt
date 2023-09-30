@@ -8,7 +8,7 @@ type EntityState string
 
 const (
 	UnavailableEntityState EntityState = "UNAVAILABLE"
-	UnkownEntityState                  = "UNKNOWN"
+	UnkownEntityState      EntityState = "UNKNOWN"
 )
 
 // Generic Remote Two Entity

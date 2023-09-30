@@ -4,11 +4,11 @@ type DenonCursorControl string
 
 const (
 	DenonCursorControlUp     DenonCursorControl = "CUP"
-	DenonCursorControlDown                      = "CDN"
-	DenonCursorControlLeft                      = "CLT"
-	DenonCursorControlRight                     = "CRT"
-	DenonCursorControlEnter                     = "ENT"
-	DenonCursorControlReturn                    = "RTN"
+	DenonCursorControlDown   DenonCursorControl = "CDN"
+	DenonCursorControlLeft   DenonCursorControl = "CLT"
+	DenonCursorControlRight  DenonCursorControl = "CRT"
+	DenonCursorControlEnter  DenonCursorControl = "ENT"
+	DenonCursorControlReturn DenonCursorControl = "RTN"
 )
 
 func (d *DenonAVR) CursorControl(cursorControl DenonCursorControl) int {

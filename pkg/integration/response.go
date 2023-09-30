@@ -18,7 +18,9 @@ func (i *Integration) sendResponseMessage(res interface{}, messageType int) erro
 
 	// Unmarshal againinto Event Message for some fields
 	response := ResponseMessage{}
-	json.Unmarshal(msg, &response)
+	if err := json.Unmarshal(msg, &response); err != nil {
+		log.WithError(err).Error("Cannot unmarshal response")
+	}
 
 	log.WithFields(log.Fields{
 		"Message": response.Msg,
@@ -56,5 +58,7 @@ func (i *Integration) authenticationResponseMessage(code int) *AuthenticationRes
 // Send a AuthenticationResponse Message
 func (i *Integration) SendAuthenticationResponse() {
 	msg := i.authenticationResponseMessage(200)
-	i.sendResponseMessage(msg, websocket.TextMessage)
+	if err := i.sendResponseMessage(msg, websocket.TextMessage); err != nil {
+		log.WithError(err).Error("Cannot send Response Message")
+	}
 }

@@ -11,31 +11,31 @@ type LightEntityCommand string
 
 const (
 	OnLightEntityState          LightEntityState = "ON"
-	OffLightEntityState                          = "OFF"
-	UnavailableLightEntityState                  = "UNAVAILABLE"
-	UnknownLightEntityState                      = "UNKNOWN"
+	OffLightEntityState         LightEntityState = "OFF"
+	UnavailableLightEntityState LightEntityState = "UNAVAILABLE"
+	UnknownLightEntityState     LightEntityState = "UNKNOWN"
 )
 
 const (
 	OnOffLightEntityFeatures            LightEntityFeatures = "on_off"
-	ToggleLightEntityFeatures                               = "toggle"
-	DimLightEntityFeatures                                  = "dim"
-	ColorLightEntityFeatures                                = "color"
-	ColorTemperatureLightEntityFeatures                     = "color_temperature"
+	ToggleLightEntityFeatures           LightEntityFeatures = "toggle"
+	DimLightEntityFeatures              LightEntityFeatures = "dim"
+	ColorLightEntityFeatures            LightEntityFeatures = "color"
+	ColorTemperatureLightEntityFeatures LightEntityFeatures = "color_temperature"
 )
 
 const (
 	OnLightEntityCommand     LightEntityCommand = "on"
-	OffLightEntityCommand                       = "off"
-	ToggleLightEntityCommand                    = "toggle"
+	OffLightEntityCommand    LightEntityCommand = "off"
+	ToggleLightEntityCommand LightEntityCommand = "toggle"
 )
 
 const (
 	StateLightEntityAttribute            LightEntityAttributes = "state"
-	HueLightEntityAttribute                                    = "hue"
-	SaturationLightEntityAttribute                             = "saturation"
-	BrightnessLightEntityAttribute                             = "brightness"
-	ColorTemperatureLightEntityAttribute                       = "color_temperature"
+	HueLightEntityAttribute              LightEntityAttributes = "hue"
+	SaturationLightEntityAttribute       LightEntityAttributes = "saturation"
+	BrightnessLightEntityAttribute       LightEntityAttributes = "brightness"
+	ColorTemperatureLightEntityAttribute LightEntityAttributes = "color_temperature"
 )
 
 type LightEntity struct {

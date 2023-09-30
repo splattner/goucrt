@@ -67,7 +67,9 @@ func (d *Deconz) StartandListenLoop() {
 			return
 
 		case <-ticker.C:
-			ws.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := ws.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+				log.WithError(err).Error("Cannot Set write deadline on websocket")
+			}
 			log.WithField("RemoteAddr", ws.RemoteAddr().String()).Debug("Deconz, Send Ping Message")
 			if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
 				log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Could not send Ping message")
@@ -83,9 +85,13 @@ func (d *Deconz) websocketReceiveHandler(ws *websocket.Conn) {
 	log.Info("Deconz, Starting Deconz Websocket receive handler")
 
 	ws.SetReadLimit(maxMessageSize)
-	ws.SetReadDeadline(time.Now().Add(pongWait))
+	if err := ws.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
+		log.WithError(err).Error("Cannot Set read deadline on websocket")
+	}
 	ws.SetPongHandler(func(string) error {
-		ws.SetReadDeadline(time.Now().Add(pongWait))
+		if err := ws.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
+			log.WithError(err).Error("Cannot Set read deadline on websocket")
+		}
 		return nil
 	})
 

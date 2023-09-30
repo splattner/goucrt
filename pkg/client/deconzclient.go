@@ -115,7 +115,7 @@ func (c *DeconzClient) handleSetDriverUserData(user_data map[string]string, conf
 
 		if err != nil {
 			log.WithError(err).Debug("Failed to get new api Key")
-			c.IntegrationDriver.SetDriverSetupState(integration.StopEvent, integration.ErrorDeviceState, integration.AuthErrorError, nil)
+			c.IntegrationDriver.SetDriverSetupState(integration.StopEvent, integration.ErrorState, integration.AuthErrorError, nil)
 			return
 		}
 
@@ -232,7 +232,9 @@ func (c *DeconzClient) handleNewSensorDeviceDiscovered(device *deconz.DeconzDevi
 
 		})
 
-		c.IntegrationDriver.AddEntity(sensor)
+		if err := c.IntegrationDriver.AddEntity(sensor); err != nil {
+			log.WithError(err).Error("Cannot add entity")
+		}
 	}
 }
 
@@ -357,7 +359,9 @@ func (c *DeconzClient) handleNewLightDeviceDiscovered(device *deconz.DeconzDevic
 
 	})
 
-	c.IntegrationDriver.AddEntity(light)
+	if err := c.IntegrationDriver.AddEntity(light); err != nil {
+		log.WithError(err).Error("Cannot add entity")
+	}
 }
 
 func (c *DeconzClient) handleNewGroupDeviceDiscovered(device *deconz.DeconzDevice) {
@@ -440,9 +444,13 @@ func (c *DeconzClient) handleNewGroupDeviceDiscovered(device *deconz.DeconzDevic
 
 	group.AddCommand(entities.ToggleLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
 		if device.IsOn() {
-			device.TurnOff()
+			if err := device.TurnOff(); err != nil {
+				return 404
+			}
 		} else {
-			device.TurnOn()
+			if err := device.TurnOn(); err != nil {
+				return 404
+			}
 		}
 		return 200
 	})
@@ -495,7 +503,9 @@ func (c *DeconzClient) handleNewGroupDeviceDiscovered(device *deconz.DeconzDevic
 
 	})
 
-	c.IntegrationDriver.AddEntity(group)
+	if err := c.IntegrationDriver.AddEntity(group); err != nil {
+		log.WithError(err).Error("Cannot add entity")
+	}
 }
 
 func (c *DeconzClient) handleNewDeviceDiscovered(device *deconz.DeconzDevice) {
@@ -527,11 +537,17 @@ func (c *DeconzClient) handleRemoveDevice(device *deconz.DeconzDevice) {
 
 	switch device.Type {
 	case deconz.SensorDeconzDeviceType:
-		c.IntegrationDriver.RemoveEntityByID(fmt.Sprintf("sensor%d", device.GetID()))
+		if err := c.IntegrationDriver.RemoveEntityByID(fmt.Sprintf("sensor%d", device.GetID())); err != nil {
+			log.WithError(err).Error("Cannot remove Entity")
+		}
 	case deconz.LightDeconzDeviceType:
-		c.IntegrationDriver.RemoveEntityByID(fmt.Sprintf("light%d", device.GetID()))
+		if err := c.IntegrationDriver.RemoveEntityByID(fmt.Sprintf("light%d", device.GetID())); err != nil {
+			log.WithError(err).Error("Cannot remove Entity")
+		}
 	case deconz.GroupDeconzDeviceType:
-		c.IntegrationDriver.RemoveEntityByID(fmt.Sprintf("group%d", device.GetID()))
+		if err := c.IntegrationDriver.RemoveEntityByID(fmt.Sprintf("group%d", device.GetID())); err != nil {
+			log.WithError(err).Error("Cannot remove Entity")
+		}
 	}
 
 }

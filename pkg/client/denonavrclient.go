@@ -85,17 +85,28 @@ func (c *DenonAVRClient) initDenonAVRClient() {
 	c.mediaPlayer.AddFeature(entities.UnmuteMediaPlayerEntityFeatures)
 	c.mediaPlayer.AddFeature(entities.MuteToggleMediaPlayerEntityFeatures)
 	c.mediaPlayer.AddFeature(entities.SelectSourceMediaPlayerEntityFeatures)
-	c.mediaPlayer.AddFeature(entities.SelectSoundModeMediaPlayerEntityCommand)
+	c.mediaPlayer.AddFeature(entities.SelectSoundModeMediaPlayerEntityFeatures)
 	c.mediaPlayer.AddFeature(entities.DPadMediaPlayerEntityFeatures)
-	c.IntegrationDriver.AddEntity(c.mediaPlayer)
+
+	if err := c.IntegrationDriver.AddEntity(c.mediaPlayer); err != nil {
+		log.WithError(err).Error("Cannot add Entity")
+	}
 
 	// Butons
 	c.moni1Button = entities.NewButtonEntity("moni1", entities.LanguageText{En: "Monitor Out 1"}, "")
-	c.IntegrationDriver.AddEntity(c.moni1Button)
+	if err := c.IntegrationDriver.AddEntity(c.moni1Button); err != nil {
+		log.WithError(err).Error("Cannot add Entity")
+	}
+
 	c.moni2Button = entities.NewButtonEntity("moni2", entities.LanguageText{En: "Monitor Out 2"}, "")
-	c.IntegrationDriver.AddEntity(c.moni2Button)
+	if err := c.IntegrationDriver.AddEntity(c.moni2Button); err != nil {
+		log.WithError(err).Error("Cannot add Entity")
+	}
+
 	c.moniAutoButton = entities.NewButtonEntity("moniauto", entities.LanguageText{En: "Monitor Out Auto"}, "")
-	c.IntegrationDriver.AddEntity(c.moniAutoButton)
+	if err := c.IntegrationDriver.AddEntity(c.moniAutoButton); err != nil {
+		log.WithError(err).Error("Cannot add Entity")
+	}
 
 }
 
@@ -167,7 +178,7 @@ func (c *DenonAVRClient) configureDenon() {
 				volume = s
 			}
 
-			attributes[entities.VolumeMediaPlayerEntityAttribute] = volume + 80
+			attributes[string(entities.VolumeMediaPlayerEntityAttribute)] = volume + 80
 
 			c.mediaPlayer.SetAttributes(attributes)
 		})
@@ -326,14 +337,10 @@ func (c *DenonAVRClient) denonClientLoop() {
 
 	// Run Client Loop to handle entity changes from device
 	for {
-		select {
-		case msg := <-c.messages:
-
-			switch msg {
-			case "disconnect":
-				return
-			}
-
+		msg := <-c.messages
+		switch msg {
+		case "disconnect":
+			return
 		}
 	}
 

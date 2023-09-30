@@ -8,8 +8,8 @@ type DeconzDeviceType string
 
 const (
 	LightDeconzDeviceType  DeconzDeviceType = "light"
-	GroupDeconzDeviceType                   = "group"
-	SensorDeconzDeviceType                  = "sensor"
+	GroupDeconzDeviceType  DeconzDeviceType = "group"
+	SensorDeconzDeviceType DeconzDeviceType = "sensor"
 )
 
 type DeconzDevice struct {
@@ -122,12 +122,10 @@ func (d *DeconzDevice) TurnOff() error {
 func (d *DeconzDevice) Toggle() error {
 
 	if d.IsOn() {
-		d.TurnOff()
-	} else {
-		d.TurnOn()
+		return d.TurnOff()
 	}
 
-	return d.setState()
+	return d.TurnOn()
 }
 
 func (d *DeconzDevice) IsOn() bool {
