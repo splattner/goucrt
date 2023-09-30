@@ -1,0 +1,5 @@
+.*
+*
+!go.mod
+!ucrt-amd64
+!ucrt-arm64

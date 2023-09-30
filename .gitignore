@@ -17,3 +17,6 @@ coverage/
 cmd/ucrt/ucrt
 cmd/ucrt/*.json
 dist/
+
+ucrt-amd64
+ucrt-arm64

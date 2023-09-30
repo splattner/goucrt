@@ -26,9 +26,19 @@ jobs:
       - name: Determine Go version from go.mod
         run: echo "GO_VERSION=$(go mod edit -json | jq -r .Go)" >> $GITHUB_ENV
 
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
@@ -44,28 +54,37 @@ jobs:
 
       # Extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      # - name: Extract Docker metadata
+      #   id: meta
+      #   uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
+      #   with:
+      #     images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build docker images
+        run: make docker-build -e IMG_TAG=${GITHUB_REF#refs/heads/}
+
+      - name: Push docker images
+        run: make docker-push -e IMG_TAG=${GITHUB_REF#refs/heads/}
+
+      - name: Create & Push docker manifrst
+        run: make docker-manifest -e IMG_TAG=${GITHUB_REF#refs/heads/}
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
-      - name: Build and push Docker image
-        id: build-and-push
-        uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
-        with:
-          context: .
-          file: build/Dockerfile.multistage
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            GO_VERSION=${{ env.GO_VERSION }}
+      # - name: Build and push Docker image
+      #   id: build-and-push
+      #   uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
+      #   with:
+      #     context: .
+      #     file: build/Dockerfile.multistage
+      #     platforms: linux/amd64,linux/arm64
+      #     push: ${{ github.event_name != 'pull_request' }}
+      #     tags: ${{ steps.meta.outputs.tags }}
+      #     labels: ${{ steps.meta.outputs.labels }}
+      #     cache-from: type=gha
+      #     cache-to: type=gha,mode=max
+      #     build-args: |
+      #       GO_VERSION=${{ env.GO_VERSION }}
 
       - name: Bump version and push tag
         id: tag_version

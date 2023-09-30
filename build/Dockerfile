@@ -1,5 +1,8 @@
 FROM alpine:3
 
+ARG TARGETARCH
+ARG UCRT_BIN=ucrt
+
 LABEL maintainer "Sebastian Plattner"
 LABEL org.opencontainers.image.title "Unfolded Cirrle Remote Two Integraton Driber"
 LABEL org.opencontainers.image.description "Golang based integration driver for a Unfolded Circle Remote Two"
@@ -9,7 +12,7 @@ LABEL org.opencontainers.image.licenses MPL-2.0
 
 RUN apk --no-cache add libc6-compat
 
-COPY ucrt /app/
+COPY ./$UCRT_BIN-$TARGETARCH /app/ucrt
 
 WORKDIR /app
 
