@@ -19,5 +19,5 @@ golangci_bin = $(go_bin)/golangci-lint
 
 
 # Image URL to use all building/pushing image targets
-GOUCRT_GHCR_IMG ?= splattner/goucrt:$(IMG_TAG)
+GOUCRT_GHCR_IMG ?= ghcr.io/splattner/goucrt:$(IMG_TAG)
 
