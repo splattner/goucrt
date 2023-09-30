@@ -1,6 +1,5 @@
 FROM alpine:3
 
-ARG TARGETARCH
 ARG UCRT_BIN=ucrt
 
 LABEL maintainer "Sebastian Plattner"
@@ -12,7 +11,7 @@ LABEL org.opencontainers.image.licenses MPL-2.0
 
 RUN apk --no-cache add libc6-compat
 
-COPY ./$UCRT_BIN-$TARGETARCH /app/ucrt
+COPY ./$UCRT_BIN /app/ucrt
 
 WORKDIR /app
 

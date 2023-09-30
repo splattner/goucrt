@@ -55,14 +55,16 @@ docker-build-amd64: $(BIN_FILENAME) ## Build the docker image linux/amd64
 	docker build . \
 	    -f build/Dockerfile \
 		--tag $(GOUCRT_GHCR_IMG)-amd64 \
-		--platform linux/amd64
+		--platform linux/amd64 \
+		--build-arg UCRT_BIN=ucrt-amd64
 		
 .PHONY: docker-build-arm64
 docker-build-arm64: $(BIN_FILENAME_ARM64) ## Build the docker image linux/arm64
 	docker build . \
 	    -f build/Dockerfile \
 		--tag $(GOUCRT_GHCR_IMG)-arm64 \
-		--platform linux/arm64
+		--platform linux/arm64 \
+		--build-arg UCRT_BIN=ucrt-arm64
 
 .PHONY: docker-manifest
 docker-manifest: docker-manifest-create docker-manifest-push # Create and push docker manifest
