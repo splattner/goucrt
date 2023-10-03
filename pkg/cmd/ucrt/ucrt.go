@@ -6,6 +6,7 @@ import (
 	"github.com/splattner/goucrt/pkg/cmd/deconz"
 	"github.com/splattner/goucrt/pkg/cmd/denonavr"
 	"github.com/splattner/goucrt/pkg/cmd/shelly"
+	"github.com/splattner/goucrt/pkg/cmd/tasmota"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -99,6 +100,7 @@ func NewCommand(name string) *cobra.Command {
 		denonavr.NewCommand(rootCmd),
 		deconz.NewCommand(rootCmd),
 		shelly.NewCommand(rootCmd),
+		tasmota.NewCommand(rootCmd),
 	)
 
 	return rootCmd

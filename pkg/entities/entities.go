@@ -16,13 +16,15 @@ const (
 type Entity struct {
 	Id string `json:"entity_id"`
 	EntityType
-	DeviceId               string                                     `json:"device_id,omitempty"`
-	Features               []interface{}                              `json:"features"`
-	Name                   LanguageText                               `json:"name"`
-	Area                   string                                     `json:"area,omitempty"`
-	DeviceClass            string                                     `json:"-"`
-	Attributes             map[string]interface{}                     `json:"-"`
-	handleEntityChangeFunc func(interface{}, *map[string]interface{}) `json:"-"`
+	DeviceId                string                                     `json:"device_id,omitempty"`
+	Features                []interface{}                              `json:"features"`
+	Name                    LanguageText                               `json:"name"`
+	Area                    string                                     `json:"area,omitempty"`
+	DeviceClass             string                                     `json:"-"`
+	Attributes              map[string]interface{}                     `json:"-"`
+	handleEntityChangeFunc  func(interface{}, *map[string]interface{}) `json:"-"`
+	SubscribeCallbackFunc   func()                                     `json:"-"`
+	UnsubscribeCallbackFunc func()                                     `json:"-"`
 }
 
 type EntityType struct {
@@ -79,6 +81,16 @@ func (e *Entity) GetEntityState() *EntityStateData {
 // To send entity_change events to Remote two
 func (e *Entity) SetHandleEntityChangeFunc(f func(interface{}, *map[string]interface{})) {
 	e.handleEntityChangeFunc = f
+}
+
+// Set the function that is called when RT subscribes to this entity
+func (e *Entity) SetSubscribeCallbackFunc(f func()) {
+	e.SubscribeCallbackFunc = f
+}
+
+// Set the function that is called when RT unsubscribes to this entity
+func (e *Entity) SetUnsubscribeCallbackFunc(f func()) {
+	e.UnsubscribeCallbackFunc = f
 }
 
 // Set attributes for the Entity and then call the EntityChange Function

@@ -16,6 +16,8 @@ import (
 type TasmotaClient struct {
 	Client
 	tasmota *tasmota.Tasmota
+
+	mapOnState map[string]entities.LightEntityState
 }
 
 func NewTasmotaClient(i *integration.Integration) *TasmotaClient {
@@ -102,6 +104,11 @@ func NewTasmotaClient(i *integration.Integration) *TasmotaClient {
 	tasmota.clientLoopFunc = tasmota.tasmotaClientLoop
 	//client.setDriverUserDataFunc = client.handleSetDriverUserData
 
+	tasmota.mapOnState = map[string]entities.LightEntityState{
+		"ON":  entities.OnLightEntityState,
+		"OFF": entities.OffLightEntityState,
+	}
+
 	return &tasmota
 }
 
@@ -183,6 +190,10 @@ func (c *TasmotaClient) handleNewDeviceDiscovered(device *tasmota.TasmotaDevice)
 	case 0:
 		// Sonoff Basic
 		switchEntity := entities.NewSwitchEntity(device.Topic, entities.LanguageText{En: "Tasmota " + device.FriendlyName[0]}, "")
+
+		switchEntity.SubscribeCallbackFunc = device.Subscribe
+		switchEntity.UnsubscribeCallbackFunc = device.Unsubscribe
+
 		switchEntity.AddFeature(entities.OnOffSwitchEntityyFeatures)
 		switchEntity.AddFeature(entities.ToggleSwitchEntityyFeatures)
 
@@ -190,15 +201,16 @@ func (c *TasmotaClient) handleNewDeviceDiscovered(device *tasmota.TasmotaDevice)
 		switchEntity.MapCommand(entities.OffSwitchEntityCommand, device.TurnOff)
 		switchEntity.MapCommand(entities.ToggleSwitchEntityCommand, device.Toggle)
 
-		device.AddMsgReceivedFunc("RESULT", func(msg []byte) {
+		device.AddMsgReceivedFunc("RESULT", func(msg interface{}) {
+
+			res := msg.(tasmota.TasmotaResultMsg)
 
 			attributes := make(map[string]interface{})
 
-			switch string(msg) {
-			case "on":
-				attributes[string(entities.StateSwitchEntityyAttribute)] = entities.OnSwitchtEntityState
-			case "off":
-				attributes[string(entities.StateSwitchEntityyAttribute)] = entities.OffSwitchtEntityState
+			if res.Power == "ON" || res.Power1 == "ON" {
+				attributes[string(entities.StateLightEntityAttribute)] = entities.OnLightEntityState
+			} else {
+				attributes[string(entities.StateLightEntityAttribute)] = entities.OffLightEntityState
 			}
 
 			switchEntity.SetAttributes(attributes)
@@ -208,32 +220,100 @@ func (c *TasmotaClient) handleNewDeviceDiscovered(device *tasmota.TasmotaDevice)
 
 	case 4:
 		// RGBW
-		lightEntity := entities.NewLightEntity(device.Topic, entities.LanguageText{En: "Tasmota " + device.FriendlyName[0]}, "")
+		lightEntity_rgb := entities.NewLightEntity(device.Topic, entities.LanguageText{En: "Tasmota " + device.FriendlyName[0]}, "")
 
-		lightEntity.AddFeature(entities.OnOffLightEntityFeatures)
-		lightEntity.AddFeature(entities.ToggleLightEntityFeatures)
-		lightEntity.AddFeature(entities.DimLightEntityFeatures)
-		lightEntity.AddFeature(entities.ColorLightEntityFeatures)
+		lightEntity_rgb.SubscribeCallbackFunc = device.Subscribe
+		lightEntity_rgb.UnsubscribeCallbackFunc = device.Unsubscribe
 
-		lightEntity.MapCommand(entities.OnLightEntityCommand, device.TurnOn)
-		lightEntity.MapCommand(entities.OffLightEntityCommand, device.TurnOff)
-		lightEntity.MapCommand(entities.ToggleLightEntityCommand, device.Toggle)
+		lightEntity_rgb.AddFeature(entities.OnOffLightEntityFeatures)
+		lightEntity_rgb.AddFeature(entities.ToggleLightEntityFeatures)
+		lightEntity_rgb.AddFeature(entities.DimLightEntityFeatures)
+		lightEntity_rgb.AddFeature(entities.ColorLightEntityFeatures)
 
-		device.AddMsgReceivedFunc("RESULT", func(msg []byte) {
+		// Add commands
+		lightEntity_rgb.AddCommand(entities.OnLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
+
+			// NO param set, so just turn on
+			if len(params) == 0 {
+				if err := device.TurnOn(); err != nil {
+					return 404
+				}
+			} else {
+				if params["saturation"] != nil && params["hue"] != nil {
+
+					hue := float32(params["hue"].(float64))
+					sat := float32(params["saturation"].(float64) / 255 * 100)
+
+					// Color Light
+					if err := device.SetHue(hue); err != nil {
+						return 404
+					}
+					if err := device.SetSaturation(sat); err != nil {
+						return 404
+					}
+
+				}
+
+				if params["brightness"] != nil {
+					bri := int(params["brightness"].(float64) / 255 * 100)
+					if bri > 0 && device.LocalState.White == 0 {
+						// Set Brightness if not in White mode
+						if err := device.SetBrightness(bri); err != nil {
+							return 404
+						}
+					} else {
+
+						// When in color mode, and bri is 0, set/turn on white mode
+						// Setting white to 0 turns off the white mode and return to color mode
+						if err := device.SetWhite(bri); err != nil {
+							return 404
+						}
+					}
+
+				}
+
+			}
+
+			return 200
+		})
+
+		lightEntity_rgb.MapCommand(entities.OffLightEntityCommand, device.TurnOff)
+		lightEntity_rgb.MapCommand(entities.ToggleLightEntityCommand, device.Toggle)
+
+		device.AddMsgReceivedFunc("RESULT", func(msg interface{}) {
+
+			res := msg.(tasmota.TasmotaResultMsg)
+
+			log.WithFields(log.Fields{"res": res, "Device": device.FriendlyName}).Debug("Result msg received")
 
 			attributes := make(map[string]interface{})
 
-			switch string(msg) {
-			case "on":
+			if res.Power == "ON" || res.Power1 == "ON" {
 				attributes[string(entities.StateLightEntityAttribute)] = entities.OnLightEntityState
-			case "off":
+			} else {
 				attributes[string(entities.StateLightEntityAttribute)] = entities.OffLightEntityState
 			}
 
-			lightEntity.SetAttributes(attributes)
+			// Only White light
+			if res.White > 0 {
+				attributes[string(entities.SaturationLightEntityAttribute)] = 0
+				attributes[string(entities.BrightnessLightEntityAttribute)] = int(float32(res.White) / 100 * 255)
+			} else {
+				if res.HSBCOlor != "" {
+					// Handle COlor Part of light
+					hue, sat, bri := device.GetHSB(res.HSBCOlor)
+
+					attributes[string(entities.HueLightEntityAttribute)] = int(hue)
+					attributes[string(entities.SaturationLightEntityAttribute)] = int(float64(sat) / 100 * 255)
+					attributes[string(entities.BrightnessLightEntityAttribute)] = int(float64(bri) / 100 * 255)
+
+				}
+			}
+
+			lightEntity_rgb.SetAttributes(attributes)
 		})
 
-		tasmotaDevice = lightEntity
+		tasmotaDevice = lightEntity_rgb
 
 	}
 
@@ -256,16 +336,19 @@ func (c *TasmotaClient) handleNewDeviceDiscovered(device *tasmota.TasmotaDevice)
 // Callen on RT connect
 func (c *TasmotaClient) tasmotaClientLoop() {
 
+	ticker := time.NewTicker(5 * time.Minute)
+
 	defer func() {
-		c.tasmota.StopDiscovery()
-		c.tasmota.Stop()
+		if c.tasmota != nil {
+			c.tasmota.StopDiscovery()
+			c.tasmota.Stop()
+		}
+		ticker.Stop()
 		c.setDeviceState(integration.DisconnectedDeviceState)
 	}()
 
 	if c.tasmota == nil {
 		c.setupTasmota()
-	} else {
-		return
 	}
 
 	if c.tasmota != nil {

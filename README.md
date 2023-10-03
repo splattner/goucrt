@@ -1,6 +1,6 @@
 # A Unfolded Circle Remote Two Integration in Go
 
-![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/splattner/goucrt/docker-publish.yml)
+![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/splattner/goucrt/main.yaml)
 ![GitHub](https://img.shields.io/github/license/splattner/goucrt)
 ![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/splattner/goucrt)
 
@@ -37,6 +37,17 @@ This client currently implements [`Light` entities](https://github.com/unfoldedc
 ### Shelly
 
 This client currently implements [`Switch` entities](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/switch_light.md) for discovered Shelly Devices. It uses MQTT to discover and control Shelly devices.
+
+### Tasmota
+
+This client currently implements [`Switch` entities](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/switch_light.md) and [`Light` entities](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/entity_light.md) It uses MQTT to discover and control Tasmota devices.
+
+Currently on the following Sonoff device types are supported
+
+* `0` Sonoff Basic results in a Switch entity
+* `4` RGBW results in a Light entity
+
+*Note* The light entity does not really suport RGBW. So currently, as a somehow working workaround, when setting the brithness is set to 0, the entity changes between RGB & W Settings.
 
 ## How to use
 

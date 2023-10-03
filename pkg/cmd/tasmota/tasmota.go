@@ -37,7 +37,7 @@ func NewCommand(rootCmd *cobra.Command) *cobra.Command {
 			i, err := integration.NewIntegration(config)
 			cmd.CheckError(err)
 
-			myclient := client.NewShellyClient(i)
+			myclient := client.NewTasmotaClient(i)
 
 			myclient.InitClient()
 
