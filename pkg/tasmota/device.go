@@ -3,6 +3,7 @@ package tasmota
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -37,39 +38,37 @@ type TasmotaDevice struct {
 	ShutterOptions  []int          `json:"sho,omitempty"`
 	Version         int            `json:"ver,omitempty"`
 
-	LastResultMessage TasmotaResultMsg
-	LastTeleMessame   TasmotaTeleMsg
+	LocalState      TasmotaResultMsg
+	LastTeleMessame TasmotaTeleMsg
 
-	PowerState bool
-
-	handleMsgReceivedFunc map[string][]func([]byte)
+	handleMsgReceivedFunc map[string][]func(interface{})
 }
 
 func (d *TasmotaDevice) newTasmotaDevice(tasmota *Tasmota) {
 
 	d.tasmota = tasmota
-	d.configureCallbacks()
+	//d.subscribe()
 
-	d.handleMsgReceivedFunc = make(map[string][]func([]byte))
+	d.handleMsgReceivedFunc = make(map[string][]func(interface{}))
 }
 
 // Add a function that is called when a message is eceiverd from a Shelly device on a selected topic
-func (d *TasmotaDevice) AddMsgReceivedFunc(topic string, f func(payload []byte)) {
+func (d *TasmotaDevice) AddMsgReceivedFunc(topic string, f func(message interface{})) {
 	d.handleMsgReceivedFunc[topic] = append(d.handleMsgReceivedFunc[topic], f)
 }
 
 // Call all MsgReceivedFunc for this device and topic
-func (d *TasmotaDevice) stateChangeHandler(topic string, payload []byte) {
+func (d *TasmotaDevice) stateChangeHandler(topic string, message interface{}) {
 
 	if d.handleMsgReceivedFunc[topic] != nil {
 		for _, f := range d.handleMsgReceivedFunc[topic] {
-			f(payload)
+			f(message)
 		}
 	}
 
 }
 
-func (e *TasmotaDevice) configureCallbacks() {
+func (e *TasmotaDevice) Subscribe() {
 	log.WithField("Topic", e.Topic).Debug("Subscribe to Tasmota Topic for this device")
 
 	// Add callback for stat
@@ -79,6 +78,23 @@ func (e *TasmotaDevice) configureCallbacks() {
 	// Add callback for tele
 	topicTele := fmt.Sprintf("tele/%s/#", e.Topic)
 	e.tasmota.subscribeMqttTopic(topicTele, e.mqttCallback())
+
+	// Make sure to have an initial State
+	if err := e.GetResult(); err != nil {
+		log.WithError(err).Debug("Cannot get a Result")
+	}
+}
+
+func (e *TasmotaDevice) Unsubscribe() {
+	log.WithField("Topic", e.Topic).Debug("Subscribe to Tasmota Topic for this device")
+
+	// Add callback for stat
+	topicStat := fmt.Sprintf("stat/%s/#", e.Topic)
+	e.tasmota.unsubscribeMqttTopic(topicStat)
+
+	// Add callback for tele
+	topicTele := fmt.Sprintf("tele/%s/#", e.Topic)
+	e.tasmota.unsubscribeMqttTopic(topicTele)
 }
 
 func (d *TasmotaDevice) mqttCallback() mqtt.MessageHandler {
@@ -95,16 +111,22 @@ func (d *TasmotaDevice) mqttCallback() mqtt.MessageHandler {
 
 		switch topic {
 		case "RESULT":
-			err := json.Unmarshal(msg.Payload(), &d.LastResultMessage)
+			var resultMessage TasmotaResultMsg
+			err := json.Unmarshal(msg.Payload(), &resultMessage)
+			if resultMessage.CustomSend == "Done" {
+				// We don't care for this message
+				return
+			}
 			if err != nil {
 				log.WithError(err).Debug("Unmarshal to TasmotaPowerMsg failed")
 				return
 
 			}
-			// Set internal state
-			d.PowerState = d.LastResultMessage.Power1 == "ON" || d.LastResultMessage.Power == "ON"
 
-			d.stateChangeHandler(topic, msg.Payload())
+			// Set internal state
+			d.LocalState = resultMessage
+
+			d.stateChangeHandler(topic, resultMessage)
 		case "SENSOR":
 			err := json.Unmarshal(msg.Payload(), &d.LastTeleMessame)
 			if err != nil {
@@ -122,15 +144,21 @@ func (d *TasmotaDevice) mqttCallback() mqtt.MessageHandler {
 }
 
 func (e *TasmotaDevice) TurnOn() error {
-	return e.tasmota.publishMqttCommand("shellies/"+e.Topic+"/relay/0/command", "on")
+
+	if err := e.tasmota.publishMqttCommand("cmnd/"+e.Topic+"/POWER", "ON"); err != nil {
+		return err
+	}
+
+	// TUrn on does not send the current state of the device, so force it
+	return e.GetResult()
 }
 
 func (e *TasmotaDevice) TurnOff() error {
-	return e.tasmota.publishMqttCommand("shellies/"+e.Topic+"/relay/0/command", "off")
+	return e.tasmota.publishMqttCommand("cmnd/"+e.Topic+"/POWER", "OFF")
 }
 
 func (e *TasmotaDevice) IsOn() bool {
-	return e.PowerState
+	return e.LocalState.Power == "ON" || e.LocalState.Power1 == "ON"
 }
 
 func (e *TasmotaDevice) Toggle() error {
@@ -142,7 +170,11 @@ func (e *TasmotaDevice) Toggle() error {
 	return e.TurnOn()
 }
 
-func (d *TasmotaDevice) SetBrightness(brightness float32) error {
+func (d *TasmotaDevice) GetResult() error {
+	return d.tasmota.publishMqttCommand("cmnd/"+d.Topic+"/HsbColor", "")
+}
+
+func (d *TasmotaDevice) SetBrightness(brightness int) error {
 	return d.tasmota.publishMqttCommand("cmnd/"+d.Topic+"/HsbColor3", brightness)
 }
 
@@ -154,11 +186,11 @@ func (d *TasmotaDevice) SetSaturation(saturation float32) error {
 	return d.tasmota.publishMqttCommand("cmnd/"+d.Topic+"/HsbColor2", saturation)
 }
 
-func (d *TasmotaDevice) SetHSB(hue float32, saturation float32, brightness float32) error {
-	return d.tasmota.publishMqttCommand("cmnd/"+d.Topic+"/HsbColor", fmt.Sprintf("%.0f,%.0f,%.0f", hue, saturation, brightness))
+func (d *TasmotaDevice) SetHSB(hue float32, saturation float32, brightness int) error {
+	return d.tasmota.publishMqttCommand("cmnd/"+d.Topic+"/HsbColor", fmt.Sprintf("%.0f,%.0f,%d", hue, saturation, brightness))
 }
 
-func (d *TasmotaDevice) SetWhite(white float32) error {
+func (d *TasmotaDevice) SetWhite(white int) error {
 	//e.publishMqttCommand("cmnd/"+e.Topic+"/Color1", "0,0,0")
 	return d.tasmota.publishMqttCommand("cmnd/"+d.Topic+"/White", white)
 }
@@ -166,4 +198,33 @@ func (d *TasmotaDevice) SetWhite(white float32) error {
 func (e *TasmotaDevice) SetColorTemp(ct float32) error {
 	log.Warningln("Setting Color Temp not implemented")
 	return nil
+}
+
+func (d *TasmotaDevice) GetHSB(color string) (float64, float64, int) {
+
+	if color == "" {
+		color = d.LocalState.HSBCOlor
+	}
+
+	hsb := strings.Split(color, ",")
+
+	if len(hsb) == 3 {
+
+		hue, err := strconv.Atoi(hsb[0])
+		if err != nil {
+			log.WithError(err).Error("Unable to parse HSB")
+		}
+		sat, err := strconv.Atoi(hsb[1])
+		if err != nil {
+			log.WithError(err).Error("Unable to parse HSB")
+		}
+		bri, err := strconv.Atoi(hsb[2])
+		if err != nil {
+			log.WithError(err).Error("Unable to parse HSB")
+		}
+
+		return float64(hue), float64(sat), bri
+	}
+
+	return 0, 0, 0
 }

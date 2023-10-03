@@ -217,11 +217,13 @@ func (c *DeconzClient) handleNewSensorDeviceDiscovered(device *deconz.DeconzDevi
 			case entities.TemperaturSensorDeviceClass:
 				if state.Temperature != nil {
 					attributes["value"] = *state.Temperature / int16(100.0)
+					attributes["unit"] = "°C"
 				}
 
 			case entities.HumiditySensorDeviceClass:
 				if state.Humidity != nil {
 					attributes["value"] = *state.Humidity / uint16(100)
+					attributes["unit"] = "%"
 				}
 
 			}

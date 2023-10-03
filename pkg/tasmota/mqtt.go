@@ -8,6 +8,10 @@ import (
 )
 
 func (e *Tasmota) publishMqttCommand(topic string, value interface{}) error {
+	log.WithFields(log.Fields{
+		"topic": topic,
+		"value": fmt.Sprintf("%v", value)}).Debug("Publish MQTT Command")
+
 	if token := e.mqttClient.Publish(topic, 0, false, fmt.Sprintf("%v", value)); token.Wait() && token.Error() != nil {
 		log.WithError(token.Error()).Error("MQTT publish failed")
 		return token.Error()

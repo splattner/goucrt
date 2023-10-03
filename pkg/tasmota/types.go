@@ -1,13 +1,14 @@
 package tasmota
 
 type TasmotaResultMsg struct {
-	Power1   string `json:"POWER1,omitempty"`
-	Power    string `json:"POWER,omitempty"`
-	Dimmer   int    `json:"Dimmer,omitempty"`
-	Color    string `json:"Color,omitempty"`
-	HSBCOlor string `json:"HSBColor,omitempty"`
-	White    int    `json:"White,omitempty"`
-	Channel  []int  `json:"Channel,omitempty"`
+	Power1     string `json:"POWER1,omitempty"`
+	Power      string `json:"POWER,omitempty"`
+	Dimmer     int    `json:"Dimmer,omitempty"`
+	Color      string `json:"Color,omitempty"`
+	HSBCOlor   string `json:"HSBColor,omitempty"`
+	White      int    `json:"White,omitempty"`
+	Channel    []int  `json:"Channel,omitempty"`
+	CustomSend string `json:"CustomSend,omitempty"`
 }
 
 type TasmotaTeleMsg struct {

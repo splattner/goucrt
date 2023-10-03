@@ -5,6 +5,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/splattner/goucrt/pkg/entities"
+	"k8s.io/utils/strings/slices"
 )
 
 // Return the ID of an entity
@@ -148,11 +149,23 @@ func (i *Integration) AddEntity(e interface{}) error {
 		i.Entities = append(i.Entities, e)
 		// Send "entity_available" event to remote
 		i.sendEntityAvailable(e)
+
+		// if RT already subscribed, call the Subscribe callback for this entity
+		if i.isSubscribed(e) {
+			i.callSubscribeCallback(e)
+		}
+
 		return nil
 	}
 
 	// else update the existing entity
 	return i.UpdateEntity(existingEntity, e)
+}
+
+func (i *Integration) isSubscribed(entity interface{}) bool {
+	entity_id := i.getEntityId(entity)
+
+	return slices.Contains(i.SubscribedEntities, entity_id)
 }
 
 // Update an existing entity with a new entity
@@ -293,5 +306,89 @@ func (i *Integration) setEntityChangeFunc(entity interface{}, f func(interface{}
 		e.SetHandleEntityChangeFunc(f)
 	case *entities.CoverEntity:
 		e.SetHandleEntityChangeFunc(f)
+	}
+}
+
+// Call the correct subscribe Callback Func depending on the entity type
+func (i *Integration) callSubscribeCallback(entity interface{}) {
+
+	// Ugly.. I guess but I don't know how better
+	switch e := entity.(type) {
+	case *entities.ButtonEntity:
+		if e.SubscribeCallbackFunc != nil {
+			e.SubscribeCallbackFunc()
+		}
+
+	case *entities.LightEntity:
+		if e.SubscribeCallbackFunc != nil {
+			e.SubscribeCallbackFunc()
+		}
+
+	case *entities.SwitchsEntity:
+		if e.SubscribeCallbackFunc != nil {
+			e.SubscribeCallbackFunc()
+		}
+
+	case *entities.MediaPlayerEntity:
+		if e.SubscribeCallbackFunc != nil {
+			e.SubscribeCallbackFunc()
+		}
+
+	case *entities.ClimateEntity:
+		if e.SubscribeCallbackFunc != nil {
+			e.SubscribeCallbackFunc()
+		}
+
+	case *entities.CoverEntity:
+		if e.SubscribeCallbackFunc != nil {
+			e.SubscribeCallbackFunc()
+		}
+
+	case *entities.SensorEntity:
+		if e.SubscribeCallbackFunc != nil {
+			e.SubscribeCallbackFunc()
+		}
+	}
+}
+
+// Call the correct unsubscribe Callback Func depending on the entity type
+func (i *Integration) callUnubscribeCallback(entity interface{}) {
+
+	// Ugly.. I guess but I don't know how better
+	switch e := entity.(type) {
+	case *entities.ButtonEntity:
+		if e.UnsubscribeCallbackFunc != nil {
+			e.UnsubscribeCallbackFunc()
+		}
+
+	case *entities.LightEntity:
+		if e.UnsubscribeCallbackFunc != nil {
+			e.UnsubscribeCallbackFunc()
+		}
+
+	case *entities.SwitchsEntity:
+		if e.UnsubscribeCallbackFunc != nil {
+			e.UnsubscribeCallbackFunc()
+		}
+
+	case *entities.MediaPlayerEntity:
+		if e.UnsubscribeCallbackFunc != nil {
+			e.UnsubscribeCallbackFunc()
+		}
+
+	case *entities.ClimateEntity:
+		if e.UnsubscribeCallbackFunc != nil {
+			e.UnsubscribeCallbackFunc()
+		}
+
+	case *entities.CoverEntity:
+		if e.SubscribeCallbackFunc != nil {
+			e.SubscribeCallbackFunc()
+		}
+
+	case *entities.SensorEntity:
+		if e.UnsubscribeCallbackFunc != nil {
+			e.UnsubscribeCallbackFunc()
+		}
 	}
 }

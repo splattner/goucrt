@@ -138,16 +138,19 @@ func (i *Integration) wsWriter(ws *websocket.Conn) {
 
 			if err := ws.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
 				log.WithError(err).Error("Faled to set WriteDeatLine")
+				return
 			}
 
 			if err := ws.WriteMessage(websocket.TextMessage, msg); err != nil {
 				log.WithError(err).Error("Failed to send message")
+				return
 			}
 
 		case <-ticker.C:
 
 			if err := ws.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
 				log.WithError(err).Error("Cannot set writedealine")
+				return
 			}
 			log.WithField("RemoteAddr", ws.RemoteAddr().String()).Debug("Send Ping Message")
 			if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {

@@ -244,6 +244,7 @@ func (i *Integration) handleSubscribeEventRequest(req *SubscribeEventMessageReq)
 			if !slices.Contains(i.SubscribedEntities, entity_id) {
 				log.WithField("entity_id", entity_id).Info("RT subscribed to entity")
 				i.SubscribedEntities = append(i.SubscribedEntities, entity_id)
+				i.callSubscribeCallback(e)
 
 			}
 		}
@@ -253,6 +254,10 @@ func (i *Integration) handleSubscribeEventRequest(req *SubscribeEventMessageReq)
 			if !slices.Contains(i.SubscribedEntities, entity_id) {
 				log.WithField("entity_id", entity_id).Info("RT subscribed to entity")
 				i.SubscribedEntities = append(i.SubscribedEntities, entity_id)
+
+				if entity, _, err := i.GetEntityById(entity_id); err != nil {
+					i.callSubscribeCallback(entity)
+				}
 			}
 		}
 	}
@@ -278,6 +283,10 @@ func (i *Integration) handleUnsubscribeEventsRequest(req *UnubscribeEventMessage
 			i.SubscribedEntities[ix] = i.SubscribedEntities[len(i.SubscribedEntities)-1] // Copy last element to index i.
 			i.SubscribedEntities[len(i.SubscribedEntities)-1] = ""                       // Erase last element (write zero value).
 			i.SubscribedEntities = i.SubscribedEntities[:len(i.SubscribedEntities)-1]    // Truncate slice.
+
+			if entity, _, err := i.GetEntityById(e); err != nil {
+				i.callUnubscribeCallback(entity)
+			}
 		}
 	}
 
