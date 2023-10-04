@@ -20,6 +20,34 @@ var SOURCE_MAPPING = map[string]string{
 	"SpotifyConnect": "Spotify Connect",
 }
 
+var NETAUDIO_SOURCES = []string{
+	"AirPlay",
+	"Online Music",
+	"Media Server",
+	"iPod/USB",
+	"Bluetooth",
+	"Internet Radio",
+	"Favorites",
+	"SpotifyConnect",
+	"Flickr",
+	"NET/USB",
+	"Music Server",
+	"NETWORK",
+	"NET",
+}
+
+var TUNER_SOURCES = []string{
+	"Tuner",
+	"TUNER",
+}
+
+var HDTUNER_SOURCES = []string{
+	"HD Radio",
+	"HDRADIO",
+}
+
+var PLAYING_SOURCES = append(append(append(NETAUDIO_SOURCES, NETAUDIO_SOURCES...), TUNER_SOURCES...), HDTUNER_SOURCES...)
+
 func (d *DenonAVR) GetZoneInputFuncList(zone DenonZone) map[string]string {
 
 	var inputFuncList map[string]string
