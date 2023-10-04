@@ -10,7 +10,7 @@ import (
 // Set an attribute and return true uf the attributed has changed
 func (d *DenonAVR) SetAttribute(name string, value interface{}) {
 
-	changed := d.attributes[name] != nil && d.attributes[name] == value
+	changed := d.attributes[name] != nil && d.attributes[name] != value
 
 	d.attributes[name] = value
 
@@ -29,8 +29,7 @@ func (d *DenonAVR) getMediaTitle() string {
 	if d.IsOn() {
 		if slices.Contains(PLAYING_SOURCES, d.mainZoneData.InputFuncSelect) {
 			// This is a source that is playing audio
-			// fot the moment, also set this to the input func
-			media_title = d.mainZoneData.InputFuncSelect
+			media_title = d.netAudioStatus.SzLine[1]
 		} else {
 			// Not a playing source
 			media_title = d.mainZoneData.InputFuncSelect

@@ -24,6 +24,11 @@ type DenonStatus struct {
 	Model           string   `xml:"Model>value"`
 }
 
+type DenonNetAudioStatus struct {
+	XMLName xml.Name `xml:"item"`
+	SzLine  []string `xml:"szLine>value"`
+}
+
 func (d *DenonAVR) getZoneStatus(zone DenonZone) {
 	switch zone {
 	case MainZone:
@@ -42,9 +47,34 @@ func (d *DenonAVR) getZoneStatus(zone DenonZone) {
 
 }
 
+func (d *DenonAVR) getNetAudioStatus() {
+	url := "http://" + d.Host + NET_AUDIO_STATUR_URL
+	d.netAudioStatus = d.getNetAudioStatusFromDevice(url)
+}
+
 // Return the Status from a Zone
 func (d *DenonAVR) getZoneStatusFromDevice(url string) DenonStatus {
 	status := DenonStatus{} // Somehow the values in the array are added instead of replaced. Not sure if this is the solution, but it works...
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.WithError(err).Error("Cannot read response body")
+	}
+
+	if err := xml.Unmarshal(body, &status); err != nil {
+		log.WithError(err).Info("Could not unmarshall")
+	}
+
+	return status
+}
+
+// Return the Status from a Zone
+func (d *DenonAVR) getNetAudioStatusFromDevice(url string) DenonNetAudioStatus {
+	status := DenonNetAudioStatus{} // Somehow the values in the array are added instead of replaced. Not sure if this is the solution, but it works...
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Fatalln(err)
