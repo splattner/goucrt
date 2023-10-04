@@ -216,7 +216,7 @@ func (d *DenonAVR) getMediaImageURL() string {
 
 		hash := fnv.New32a()
 		hash.Write([]byte(d.media_title))
-		media_image_url = fmt.Sprintf("http://%s:%s/NetAudio/art.asp-jpg?%s", d.Host, 80, hash.Sum32())
+		media_image_url = fmt.Sprintf("http://%s:%d/NetAudio/art.asp-jpg?%d", d.Host, 80, hash.Sum32())
 	}
 
 	return media_image_url
