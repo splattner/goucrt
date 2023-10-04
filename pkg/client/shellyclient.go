@@ -177,6 +177,10 @@ func (c *ShellyClient) handleNewDeviceDiscovered(device *shelly.ShellyDevice) {
 	}).Debug("New Shelly Device discovered")
 
 	shellySwitch := entities.NewSwitchEntity(device.Id, entities.LanguageText{En: "Shelly " + device.Id}, "")
+
+	shellySwitch.SubscribeCallbackFunc = device.Subscribe
+	shellySwitch.UnsubscribeCallbackFunc = device.Unsubscribe
+
 	shellySwitch.AddFeature(entities.OnOffSwitchEntityyFeatures)
 	shellySwitch.AddFeature(entities.ToggleSwitchEntityyFeatures)
 

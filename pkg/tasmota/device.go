@@ -86,7 +86,7 @@ func (e *TasmotaDevice) Subscribe() {
 }
 
 func (e *TasmotaDevice) Unsubscribe() {
-	log.WithField("Topic", e.Topic).Debug("Subscribe to Tasmota Topic for this device")
+	log.WithField("Topic", e.Topic).Debug("Unsubscribe to Tasmota Topic for this device")
 
 	// Add callback for stat
 	topicStat := fmt.Sprintf("stat/%s/#", e.Topic)
