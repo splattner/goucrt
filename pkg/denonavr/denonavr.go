@@ -35,11 +35,12 @@ const (
 )
 
 const (
-	STATUS_URL    string = "/goform/formMainZone_MainZoneXmlStatus.xml"
-	STATUS_Z2_URL string = "/goform/formZone2_Zone2XmlStatus.xml"
-	STATUS_Z3_URL string = "/goform/formZone3_Zone3XmlStatus.xml"
-	MAINZONE_URL  string = "/goform/formMainZone_MainZoneXml.xml"
-	COMMAND_URL   string = "/goform/formiPhoneAppDirect.xml"
+	STATUS_URL           string = "/goform/formMainZone_MainZoneXmlStatus.xml"
+	STATUS_Z2_URL        string = "/goform/formZone2_Zone2XmlStatus.xml"
+	STATUS_Z3_URL        string = "/goform/formZone3_Zone3XmlStatus.xml"
+	MAINZONE_URL         string = "/goform/formMainZone_MainZoneXml.xml"
+	COMMAND_URL          string = "/goform/formiPhoneAppDirect.xml"
+	NET_AUDIO_STATUR_URL string = "/goform/formNetAudio_StatusXml.xml"
 )
 
 type DenonXML struct {
@@ -82,6 +83,7 @@ type DenonAVR struct {
 	mainZoneStatus DenonStatus
 	zone2Status    DenonStatus
 	zone3Status    DenonStatus
+	netAudioStatus DenonNetAudioStatus
 
 	attributes map[string]interface{}
 
@@ -101,6 +103,7 @@ func NewDenonAVR(host string) *DenonAVR {
 	denonavr.mainZoneStatus = DenonStatus{}
 	denonavr.zone2Status = DenonStatus{}
 	denonavr.zone3Status = DenonStatus{}
+	denonavr.netAudioStatus = DenonNetAudioStatus{}
 
 	denonavr.entityChangedFunction = make(map[string][]func(interface{}))
 
@@ -180,6 +183,7 @@ func (d *DenonAVR) updateAndNotify() {
 	d.getZoneStatus(MainZone)
 	d.getZoneStatus(Zone2)
 	d.getZoneStatus(Zone3)
+	d.getNetAudioStatus()
 
 	// TODO: make the following part nicer?
 
