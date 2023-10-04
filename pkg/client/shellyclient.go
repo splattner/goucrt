@@ -91,7 +91,7 @@ func NewShellyClient(i *integration.Integration) *ShellyClient {
 			},
 			Settings: []integration.SetupDataSchemaSettings{ipaddr, port, username, password},
 		},
-		Icon: "",
+		Icon: "custom:shelly.png",
 	}
 
 	client.IntegrationDriver.SetMetadata(&metadata)

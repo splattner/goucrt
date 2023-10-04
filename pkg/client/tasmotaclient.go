@@ -93,7 +93,7 @@ func NewTasmotaClient(i *integration.Integration) *TasmotaClient {
 			},
 			Settings: []integration.SetupDataSchemaSettings{ipaddr, port, username, password},
 		},
-		Icon: "",
+		Icon: "custom:tasmota.png",
 	}
 
 	tasmota.IntegrationDriver.SetMetadata(&metadata)
