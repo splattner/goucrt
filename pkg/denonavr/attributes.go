@@ -45,15 +45,19 @@ func (d *DenonAVR) getMediaTitle() string {
 // Title of the Playing media or the current Input Function
 // Return true if the d.media_image_url has changed
 func (d *DenonAVR) getMediaImageURL() string {
-	var media_image_url string
+	media_image_url := ""
 
-	if slices.Contains(PLAYING_SOURCES, d.mainZoneData.InputFuncSelect) {
-		// This is a source that is playing audio
-		// fot the moment, also set this to the input func
+	if d.IsOn() {
+		if slices.Contains(PLAYING_SOURCES, d.mainZoneData.InputFuncSelect) {
+			// This is a source that is playing audio
+			// fot the moment, also set this to the input func
 
-		hash := fnv.New32a()
-		hash.Write([]byte(d.getMediaTitle()))
-		media_image_url = fmt.Sprintf("http://%s:%d/NetAudio/art.asp-jpg?%d", d.Host, 80, hash.Sum32())
+			hash := fnv.New32a()
+			hash.Write([]byte(d.getMediaTitle()))
+			media_image_url = fmt.Sprintf("http://%s:%d/NetAudio/art.asp-jpg?%d", d.Host, 80, hash.Sum32())
+		} else {
+			media_image_url = fmt.Sprintf("http://%s:%d/", d.Host, 80) + "img/album%20art_S.png"
+		}
 	}
 
 	d.SetAttribute("media_image_url", media_image_url)
