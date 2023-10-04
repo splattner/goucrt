@@ -282,7 +282,10 @@ func (c *DenonAVRClient) configureDenon() {
 		// Source commands
 		c.mediaPlayer.AddCommand(entities.SelectSourcMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
 			log.WithField("entityId", mediaPlayer.Id).Debug("SelectSourcMediaPlayerEntityCommand called")
-			return c.denon.SetSelectSourceMainZone(params["source"].(string))
+			if params["source"] != nil {
+				return c.denon.SetSelectSourceMainZone(params["source"].(string))
+			}
+			return 200
 		})
 
 		// Cursor commands
