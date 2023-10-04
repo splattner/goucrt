@@ -6,6 +6,7 @@ import (
 	"hash/fnv"
 	"io"
 	"reflect"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -297,13 +298,13 @@ func (d *DenonAVR) updateAndNotify() {
 
 	// Surround Mode
 	if oldMainZoneStatus.SurrMode != d.mainZoneStatus.SurrMode {
-		d.callEntityChangeFunction("MainZoneSurroundMode", d.mainZoneStatus.SurrMode)
+		d.callEntityChangeFunction("MainZoneSurroundMode", strings.TrimLeft(d.mainZoneStatus.SurrMode, ""))
 	}
 	if oldZone2Status.SurrMode != d.zone2Status.SurrMode {
-		d.callEntityChangeFunction("Zone2SurroundMode", d.zone2Status.SurrMode)
+		d.callEntityChangeFunction("Zone2SurroundMode", strings.TrimLeft(d.zone2Status.SurrMode, ""))
 	}
 	if oldZone3Status.SurrMode != d.zone3Status.SurrMode {
-		d.callEntityChangeFunction("Zone3SurroundMode", d.zone3Status.SurrMode)
+		d.callEntityChangeFunction("Zone3SurroundMode", strings.TrimLeft(d.zone3Status.SurrMode, ""))
 	}
 
 }
