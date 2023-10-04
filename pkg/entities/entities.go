@@ -93,6 +93,14 @@ func (e *Entity) SetUnsubscribeCallbackFunc(f func()) {
 	e.UnsubscribeCallbackFunc = f
 }
 
+// Set one attribute for the Entity
+func (e *Entity) SetAttribute(attribute MediaPlayerEntityAttributes, value interface{}) {
+
+	attributes := make(map[string]interface{})
+	attributes[string(attribute)] = value
+	e.SetAttributes(attributes)
+}
+
 // Set attributes for the Entity and then call the EntityChange Function
 func (e *Entity) SetAttributes(attributes map[string]interface{}) {
 
