@@ -248,7 +248,7 @@ func (d *DenonAVR) updateAndNotify() {
 	var media_image_url = d.getMediaImageURL()
 	if d.media_image_url != media_image_url {
 		d.media_image_url = media_image_url
-		d.callEntityChangeFunction("media_img_url", media_image_url)
+		d.callEntityChangeFunction("media_image_url", media_image_url)
 	}
 
 	// Power

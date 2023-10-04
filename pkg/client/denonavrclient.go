@@ -88,6 +88,8 @@ func (c *DenonAVRClient) initDenonAVRClient() {
 	c.mediaPlayer.AddFeature(entities.SelectSourceMediaPlayerEntityFeatures)
 	c.mediaPlayer.AddFeature(entities.SelectSoundModeMediaPlayerEntityFeatures)
 	c.mediaPlayer.AddFeature(entities.DPadMediaPlayerEntityFeatures)
+	c.mediaPlayer.AddFeature(entities.MediaTitleMediaPlayerEntityFeatures)
+	c.mediaPlayer.AddFeature(entities.MediaImageUrlMediaPlayerEntityFeatures)
 
 	if err := c.IntegrationDriver.AddEntity(c.mediaPlayer); err != nil {
 		log.WithError(err).Error("Cannot add Entity")
