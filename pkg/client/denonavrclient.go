@@ -216,36 +216,41 @@ func (c *DenonAVRClient) configureDenon() {
 		c.denon.AddHandleEntityChangeFunc("MainZoneInputFuncSelect", func(value interface{}) {
 
 			attributes := make(map[string]interface{})
-
 			// We use the renamed Name
 			mainZoneInputFuncSelectList := c.denon.GetZoneInputFuncList(denonavr.MainZone)
-
 			attributes["source"] = mainZoneInputFuncSelectList[value.(string)]
-
 			c.mediaPlayer.SetAttributes(attributes)
 
 		})
 
 		c.denon.AddHandleEntityChangeFunc("MainZoneSurroundMode", func(value interface{}) {
-
 			attributes := make(map[string]interface{})
-
 			attributes["sound_mode"] = value.(string)
-
 			c.mediaPlayer.SetAttributes(attributes)
-
 		})
 
 		// We can set the sound_mode_list without change handler. Its static
 		func() {
 
 			attributes := make(map[string]interface{})
-
 			attributes["sound_mode_list"] = c.denon.GetSoundModeList()
-
 			c.mediaPlayer.SetAttributes(attributes)
 
 		}()
+
+		// Media Title
+		c.denon.AddHandleEntityChangeFunc("media_title", func(value interface{}) {
+			attributes := make(map[string]interface{})
+			attributes["media_title"] = value.(string)
+			c.mediaPlayer.SetAttributes(attributes)
+		})
+
+		// Media Image URL
+		c.denon.AddHandleEntityChangeFunc("media_image_url", func(value interface{}) {
+			attributes := make(map[string]interface{})
+			attributes["media_image_url"] = value.(string)
+			c.mediaPlayer.SetAttributes(attributes)
+		})
 
 		// Add Commands
 		c.mediaPlayer.MapCommand(entities.OnMediaPlayerEntityCommand, c.denon.TurnOn)

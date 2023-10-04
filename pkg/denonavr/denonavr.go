@@ -3,11 +3,13 @@ package denonavr
 import (
 	"encoding/xml"
 	"fmt"
+	"hash/fnv"
 	"io"
 	"reflect"
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"k8s.io/utils/strings/slices"
 
 	"net/http"
 )
@@ -82,6 +84,9 @@ type DenonAVR struct {
 	mainZoneStatus DenonStatus
 	zone2Status    DenonStatus
 	zone3Status    DenonStatus
+
+	media_title     string
+	media_image_url string
 
 	updateTrigger chan string
 
@@ -174,6 +179,49 @@ func (d *DenonAVR) StartListenLoop() {
 	}
 }
 
+// Call the registred entity change function with the new value for a attribute
+func (d *DenonAVR) callEntityChangeFunction(attribute string, newValue interface{}) {
+	if len(d.entityChangedFunction[attribute]) > 0 {
+		for _, f := range d.entityChangedFunction[attribute] {
+			f(newValue)
+		}
+	}
+}
+
+// Get the current Media Title
+// Title of the Playing media or the current Input Function
+func (d *DenonAVR) getMediaTitle() string {
+	var media_title string
+
+	if slices.Contains(PLAYING_SOURCES, d.mainZoneData.InputFuncSelect) {
+		// This is a source that is playing audio
+		// fot the moment, also set this to the input func
+		media_title = d.mainZoneData.InputFuncSelect
+	} else {
+		// Not a playing source
+		media_title = d.mainZoneData.InputFuncSelect
+	}
+
+	return media_title
+}
+
+// Get the current Media Title
+// Title of the Playing media or the current Input Function
+func (d *DenonAVR) getMediaImageURL() string {
+	var media_image_url string
+
+	if slices.Contains(PLAYING_SOURCES, d.mainZoneData.InputFuncSelect) {
+		// This is a source that is playing audio
+		// fot the moment, also set this to the input func
+
+		hash := fnv.New32a()
+		hash.Write([]byte(d.media_title))
+		media_image_url = fmt.Sprintf("http://%s:%s/NetAudio/art.asp-jpg?%s", d.Host, 80, hash.Sum32())
+	}
+
+	return media_image_url
+}
+
 func (d *DenonAVR) updateAndNotify() {
 
 	// Make copy of data to compare and update on changes
@@ -188,130 +236,74 @@ func (d *DenonAVR) updateAndNotify() {
 	d.getZoneStatus(Zone3)
 
 	// TODO: make the following part nicer?
+
+	// Media Title
+	var media_title = d.getMediaTitle()
+	if d.media_title != media_title {
+		d.media_title = media_title
+		d.callEntityChangeFunction("media_title", media_title)
+	}
+
+	// Media Image URL
+	var media_image_url = d.getMediaImageURL()
+	if d.media_image_url != media_image_url {
+		d.media_image_url = media_image_url
+		d.callEntityChangeFunction("media_img_url", media_image_url)
+	}
+
 	// Power
-	if len(d.entityChangedFunction["Power"]) > 0 {
-		if oldMainZonData.Power != d.mainZoneData.Power {
-			for _, f := range d.entityChangedFunction["Power"] {
-				f(d.mainZoneData.Power)
-			}
-		}
+	if oldMainZonData.Power != d.mainZoneData.Power {
+		d.callEntityChangeFunction("POWER", d.mainZoneData.Power)
 	}
 
 	// Zone Power
-	if len(d.entityChangedFunction["MainZonePower"]) > 0 {
-		if oldMainZoneStatus.Power != d.mainZoneStatus.Power {
-			for _, f := range d.entityChangedFunction["MainZonePower"] {
-				f(d.mainZoneStatus.Power)
-			}
-		}
+	if oldMainZoneStatus.Power != d.mainZoneData.Power {
+		d.callEntityChangeFunction("POWER", d.mainZoneStatus.Power)
 	}
-
-	if len(d.entityChangedFunction["Zone2Power"]) > 0 {
-		if oldZone2Status.Power != d.zone2Status.Power {
-			for _, f := range d.entityChangedFunction["Zone2Power"] {
-				f(d.zone2Status.Power)
-			}
-		}
+	if oldZone2Status.Power != d.zone2Status.Power {
+		d.callEntityChangeFunction("Zone2Power", d.zone2Status.Power)
 	}
-
-	if len(d.entityChangedFunction["Zone3Power"]) > 0 {
-		if oldZone3Status.Power != d.zone3Status.Power {
-			for _, f := range d.entityChangedFunction["Zone3Power"] {
-				f(d.zone3Status.Power)
-			}
-		}
+	if oldZone3Status.Power != d.zone3Status.Power {
+		d.callEntityChangeFunction("Zone3Power", d.zone3Status.Power)
 	}
 
 	// Volume
-	if len(d.entityChangedFunction["MainZoneVolume"]) > 0 {
-		if oldMainZoneStatus.MasterVolume != d.mainZoneStatus.MasterVolume {
-			for _, f := range d.entityChangedFunction["MainZoneVolume"] {
-				f(d.mainZoneData.MasterVolume)
-			}
-		}
+	if oldMainZoneStatus.MasterVolume != d.mainZoneStatus.MasterVolume {
+		d.callEntityChangeFunction("MainZoneVolume", d.mainZoneStatus.MasterVolume)
 	}
-
-	if len(d.entityChangedFunction["Zone2Volume"]) > 0 {
-		if oldZone2Status.MasterVolume != d.zone2Status.MasterVolume {
-			for _, f := range d.entityChangedFunction["Zone2Volume"] {
-				f(d.zone2Status.MasterVolume)
-			}
-		}
+	if oldZone2Status.MasterVolume != d.zone2Status.MasterVolume {
+		d.callEntityChangeFunction("Zone2Volume", d.zone2Status.MasterVolume)
 	}
-
-	if len(d.entityChangedFunction["Zone3Volume"]) > 0 {
-		if oldZone3Status.MasterVolume != d.zone3Status.MasterVolume {
-			for _, f := range d.entityChangedFunction["Zone23olume"] {
-				f(d.zone3Status.MasterVolume)
-			}
-		}
+	if oldZone3Status.MasterVolume != d.zone3Status.MasterVolume {
+		d.callEntityChangeFunction("Zone3Volume", d.zone3Status.MasterVolume)
 	}
-
-	if len(d.entityChangedFunction["MainZoneMute"]) > 0 {
-		if oldMainZoneStatus.Mute != d.mainZoneStatus.Mute {
-			for _, f := range d.entityChangedFunction["MainZoneMute"] {
-				f(d.mainZoneStatus.Mute)
-			}
-		}
+	if oldMainZoneStatus.Mute != d.mainZoneStatus.Mute {
+		d.callEntityChangeFunction("MainZoneMute", d.mainZoneStatus.MasterVolume)
 	}
-
-	if len(d.entityChangedFunction["Zone2Mute"]) > 0 {
-		if oldZone2Status.Mute != d.zone2Status.Mute {
-			for _, f := range d.entityChangedFunction["Zone2Mute"] {
-				f(d.zone2Status.Mute)
-			}
-		}
+	if oldZone2Status.Mute != d.zone2Status.Mute {
+		d.callEntityChangeFunction("Zone2Mute", d.zone2Status.MasterVolume)
 	}
-
-	if len(d.entityChangedFunction["Zone3Mute"]) > 0 {
-		if oldZone3Status.Mute != d.zone3Status.Mute {
-			for _, f := range d.entityChangedFunction["Zone3Mute"] {
-				f(d.zone3Status.Mute)
-			}
-		}
+	if oldZone3Status.Mute != d.zone3Status.Mute {
+		d.callEntityChangeFunction("Zone3Mute", d.zone3Status.MasterVolume)
 	}
 
 	// Video Select
-
-	if len(d.entityChangedFunction["MainZoneInputFuncList"]) > 0 {
-		if !reflect.DeepEqual(oldMainZoneStatus.InputFuncList, d.mainZoneStatus.InputFuncList) {
-			for _, f := range d.entityChangedFunction["MainZoneInputFuncList"] {
-				f(d.mainZoneData.VideoSelectList)
-			}
-		}
+	if !reflect.DeepEqual(oldMainZoneStatus.InputFuncList, d.mainZoneStatus.InputFuncList) {
+		d.callEntityChangeFunction("MainZoneInputFuncList", d.mainZoneData.VideoSelectList)
 	}
-
-	if len(d.entityChangedFunction["MainZoneInputFuncSelect"]) > 0 {
-		if oldMainZonData.VideoSelect != d.mainZoneData.VideoSelect {
-			for _, f := range d.entityChangedFunction["MainZoneInputFuncSelect"] {
-				f(d.mainZoneData.VideoSelect)
-			}
-		}
+	if oldMainZonData.VideoSelect != d.mainZoneData.VideoSelect {
+		d.callEntityChangeFunction("MainZoneInputFuncSelect", d.mainZoneData.VideoSelect)
 	}
 
 	// Surround Mode
-	if len(d.entityChangedFunction["MainZoneSurroundMode"]) > 0 {
-		if oldMainZoneStatus.SurrMode != d.mainZoneStatus.SurrMode {
-			for _, f := range d.entityChangedFunction["MainZoneSurroundMode"] {
-				f(d.GetSurroundMode(MainZone))
-			}
-		}
+	if oldMainZoneStatus.SurrMode != d.mainZoneStatus.SurrMode {
+		d.callEntityChangeFunction("MainZoneSurroundMode", d.mainZoneStatus.SurrMode)
 	}
-
-	if len(d.entityChangedFunction["Zone2SurroundMode"]) > 0 {
-		if oldZone2Status.SurrMode != d.zone2Status.SurrMode {
-			for _, f := range d.entityChangedFunction["Zone2SurroundMode"] {
-				f(d.GetSurroundMode(Zone2))
-			}
-		}
+	if oldZone2Status.SurrMode != d.zone2Status.SurrMode {
+		d.callEntityChangeFunction("Zone2SurroundMode", d.zone2Status.SurrMode)
 	}
-
-	if len(d.entityChangedFunction["Zone3SurroundMode"]) > 0 {
-		if oldZone3Status.SurrMode != d.zone3Status.SurrMode {
-			for _, f := range d.entityChangedFunction["Zone3SurroundMode"] {
-				f(d.GetSurroundMode(Zone3))
-			}
-		}
+	if oldZone3Status.SurrMode != d.zone3Status.SurrMode {
+		d.callEntityChangeFunction("Zone3SurroundMode", d.zone3Status.SurrMode)
 	}
 
 }
