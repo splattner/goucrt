@@ -220,13 +220,13 @@ func (d *DenonAVR) updateAndNotify() {
 		d.callEntityChangeFunction("Zone3Volume", d.zone3Status.MasterVolume)
 	}
 	if oldMainZoneStatus.Mute != d.mainZoneStatus.Mute {
-		d.callEntityChangeFunction("MainZoneMute", d.mainZoneStatus.MasterVolume)
+		d.callEntityChangeFunction("MainZoneMute", d.mainZoneStatus.Mute)
 	}
 	if oldZone2Status.Mute != d.zone2Status.Mute {
-		d.callEntityChangeFunction("Zone2Mute", d.zone2Status.MasterVolume)
+		d.callEntityChangeFunction("Zone2Mute", d.zone2Status.Mute)
 	}
 	if oldZone3Status.Mute != d.zone3Status.Mute {
-		d.callEntityChangeFunction("Zone3Mute", d.zone3Status.MasterVolume)
+		d.callEntityChangeFunction("Zone3Mute", d.zone3Status.Mute)
 	}
 
 	// Video Select
@@ -239,13 +239,13 @@ func (d *DenonAVR) updateAndNotify() {
 
 	// Surround Mode
 	if oldMainZoneStatus.SurrMode != d.mainZoneStatus.SurrMode {
-		d.callEntityChangeFunction("MainZoneSurroundMode", strings.TrimRight(d.mainZoneStatus.SurrMode, ""))
+		d.callEntityChangeFunction("MainZoneSurroundMode", strings.TrimRight(d.mainZoneStatus.SurrMode, " "))
 	}
 	if oldZone2Status.SurrMode != d.zone2Status.SurrMode {
-		d.callEntityChangeFunction("Zone2SurroundMode", strings.TrimRight(d.zone2Status.SurrMode, ""))
+		d.callEntityChangeFunction("Zone2SurroundMode", strings.TrimRight(d.zone2Status.SurrMode, " "))
 	}
 	if oldZone3Status.SurrMode != d.zone3Status.SurrMode {
-		d.callEntityChangeFunction("Zone3SurroundMode", strings.TrimRight(d.zone3Status.SurrMode, ""))
+		d.callEntityChangeFunction("Zone3SurroundMode", strings.TrimRight(d.zone3Status.SurrMode, " "))
 	}
 
 }
