@@ -15,6 +15,7 @@ Currently this repository implements a driver for the following devices:
 * Denon Audio/Video Reveiver
 * [DeCONZ](https://dresden-elektronik.github.io/deconz-rest-doc/)
 * [Shelly](https://www.shelly.com/)
+* [Tasmota](https://tasmota.github.io/docs/)
 
 ## Device / Clients
 
@@ -36,9 +37,13 @@ This client currently implements [`Light` entities](https://github.com/unfoldedc
 
 ### Shelly
 
+Run with `ucrt shelly`
+
 This client currently implements [`Switch` entities](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/switch_light.md) for discovered Shelly Devices. It uses MQTT to discover and control Shelly devices.
 
 ### Tasmota
+
+Run with `ucrt tasmota`
 
 This client currently implements [`Switch` entities](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/switch_light.md) and [`Light` entities](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/entity_light.md) It uses MQTT to discover and control Tasmota devices.
 
@@ -55,7 +60,7 @@ Currently on the following Sonoff device types are supported
 Unfolder Circle Remote Two integration
 
 Usage:
-  ucrt [command]
+  ucrt-amd64 [command]
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
@@ -63,20 +68,23 @@ Available Commands:
   denonavr    Start Denon AVR Ingegration
   help        Help about any command
   shelly      Start Shelly Ingegration
+  tasmota     Start Tasmota Ingegration
 
 Flags:
       --debug                         Enable debug log level
-  -h, --help                          help for ucrt
+      --disableMDNS                   Disable integration advertisement via mDNS
+  -h, --help                          help for ucrt-amd64
   -l, --listenPort int                the port this integration is listening for websocket connection from the remote (default 8080)
-      --mdns                          Enable integration advertisement via mDNS (default true)
       --registration                  Enable driver registration on the Remote Two instead of mDNS advertisement
       --registrationPin string        Pin of the RemoteTwo for driver registration
       --registrationUsername string   Username of the RemoteTwo for driver registration (default "web-configurator")
       --remoteTwoIP string            IP Address of your Remote Two instance (disables Remote Two discovery)
       --remoteTwoPort int             Port of your Remote Two instance (disables Remote Two discovery) (default 80)
+      --ucconfighome string           Configuration directory to save the user configuration from the driver setup (default "./ucconfig/")
       --websocketPath string          path where this integration is available for websocket connections (default "/ws")
 
-Use "ucrt [command] --help" for more information about a command.
+Use "ucrt-amd64 [command] --help" for more information about a command.
+
 ```
 
 ### Configuration
