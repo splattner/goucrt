@@ -163,7 +163,7 @@ func (c *DenonAVRClient) configureDenon() {
 	})
 
 	c.denon.AddHandleEntityChangeFunc("MainZoneMute", func(value interface{}) {
-		c.mediaPlayer.SetAttribute(entities.MutedMediaPlayeEntityAttribute, c.denon.MainZoneMuted)
+		c.mediaPlayer.SetAttribute(entities.MutedMediaPlayeEntityAttribute, c.denon.MainZoneMuted())
 	})
 
 	c.denon.AddHandleEntityChangeFunc("MainZoneInputFuncList", func(value interface{}) {
