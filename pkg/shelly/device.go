@@ -25,7 +25,6 @@ type ShellyDevice struct {
 func (d *ShellyDevice) newShellyDevice(shelly *Shelly) {
 
 	d.shelly = shelly
-	d.configureCallbacks()
 
 	d.handleMsgReceivedFunc = make(map[string][]func([]byte))
 }
@@ -46,11 +45,18 @@ func (d *ShellyDevice) stateChangeHandler(topic string, payload []byte) {
 
 }
 
-func (e *ShellyDevice) configureCallbacks() {
+func (e *ShellyDevice) Subscribe() {
 	log.WithField("ID", e.Id).Debug("Subscribe to Shelly Topic for this device")
 	// Add callback for this device
 	topic := fmt.Sprintf("shellies/%s/#", e.Id)
 	e.shelly.subscribeMqttTopic(topic, e.mqttCallback())
+}
+
+func (e *ShellyDevice) Unsubscribe() {
+	log.WithField("ID", e.Id).Debug("Unsubscribe from Shelly Topic for this device")
+
+	topic := fmt.Sprintf("shellies/%s/#", e.Id)
+	e.shelly.unsubscribeMqttTopic(topic)
 }
 
 func (e *ShellyDevice) mqttCallback() mqtt.MessageHandler {

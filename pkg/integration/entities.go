@@ -217,6 +217,8 @@ func (i *Integration) RemoveEntityByID(entity_id string) error {
 		i.Entities[len(i.Entities)-1] = ""             // Erase last element (write zero value).
 		i.Entities = i.Entities[:len(i.Entities)-1]    // Truncate slice.
 
+		i.callUnubscribeCallback(entity)
+
 		// Send "entity_removed" event to remote
 		i.sendEntityRemoved(entity)
 		return nil
