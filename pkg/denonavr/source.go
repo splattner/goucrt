@@ -71,7 +71,8 @@ func (d *DenonAVR) getInputFuncList(zoneStatus DenonStatus) map[string]string {
 	// Only add those not deleted
 	// Use renamed value
 	for i, input := range zoneStatus.InputFuncList {
-		if zoneStatus.SourceDelete[i] == "USE" {
+		// only the ones active or empty (== Online Music)
+		if zoneStatus.SourceDelete[i] == "USE" || zoneStatus.SourceDelete[i] == "" {
 			inputFuncList[input] = strings.TrimRight(zoneStatus.RenameSource[i], " ")
 		}
 	}

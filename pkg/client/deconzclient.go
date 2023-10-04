@@ -11,15 +11,12 @@ import (
 	"github.com/splattner/goucrt/pkg/integration"
 )
 
-var mapOnState = map[bool]entities.LightEntityState{
-	true:  entities.OnLightEntityState,
-	false: entities.OffLightEntityState,
-}
-
 // Denon AVR Client Implementation
 type DeconzClient struct {
 	Client
 	deconz *deconz.Deconz
+
+	mapOnState map[bool]entities.LightEntityState
 }
 
 func NewDeconzClient(i *integration.Integration) *DeconzClient {
@@ -93,6 +90,11 @@ func NewDeconzClient(i *integration.Integration) *DeconzClient {
 	client.setupFunc = client.deconzHandleSetup
 	client.clientLoopFunc = client.deconzClientLoop
 	client.setDriverUserDataFunc = client.handleSetDriverUserData
+
+	client.mapOnState = map[bool]entities.LightEntityState{
+		true:  entities.OnLightEntityState,
+		false: entities.OffLightEntityState,
+	}
 
 	return &client
 }
@@ -246,7 +248,7 @@ func (c *DeconzClient) handleNewLightDeviceDiscovered(device *deconz.DeconzDevic
 	// Add Features and initial values
 	light.AddFeature(entities.OnOffLightEntityFeatures)
 	light.AddFeature(entities.ToggleLightEntityFeatures)
-	light.UpdateAttribute(entities.StateLightEntityAttribute, mapOnState[device.IsOn()])
+	light.UpdateAttribute(entities.StateLightEntityAttribute, c.mapOnState[device.IsOn()])
 
 	light.AddFeature(entities.DimLightEntityFeatures)
 	light.UpdateAttribute(entities.BrightnessLightEntityAttribute, device.GetBrightness())
@@ -325,7 +327,7 @@ func (c *DeconzClient) handleNewLightDeviceDiscovered(device *deconz.DeconzDevic
 			if state.Reachable != nil && !*state.Reachable {
 				attributes[string(entities.StateLightEntityAttribute)] = entities.UnavailableLightEntityState
 			} else {
-				attributes[string(entities.StateLightEntityAttribute)] = mapOnState[*state.On]
+				attributes[string(entities.StateLightEntityAttribute)] = c.mapOnState[*state.On]
 			}
 
 		}
@@ -372,7 +374,7 @@ func (c *DeconzClient) handleNewGroupDeviceDiscovered(device *deconz.DeconzDevic
 	// Add Features and initial values
 	group.AddFeature(entities.OnOffLightEntityFeatures)
 	group.AddFeature(entities.ToggleLightEntityFeatures)
-	group.UpdateAttribute(entities.StateLightEntityAttribute, mapOnState[device.IsOn()])
+	group.UpdateAttribute(entities.StateLightEntityAttribute, c.mapOnState[device.IsOn()])
 
 	group.AddFeature(entities.DimLightEntityFeatures)
 	group.UpdateAttribute(entities.BrightnessLightEntityAttribute, device.GetBrightness())
@@ -466,7 +468,7 @@ func (c *DeconzClient) handleNewGroupDeviceDiscovered(device *deconz.DeconzDevic
 		attributes := make(map[string]interface{})
 
 		if group.HasAttribute(entities.StateLightEntityAttribute) {
-			attributes[string(entities.StateLightEntityAttribute)] = mapOnState[*device.Group.State.AnyOn]
+			attributes[string(entities.StateLightEntityAttribute)] = c.mapOnState[*device.Group.State.AnyOn]
 
 			// if off, then just update this and leave the rest
 			if !*device.Group.State.AnyOn {

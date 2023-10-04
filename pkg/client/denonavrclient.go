@@ -20,6 +20,8 @@ type DenonAVRClient struct {
 	moniAutoButton *entities.ButtonEntity
 
 	mediaPlayer *entities.MediaPlayerEntity
+
+	mapOnState map[bool]entities.MediaPlayerEntityState
 }
 
 func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
@@ -69,6 +71,11 @@ func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
 	client.setupFunc = client.denonHandleSetup
 	client.clientLoopFunc = client.denonClientLoop
 
+	client.mapOnState = map[bool]entities.MediaPlayerEntityState{
+		true:  entities.OnMediaPlayerEntityState,
+		false: entities.OffMediaPlayerEntityState,
+	}
+
 	return &client
 }
 
@@ -114,208 +121,149 @@ func (c *DenonAVRClient) initDenonAVRClient() {
 }
 
 func (c *DenonAVRClient) denonHandleSetup(setup_data integration.SetupData) {
-	//event_type: SETUP with state: SETUP is a progress event to keep the process running,
-	// If the setup process takes more than a few seconds,
-	// the integration should send driver_setup_change events with state: SETUP to the Remote Two
-	// to show a setup progress to the user and prevent an inactivity timeout.
+
 	c.IntegrationDriver.SetDriverSetupState(integration.SetupEvent, integration.SetupState, "", nil)
 	time.Sleep(1 * time.Second)
 
-	// var userAction = integration.RequireUserAction{
-	// 	Confirmation: integration.ConfirmationPage{
-	// 		Title: integration.LanguageText{
-	// 			En: "You are about to add this integration. Just confirm it",
-	// 		},
-	// 	},
-	// }
-
-	// Start the setup with some require user data
-	//c.IntegrationDriver.SetDriverSetupState(integration.SetupEvent, integration.WaitUserActionState, "", &userAction)
-
-	// // Finish the setup
+	// No required User action so finish
 	c.IntegrationDriver.SetDriverSetupState(integration.StopEvent, integration.OkState, "", nil)
 
 }
 
 func (c *DenonAVRClient) setupDenon() {
-	if c.denon == nil {
-		if c.IntegrationDriver.SetupData != nil && c.IntegrationDriver.SetupData["ipaddr"] != "" {
-			c.denon = denonavr.NewDenonAVR(c.IntegrationDriver.SetupData["ipaddr"])
-		} else {
-			log.Error("Cannot setup Denon, missing setupData")
-		}
+	if c.IntegrationDriver.SetupData != nil && c.IntegrationDriver.SetupData["ipaddr"] != "" {
+		c.denon = denonavr.NewDenonAVR(c.IntegrationDriver.SetupData["ipaddr"])
+	} else {
+		log.Error("Cannot setup Denon, missing setupData")
 	}
 }
 
 func (c *DenonAVRClient) configureDenon() {
 
-	if c.denon != nil {
-		// Configure the Entity Change Func
+	// Configure the Entity Change Func
 
-		// Buttons
-		c.moni1Button.MapCommand(entities.PushButtonEntityCommand, c.denon.SetMoni1Out)
-		c.moni2Button.MapCommand(entities.PushButtonEntityCommand, c.denon.SetMoni2Out)
-		c.moniAutoButton.MapCommand(entities.PushButtonEntityCommand, c.denon.SetMoniAutoOut)
+	// Buttons
+	c.moni1Button.MapCommand(entities.PushButtonEntityCommand, c.denon.SetMoni1Out)
+	c.moni2Button.MapCommand(entities.PushButtonEntityCommand, c.denon.SetMoni2Out)
+	c.moniAutoButton.MapCommand(entities.PushButtonEntityCommand, c.denon.SetMoniAutoOut)
 
-		// Media Player
+	// Media Player
+	c.denon.AddHandleEntityChangeFunc("Power", func(value interface{}) {
+		c.mediaPlayer.SetAttribute(entities.StateMediaPlayerEntityAttribute, c.mapOnState[c.denon.IsOn()])
+	})
 
-		c.denon.AddHandleEntityChangeFunc("Power", func(value interface{}) {
+	c.denon.AddHandleEntityChangeFunc("MainZoneVolume", func(value interface{}) {
 
-			attributes := make(map[string]interface{})
+		var volume float64
+		if s, err := strconv.ParseFloat(value.(string), 64); err == nil {
+			volume = s
+		}
 
-			switch value.(string) {
-			case "ON":
-				attributes[string(entities.StateMediaPlayerEntityAttribute)] = entities.OnMediaPlayerEntityState
-			case "OFF":
-				attributes[string(entities.StateMediaPlayerEntityAttribute)] = entities.OffMediaPlayerEntityState
-			}
+		c.mediaPlayer.SetAttribute(entities.VolumeMediaPlayerEntityAttribute, volume+80)
+	})
 
-			c.mediaPlayer.SetAttributes(attributes)
-		})
+	c.denon.AddHandleEntityChangeFunc("MainZoneMute", func(value interface{}) {
+		c.mediaPlayer.SetAttribute(entities.MutedMediaPlayeEntityAttribute, c.denon.MainZoneMuted)
+	})
 
-		c.denon.AddHandleEntityChangeFunc("MainZoneVolume", func(value interface{}) {
-			attributes := make(map[string]interface{})
+	c.denon.AddHandleEntityChangeFunc("MainZoneInputFuncList", func(value interface{}) {
+		var sourceList []string
+		mainZoneInputFuncSelectList := c.denon.GetZoneInputFuncList(denonavr.MainZone)
+		for _, renamedSource := range mainZoneInputFuncSelectList {
+			sourceList = append(sourceList, renamedSource)
+		}
 
-			var volume float64
-			if s, err := strconv.ParseFloat(value.(string), 64); err == nil {
-				volume = s
-			}
+		c.mediaPlayer.SetAttribute(entities.SourceListMediaPlayerEntityAttribute, sourceList)
+	})
 
-			attributes[string(entities.VolumeMediaPlayerEntityAttribute)] = volume + 80
+	c.denon.AddHandleEntityChangeFunc("MainZoneInputFuncSelect", func(value interface{}) {
 
-			c.mediaPlayer.SetAttributes(attributes)
-		})
+		// We use the renamed Name
+		mainZoneInputFuncSelectList := c.denon.GetZoneInputFuncList(denonavr.MainZone)
+		c.mediaPlayer.SetAttribute(entities.SourceMediaPlayerEntityAttribute, mainZoneInputFuncSelectList[value.(string)])
+	})
 
-		c.denon.AddHandleEntityChangeFunc("MainZoneMute", func(value interface{}) {
+	c.denon.AddHandleEntityChangeFunc("MainZoneSurroundMode", func(value interface{}) {
+		c.mediaPlayer.SetAttribute(entities.SoundModeMediaPlayerEntityAttribute, value.(string))
+	})
 
-			attributes := make(map[string]interface{})
+	// We can set the sound_mode_list without change handler. Its static
+	func() {
+		c.mediaPlayer.SetAttribute(entities.SoundModeListMediaPlayerEntityAttribute, c.denon.GetSoundModeList())
+	}()
 
-			switch value.(string) {
-			case "on":
-				attributes[string(entities.MutedMediaPlayeEntityAttribute)] = true
-			case "off":
-				attributes[string(entities.MutedMediaPlayeEntityAttribute)] = false
-			}
+	// Media Title
+	c.denon.AddHandleEntityChangeFunc("media_title", func(value interface{}) {
+		c.mediaPlayer.SetAttribute(entities.MediaTitleMediaPlayerEntityAttribute, value.(string))
+	})
 
-			c.mediaPlayer.SetAttributes(attributes)
-		})
+	// Media Image URL
+	c.denon.AddHandleEntityChangeFunc("media_image_url", func(value interface{}) {
+		c.mediaPlayer.SetAttribute(entities.MediaImageUrlMediaPlayerEntityAttribute, value.(string))
+	})
 
-		c.denon.AddHandleEntityChangeFunc("MainZoneInputFuncList", func(value interface{}) {
+	// Add Commands
+	c.mediaPlayer.MapCommand(entities.OnMediaPlayerEntityCommand, c.denon.TurnOn)
+	c.mediaPlayer.MapCommand(entities.OffMediaPlayerEntityCommand, c.denon.TurnOff)
+	c.mediaPlayer.MapCommand(entities.ToggleMediaPlayerEntityCommand, c.denon.TogglePower)
 
-			attributes := make(map[string]interface{})
+	c.mediaPlayer.AddCommand(entities.VolumeMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
+		log.WithField("entityId", mediaPlayer.Id).Debug("VolumeMediaPlayerEntityCommand called")
 
-			var sourceList []string
-			mainZoneInputFuncSelectList := c.denon.GetZoneInputFuncList(denonavr.MainZone)
-			for _, renamedSource := range mainZoneInputFuncSelectList {
-				sourceList = append(sourceList, renamedSource)
-			}
-			attributes["source_list"] = sourceList
+		var volume float64
+		if v, err := strconv.ParseFloat(params["volume"].(string), 64); err == nil {
+			volume = v
+		}
+		if err := c.denon.SetVolume(volume); err != nil {
+			return 404
+		}
+		return 200
+	})
 
-			c.mediaPlayer.SetAttributes(attributes)
+	// Volume commands
+	c.mediaPlayer.MapCommand(entities.VolumeUpMediaPlayerEntityCommand, c.denon.SetVolumeUp)
+	c.mediaPlayer.MapCommand(entities.VolumeDownMediaPlayerEntityCommand, c.denon.SetVolumeDown)
+	c.mediaPlayer.MapCommand(entities.MuteMediaPlayerEntityCommand, c.denon.MainZoneMute)
+	c.mediaPlayer.MapCommand(entities.UnmuteMediaPlayerEntityCommand, c.denon.MainZoneUnMute)
+	c.mediaPlayer.MapCommand(entities.MuteToggleMediaPlayerEntityCommand, c.denon.MainZoneMuteToggle)
 
-		})
+	// Source commands
+	c.mediaPlayer.AddCommand(entities.SelectSourcMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
+		log.WithField("entityId", mediaPlayer.Id).Debug("SelectSourcMediaPlayerEntityCommand called")
+		if params["source"] != nil {
+			return c.denon.SetSelectSourceMainZone(params["source"].(string))
+		}
+		return 200
+	})
 
-		c.denon.AddHandleEntityChangeFunc("MainZoneInputFuncSelect", func(value interface{}) {
+	// Cursor commands
+	c.mediaPlayer.AddCommand(entities.CursorUpMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
+		log.WithField("entityId", mediaPlayer.Id).Debug("CursorUpMediaPlayerEntityCommand called")
+		return c.denon.CursorControl(denonavr.DenonCursorControlUp)
+	})
+	c.mediaPlayer.AddCommand(entities.CursorDownMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
+		log.WithField("entityId", mediaPlayer.Id).Debug("CursorDownMediaPlayerEntityCommand called")
+		return c.denon.CursorControl(denonavr.DenonCursorControlDown)
+	})
+	c.mediaPlayer.AddCommand(entities.CursorLeftMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
+		log.WithField("entityId", mediaPlayer.Id).Debug("CursorUpMediaPlayerEntityCommand called")
+		return c.denon.CursorControl(denonavr.DenonCursorControlLeft)
+	})
+	c.mediaPlayer.AddCommand(entities.CursorRightMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
+		log.WithField("entityId", mediaPlayer.Id).Debug("CursorRightMediaPlayerEntityCommand called")
+		return c.denon.CursorControl(denonavr.DenonCursorControlRight)
+	})
+	c.mediaPlayer.AddCommand(entities.CursorEnterMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
+		log.WithField("entityId", mediaPlayer.Id).Debug("CursorEnterMediaPlayerEntityCommand called")
+		return c.denon.CursorControl(denonavr.DenonCursorControlEnter)
+	})
 
-			attributes := make(map[string]interface{})
-			// We use the renamed Name
-			mainZoneInputFuncSelectList := c.denon.GetZoneInputFuncList(denonavr.MainZone)
-			attributes["source"] = mainZoneInputFuncSelectList[value.(string)]
-			c.mediaPlayer.SetAttributes(attributes)
+	// Sound Mode
+	c.mediaPlayer.AddCommand(entities.SelectSoundModeMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
+		log.WithField("entityId", mediaPlayer.Id).Debug("SelectSoundModeMediaPlayerEntityCommand called")
+		return c.denon.SetSoundModeMainZone(params["mode"].(string))
+	})
 
-		})
-
-		c.denon.AddHandleEntityChangeFunc("MainZoneSurroundMode", func(value interface{}) {
-			attributes := make(map[string]interface{})
-			attributes["sound_mode"] = value.(string)
-			c.mediaPlayer.SetAttributes(attributes)
-		})
-
-		// We can set the sound_mode_list without change handler. Its static
-		func() {
-
-			attributes := make(map[string]interface{})
-			attributes["sound_mode_list"] = c.denon.GetSoundModeList()
-			c.mediaPlayer.SetAttributes(attributes)
-
-		}()
-
-		// Media Title
-		c.denon.AddHandleEntityChangeFunc("media_title", func(value interface{}) {
-			attributes := make(map[string]interface{})
-			attributes["media_title"] = value.(string)
-			c.mediaPlayer.SetAttributes(attributes)
-		})
-
-		// Media Image URL
-		c.denon.AddHandleEntityChangeFunc("media_image_url", func(value interface{}) {
-			attributes := make(map[string]interface{})
-			attributes["media_image_url"] = value.(string)
-			c.mediaPlayer.SetAttributes(attributes)
-		})
-
-		// Add Commands
-		c.mediaPlayer.MapCommand(entities.OnMediaPlayerEntityCommand, c.denon.TurnOn)
-		c.mediaPlayer.MapCommand(entities.OffMediaPlayerEntityCommand, c.denon.TurnOff)
-		c.mediaPlayer.MapCommand(entities.ToggleMediaPlayerEntityCommand, c.denon.TogglePower)
-
-		c.mediaPlayer.AddCommand(entities.VolumeMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
-			log.WithField("entityId", mediaPlayer.Id).Debug("VolumeMediaPlayerEntityCommand called")
-
-			var volume float64
-			if v, err := strconv.ParseFloat(params["volume"].(string), 64); err == nil {
-				volume = v
-			}
-			if err := c.denon.SetVolume(volume); err != nil {
-				return 404
-			}
-			return 200
-		})
-
-		// Volume commands
-		c.mediaPlayer.MapCommand(entities.VolumeUpMediaPlayerEntityCommand, c.denon.SetVolumeUp)
-		c.mediaPlayer.MapCommand(entities.VolumeDownMediaPlayerEntityCommand, c.denon.SetVolumeDown)
-		c.mediaPlayer.MapCommand(entities.MuteMediaPlayerEntityCommand, c.denon.MainZoneMute)
-		c.mediaPlayer.MapCommand(entities.UnmuteMediaPlayerEntityCommand, c.denon.MainZoneUnMute)
-		c.mediaPlayer.MapCommand(entities.MuteToggleMediaPlayerEntityCommand, c.denon.MainZoneMuteToggle)
-
-		// Source commands
-		c.mediaPlayer.AddCommand(entities.SelectSourcMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
-			log.WithField("entityId", mediaPlayer.Id).Debug("SelectSourcMediaPlayerEntityCommand called")
-			if params["source"] != nil {
-				return c.denon.SetSelectSourceMainZone(params["source"].(string))
-			}
-			return 200
-		})
-
-		// Cursor commands
-		c.mediaPlayer.AddCommand(entities.CursorUpMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
-			log.WithField("entityId", mediaPlayer.Id).Debug("CursorUpMediaPlayerEntityCommand called")
-			return c.denon.CursorControl(denonavr.DenonCursorControlUp)
-		})
-		c.mediaPlayer.AddCommand(entities.CursorDownMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
-			log.WithField("entityId", mediaPlayer.Id).Debug("CursorDownMediaPlayerEntityCommand called")
-			return c.denon.CursorControl(denonavr.DenonCursorControlDown)
-		})
-		c.mediaPlayer.AddCommand(entities.CursorLeftMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
-			log.WithField("entityId", mediaPlayer.Id).Debug("CursorUpMediaPlayerEntityCommand called")
-			return c.denon.CursorControl(denonavr.DenonCursorControlLeft)
-		})
-		c.mediaPlayer.AddCommand(entities.CursorRightMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
-			log.WithField("entityId", mediaPlayer.Id).Debug("CursorRightMediaPlayerEntityCommand called")
-			return c.denon.CursorControl(denonavr.DenonCursorControlRight)
-		})
-		c.mediaPlayer.AddCommand(entities.CursorEnterMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
-			log.WithField("entityId", mediaPlayer.Id).Debug("CursorEnterMediaPlayerEntityCommand called")
-			return c.denon.CursorControl(denonavr.DenonCursorControlEnter)
-		})
-
-		// Sound Mode
-		c.mediaPlayer.AddCommand(entities.SelectSoundModeMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
-			log.WithField("entityId", mediaPlayer.Id).Debug("SelectSoundModeMediaPlayerEntityCommand called")
-			return c.denon.SetSoundModeMainZone(params["mode"].(string))
-		})
-	}
 }
 
 func (c *DenonAVRClient) denonClientLoop() {

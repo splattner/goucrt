@@ -2,15 +2,12 @@ package denonavr
 
 import (
 	"encoding/xml"
-	"fmt"
-	"hash/fnv"
 	"io"
 	"reflect"
 	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/strings/slices"
 
 	"net/http"
 )
@@ -86,8 +83,7 @@ type DenonAVR struct {
 	zone2Status    DenonStatus
 	zone3Status    DenonStatus
 
-	media_title     string
-	media_image_url string
+	attributes map[string]interface{}
 
 	updateTrigger chan string
 
@@ -108,15 +104,25 @@ func NewDenonAVR(host string) *DenonAVR {
 
 	denonavr.entityChangedFunction = make(map[string][]func(interface{}))
 
+	denonavr.attributes = make(map[string]interface{})
+
 	denonavr.updateTrigger = make(chan string)
 
 	return &denonavr
 }
 
-func (d *DenonAVR) AddHandleEntityChangeFunc(key string, f func(interface{})) {
+// Add a new function that is called when a attribute of this entity has changed
+func (d *DenonAVR) AddHandleEntityChangeFunc(attribute string, f func(interface{})) {
+	d.entityChangedFunction[attribute] = append(d.entityChangedFunction[attribute], f)
+}
 
-	d.entityChangedFunction[key] = append(d.entityChangedFunction[key], f)
-
+// Call the registred entity change function with the new value for a attribute
+func (d *DenonAVR) callEntityChangeFunction(attribute string, newValue interface{}) {
+	if len(d.entityChangedFunction[attribute]) > 0 {
+		for _, f := range d.entityChangedFunction[attribute] {
+			f(newValue)
+		}
+	}
 }
 
 func (d *DenonAVR) getMainZoneDataFromDevice() {
@@ -135,25 +141,6 @@ func (d *DenonAVR) getMainZoneDataFromDevice() {
 	if err := xml.Unmarshal(body, &d.mainZoneData); err != nil {
 		log.WithError(err).Info("Could not unmarshall")
 	}
-}
-
-func (d *DenonAVR) sendCommandToDevice(denonCommandType DenonCommand, command string) (int, error) {
-
-	url := "http://" + d.Host + COMMAND_URL + "?" + string(denonCommandType) + command
-	log.WithFields(log.Fields{
-		"type":    string(denonCommandType),
-		"command": command,
-		"url":     url}).Info("Send Command to Denon Device")
-
-	req, err := http.Get(url)
-	if err != nil {
-		return req.StatusCode, fmt.Errorf("Error sending command: %w", err)
-	}
-
-	// Trigger a updata data, handeld in the Listen Looü
-	d.updateTrigger <- "update"
-
-	return req.StatusCode, nil
 }
 
 func (d *DenonAVR) StartListenLoop() {
@@ -180,49 +167,6 @@ func (d *DenonAVR) StartListenLoop() {
 	}
 }
 
-// Call the registred entity change function with the new value for a attribute
-func (d *DenonAVR) callEntityChangeFunction(attribute string, newValue interface{}) {
-	if len(d.entityChangedFunction[attribute]) > 0 {
-		for _, f := range d.entityChangedFunction[attribute] {
-			f(newValue)
-		}
-	}
-}
-
-// Get the current Media Title
-// Title of the Playing media or the current Input Function
-func (d *DenonAVR) getMediaTitle() string {
-	var media_title string
-
-	if slices.Contains(PLAYING_SOURCES, d.mainZoneData.InputFuncSelect) {
-		// This is a source that is playing audio
-		// fot the moment, also set this to the input func
-		media_title = d.mainZoneData.InputFuncSelect
-	} else {
-		// Not a playing source
-		media_title = d.mainZoneData.InputFuncSelect
-	}
-
-	return media_title
-}
-
-// Get the current Media Title
-// Title of the Playing media or the current Input Function
-func (d *DenonAVR) getMediaImageURL() string {
-	var media_image_url string
-
-	if slices.Contains(PLAYING_SOURCES, d.mainZoneData.InputFuncSelect) {
-		// This is a source that is playing audio
-		// fot the moment, also set this to the input func
-
-		hash := fnv.New32a()
-		hash.Write([]byte(d.media_title))
-		media_image_url = fmt.Sprintf("http://%s:%d/NetAudio/art.asp-jpg?%d", d.Host, 80, hash.Sum32())
-	}
-
-	return media_image_url
-}
-
 func (d *DenonAVR) updateAndNotify() {
 
 	// Make copy of data to compare and update on changes
@@ -231,6 +175,7 @@ func (d *DenonAVR) updateAndNotify() {
 	oldZone2Status := d.zone2Status
 	oldZone3Status := d.zone3Status
 
+	// Get Data from Denon AVR
 	d.getMainZoneDataFromDevice()
 	d.getZoneStatus(MainZone)
 	d.getZoneStatus(Zone2)
@@ -239,18 +184,10 @@ func (d *DenonAVR) updateAndNotify() {
 	// TODO: make the following part nicer?
 
 	// Media Title
-	var media_title = d.getMediaTitle()
-	if d.media_title != media_title {
-		d.media_title = media_title
-		d.callEntityChangeFunction("media_title", media_title)
-	}
+	d.getMediaTitle()
 
 	// Media Image URL
-	var media_image_url = d.getMediaImageURL()
-	if d.media_image_url != media_image_url {
-		d.media_image_url = media_image_url
-		d.callEntityChangeFunction("media_image_url", media_image_url)
-	}
+	d.getMediaImageURL()
 
 	// Power
 	if oldMainZonData.Power != d.mainZoneData.Power {
@@ -307,9 +244,4 @@ func (d *DenonAVR) updateAndNotify() {
 		d.callEntityChangeFunction("Zone3SurroundMode", strings.TrimLeft(d.zone3Status.SurrMode, ""))
 	}
 
-}
-
-func (d *DenonAVR) GetFriendlyName() string {
-
-	return d.mainZoneData.FriendlyName
 }
