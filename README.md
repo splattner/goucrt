@@ -87,6 +87,28 @@ Use "ucrt-amd64 [command] --help" for more information about a command.
 
 ```
 
+### As a Container
+
+You can start the Integration as a container by using the released container images:
+
+Example to start the DenonAVR Integration:
+
+```bash
+docker run ghcr.io/splattner/goucrt:v0.1.7 denonavr
+```
+
+To keep the setup data persistet mount a volume to `/app/ucconfig`:
+
+```bash
+docker run -v ./localdir:/app/ucconfig ghcr.io/splattner/goucrt:v0.1.7 denonavr
+```
+
+For the mDNS adventisement to work correctly I suggest starting the integration in the `host` network. And you can set your websocket listening port with the environment variable `UC_INTEGRATION_LISTEN_PORT`:
+
+```bash
+docker run --net=host -e UC_INTEGRATION_LISTEN_PORT=10000 -v ./localdir:/app/ucconfig ghcr.io/splattner/goucrt:v0.1.7 denonavr
+```
+
 ### Configuration
 
 #### Environment Variables
