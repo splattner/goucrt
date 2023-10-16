@@ -202,7 +202,7 @@ func (d *DenonAVR) updateAndNotify() {
 	}
 
 	// Zone Power
-	if oldMainZoneStatus.Power != d.mainZoneData.Power {
+	if oldMainZoneStatus.Power != d.mainZoneStatus.Power {
 		d.callEntityChangeFunction("POWER", d.mainZoneStatus.Power)
 	}
 	if oldZone2Status.Power != d.zone2Status.Power {
