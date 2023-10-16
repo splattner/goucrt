@@ -1,4 +1,4 @@
-package client
+package tasmotaclient
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ import (
 
 // Tasmota Implementation
 type TasmotaClient struct {
-	Client
+	integration.Client
 	tasmota *tasmota.Tasmota
 
 	mapOnState map[string]entities.LightEntityState
@@ -27,7 +27,7 @@ func NewTasmotaClient(i *integration.Integration) *TasmotaClient {
 	// Start without a connection
 	tasmota.DeviceState = integration.DisconnectedDeviceState
 
-	tasmota.messages = make(chan string)
+	tasmota.Messages = make(chan string)
 
 	ipaddr := integration.SetupDataSchemaSettings{
 		Id: "mqtt_ipaddr",
@@ -85,7 +85,7 @@ func NewTasmotaClient(i *integration.Integration) *TasmotaClient {
 		Name: integration.LanguageText{
 			En: "Tasmota",
 		},
-		Version: "0.0.1",
+		Version: "0.2.0",
 		SetupDataSchema: integration.SetupDataSchema{
 			Title: integration.LanguageText{
 				En: "Configuration",
@@ -99,9 +99,9 @@ func NewTasmotaClient(i *integration.Integration) *TasmotaClient {
 	tasmota.IntegrationDriver.SetMetadata(&metadata)
 
 	// set the client specific functions
-	tasmota.initFunc = tasmota.initTasmotaClient
-	tasmota.setupFunc = tasmota.tasmotaHandleSetup
-	tasmota.clientLoopFunc = tasmota.tasmotaClientLoop
+	tasmota.InitFunc = tasmota.initTasmotaClient
+	tasmota.SetupFunc = tasmota.tasmotaHandleSetup
+	tasmota.ClientLoopFunc = tasmota.tasmotaClientLoop
 	//client.setDriverUserDataFunc = client.handleSetDriverUserData
 
 	tasmota.mapOnState = map[string]entities.LightEntityState{
@@ -166,12 +166,12 @@ func (c *TasmotaClient) startTasmota() {
 	log.Debug("Start and connect Tamota")
 
 	if err := c.tasmota.Start(); err != nil {
-		c.setDeviceState(integration.ErrorDeviceState)
+		c.SetDeviceState(integration.ErrorDeviceState)
 	}
 
 	// Handle connection to device this integration shall control
 	// Set Device state to connected when connection is established
-	c.setDeviceState(integration.ConnectedDeviceState)
+	c.SetDeviceState(integration.ConnectedDeviceState)
 
 	c.tasmota.StartDiscovery()
 
@@ -344,7 +344,7 @@ func (c *TasmotaClient) tasmotaClientLoop() {
 			c.tasmota.Stop()
 		}
 		ticker.Stop()
-		c.setDeviceState(integration.DisconnectedDeviceState)
+		c.SetDeviceState(integration.DisconnectedDeviceState)
 	}()
 
 	if c.tasmota == nil {
@@ -359,7 +359,7 @@ func (c *TasmotaClient) tasmotaClientLoop() {
 
 	// Run Client Loop to handle entity changes from device
 	for {
-		msg := <-c.messages
+		msg := <-c.Messages
 
 		switch msg {
 		case "disconnect":

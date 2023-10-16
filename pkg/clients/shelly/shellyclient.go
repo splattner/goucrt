@@ -1,4 +1,4 @@
-package client
+package shellyclient
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ import (
 
 // Shelly Implementation
 type ShellyClient struct {
-	Client
+	integration.Client
 	shelly *shelly.Shelly
 }
 
@@ -25,7 +25,7 @@ func NewShellyClient(i *integration.Integration) *ShellyClient {
 	// Start without a connection
 	client.DeviceState = integration.DisconnectedDeviceState
 
-	client.messages = make(chan string)
+	client.Messages = make(chan string)
 
 	ipaddr := integration.SetupDataSchemaSettings{
 		Id: "mqtt_ipaddr",
@@ -83,7 +83,7 @@ func NewShellyClient(i *integration.Integration) *ShellyClient {
 		Name: integration.LanguageText{
 			En: "Shelly",
 		},
-		Version: "0.0.1",
+		Version: "0.2.0",
 		SetupDataSchema: integration.SetupDataSchema{
 			Title: integration.LanguageText{
 				En: "Configuration",
@@ -97,9 +97,9 @@ func NewShellyClient(i *integration.Integration) *ShellyClient {
 	client.IntegrationDriver.SetMetadata(&metadata)
 
 	// set the client specific functions
-	client.initFunc = client.initShellyClient
-	client.setupFunc = client.shellyHandleSetup
-	client.clientLoopFunc = client.shellyClientLoop
+	client.InitFunc = client.initShellyClient
+	client.SetupFunc = client.shellyHandleSetup
+	client.ClientLoopFunc = client.shellyClientLoop
 	//client.setDriverUserDataFunc = client.handleSetDriverUserData
 
 	return &client
@@ -158,12 +158,12 @@ func (c *ShellyClient) startShelly() {
 	log.Debug("Start and connect Shelly")
 
 	if err := c.shelly.Start(); err != nil {
-		c.setDeviceState(integration.ErrorDeviceState)
+		c.SetDeviceState(integration.ErrorDeviceState)
 	}
 
 	// Handle connection to device this integration shall control
 	// Set Device state to connected when connection is established
-	c.setDeviceState(integration.ConnectedDeviceState)
+	c.SetDeviceState(integration.ConnectedDeviceState)
 
 	c.shelly.StartDiscovery()
 
@@ -222,7 +222,7 @@ func (c *ShellyClient) shellyClientLoop() {
 	defer func() {
 		c.shelly.StopDiscovery()
 		c.shelly.Stop()
-		c.setDeviceState(integration.DisconnectedDeviceState)
+		c.SetDeviceState(integration.DisconnectedDeviceState)
 	}()
 
 	if c.shelly == nil {
@@ -239,7 +239,7 @@ func (c *ShellyClient) shellyClientLoop() {
 
 	// Run Client Loop to handle entity changes from device
 	for {
-		msg := <-c.messages
+		msg := <-c.Messages
 
 		switch msg {
 		case "disconnect":

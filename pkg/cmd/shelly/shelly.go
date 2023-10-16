@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/splattner/goucrt/pkg/client"
+	shellyclient "github.com/splattner/goucrt/pkg/clients/shelly"
 	"github.com/splattner/goucrt/pkg/cmd"
 	"github.com/splattner/goucrt/pkg/integration"
 )
@@ -37,7 +37,7 @@ func NewCommand(rootCmd *cobra.Command) *cobra.Command {
 			i, err := integration.NewIntegration(config)
 			cmd.CheckError(err)
 
-			myclient := client.NewShellyClient(i)
+			myclient := shellyclient.NewShellyClient(i)
 
 			myclient.InitClient()
 

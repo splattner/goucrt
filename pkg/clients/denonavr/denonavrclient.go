@@ -1,4 +1,4 @@
-package client
+package denonavrclient
 
 import (
 	"strconv"
@@ -12,7 +12,7 @@ import (
 
 // Denon AVR Client Implementation
 type DenonAVRClient struct {
-	Client
+	integration.Client
 	denon *denonavr.DenonAVR
 
 	moni1Button    *entities.ButtonEntity
@@ -31,7 +31,7 @@ func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
 	// Start without a connection
 	client.DeviceState = integration.DisconnectedDeviceState
 
-	client.messages = make(chan string)
+	client.Messages = make(chan string)
 
 	inputSetting := integration.SetupDataSchemaSettings{
 		Id: "ipaddr",
@@ -53,7 +53,7 @@ func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
 		Name: integration.LanguageText{
 			En: "Denon AVR",
 		},
-		Version: "0.0.1",
+		Version: "0.2.0",
 		SetupDataSchema: integration.SetupDataSchema{
 			Title: integration.LanguageText{
 				En: "Configuration",
@@ -67,9 +67,9 @@ func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
 	client.IntegrationDriver.SetMetadata(&metadata)
 
 	// set the client specific functions
-	client.initFunc = client.initDenonAVRClient
-	client.setupFunc = client.denonHandleSetup
-	client.clientLoopFunc = client.denonClientLoop
+	client.InitFunc = client.initDenonAVRClient
+	client.SetupFunc = client.denonHandleSetup
+	client.ClientLoopFunc = client.denonClientLoop
 
 	client.mapOnState = map[bool]entities.MediaPlayerEntityState{
 		true:  entities.OnMediaPlayerEntityState,
@@ -269,7 +269,7 @@ func (c *DenonAVRClient) configureDenon() {
 func (c *DenonAVRClient) denonClientLoop() {
 
 	defer func() {
-		c.setDeviceState(integration.DisconnectedDeviceState)
+		c.SetDeviceState(integration.DisconnectedDeviceState)
 	}()
 
 	if c.denon == nil {
@@ -291,12 +291,12 @@ func (c *DenonAVRClient) denonClientLoop() {
 
 		// Handle connection to device this integration shall control
 		// Set Device state to connected when connection is established
-		c.setDeviceState(integration.ConnectedDeviceState)
+		c.SetDeviceState(integration.ConnectedDeviceState)
 	}
 
 	// Run Client Loop to handle entity changes from device
 	for {
-		msg := <-c.messages
+		msg := <-c.Messages
 		switch msg {
 		case "disconnect":
 			return
