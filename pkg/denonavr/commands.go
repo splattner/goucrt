@@ -33,7 +33,7 @@ func (d *DenonAVR) SetMoni1Out() error {
 }
 
 func (d *DenonAVR) SetMoni2Out() error {
-	_, err := d.sendCommandToDevice(DenonCommandCursorControl, "MONI1")
+	_, err := d.sendCommandToDevice(DenonCommandCursorControl, "MONI2")
 
 	return err
 }
