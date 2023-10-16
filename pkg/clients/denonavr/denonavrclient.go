@@ -53,7 +53,7 @@ func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
 		Name: integration.LanguageText{
 			En: "Denon AVR",
 		},
-		Version: "0.2.0",
+		Version: "0.2.1",
 		SetupDataSchema: integration.SetupDataSchema{
 			Title: integration.LanguageText{
 				En: "Configuration",
