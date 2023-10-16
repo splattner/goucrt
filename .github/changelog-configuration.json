@@ -4,48 +4,42 @@
         {
             "title": "## 🚀 Features",
             "labels": [
-                "enhancement",
-                "area:operator"
+                "enhancement"
             ],
             "exhaustive": true
         },
         {
             "title": "## 🛠️ Minor Changes",
             "labels": [
-                "change",
-                "area:operator"
+                "change"
             ],
             "exhaustive": true
         },
         {
             "title": "## 🔎 Breaking Changes",
             "labels": [
-                "breaking",
-                "area:operator"
+                "breaking"
             ],
             "exhaustive": true
         },
         {
             "title": "## 🐛 Fixes",
             "labels": [
-                "bug",
-                "area:operator"
+                "bug"
             ],
             "exhaustive": true
         },
         {
             "title": "## 📄 Documentation",
             "labels": [
-                "documentation",
-                "area:operator"
+                "documentation"
             ],
             "exhaustive": true
         },
         {
             "title": "## 🔗 Dependency Updates",
             "labels": [
-                "dependency",
-                "area:operator"
+                "dependency"
             ],
             "exhaustive": true
         }
