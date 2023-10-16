@@ -176,7 +176,7 @@ func (d *DenonAVR) StartListenLoop() {
 func (d *DenonAVR) updateAndNotify() {
 
 	// Make copy of data to compare and update on changes
-	oldMainZonData := d.mainZoneData
+	oldMainZoneData := d.mainZoneData
 	oldMainZoneStatus := d.mainZoneStatus
 	oldZone2Status := d.zone2Status
 	oldZone3Status := d.zone3Status
@@ -197,7 +197,7 @@ func (d *DenonAVR) updateAndNotify() {
 	d.getMediaImageURL()
 
 	// Power
-	if oldMainZonData.Power != d.mainZoneData.Power {
+	if oldMainZoneData.Power != d.mainZoneData.Power {
 		d.callEntityChangeFunction("POWER", d.mainZoneData.Power)
 	}
 
@@ -236,7 +236,7 @@ func (d *DenonAVR) updateAndNotify() {
 	if !reflect.DeepEqual(oldMainZoneStatus.InputFuncList, d.mainZoneStatus.InputFuncList) {
 		d.callEntityChangeFunction("MainZoneInputFuncList", d.mainZoneData.VideoSelectList)
 	}
-	if oldMainZonData.VideoSelect != d.mainZoneData.VideoSelect {
+	if oldMainZoneData.VideoSelect != d.mainZoneData.VideoSelect {
 		d.callEntityChangeFunction("MainZoneInputFuncSelect", d.mainZoneData.VideoSelect)
 	}
 
