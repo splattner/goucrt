@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/splattner/goucrt/pkg/client"
+	deconzclient "github.com/splattner/goucrt/pkg/clients/deconz"
 	"github.com/splattner/goucrt/pkg/cmd"
 	"github.com/splattner/goucrt/pkg/integration"
 )
@@ -37,7 +37,7 @@ func NewCommand(rootCmd *cobra.Command) *cobra.Command {
 			i, err := integration.NewIntegration(config)
 			cmd.CheckError(err)
 
-			myclient := client.NewDeconzClient(i)
+			myclient := deconzclient.NewDeconzClient(i)
 
 			myclient.InitClient()
 

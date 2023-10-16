@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/splattner/goucrt/pkg/client"
+	denonavrclient "github.com/splattner/goucrt/pkg/clients/denonavr"
 	"github.com/splattner/goucrt/pkg/cmd"
 	"github.com/splattner/goucrt/pkg/integration"
 )
@@ -37,7 +37,7 @@ func NewCommand(rootCmd *cobra.Command) *cobra.Command {
 			i, err := integration.NewIntegration(config)
 			cmd.CheckError(err)
 
-			myclient := client.NewDenonAVRClient(i)
+			myclient := denonavrclient.NewDenonAVRClient(i)
 
 			myclient.InitClient()
 

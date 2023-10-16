@@ -1,4 +1,4 @@
-package client
+package deconzclient
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 
 // Denon AVR Client Implementation
 type DeconzClient struct {
-	Client
+	integration.Client
 	deconz *deconz.Deconz
 
 	mapOnState map[bool]entities.LightEntityState
@@ -26,7 +26,7 @@ func NewDeconzClient(i *integration.Integration) *DeconzClient {
 	// Start without a connection
 	client.DeviceState = integration.DisconnectedDeviceState
 
-	client.messages = make(chan string)
+	client.Messages = make(chan string)
 
 	ipaddr := integration.SetupDataSchemaSettings{
 		Id: "ipaddr",
@@ -72,7 +72,7 @@ func NewDeconzClient(i *integration.Integration) *DeconzClient {
 		Name: integration.LanguageText{
 			En: "DeCONZ",
 		},
-		Version: "0.0.1",
+		Version: "0.2.0",
 		SetupDataSchema: integration.SetupDataSchema{
 			Title: integration.LanguageText{
 				En: "Configuration",
@@ -86,10 +86,10 @@ func NewDeconzClient(i *integration.Integration) *DeconzClient {
 	client.IntegrationDriver.SetMetadata(&metadata)
 
 	// set the client specific functions
-	client.initFunc = client.initDeconzClient
-	client.setupFunc = client.deconzHandleSetup
-	client.clientLoopFunc = client.deconzClientLoop
-	client.setDriverUserDataFunc = client.handleSetDriverUserData
+	client.InitFunc = client.initDeconzClient
+	client.SetupFunc = client.deconzHandleSetup
+	client.ClientLoopFunc = client.deconzClientLoop
+	client.SetDriverUserDataFunc = client.handleSetDriverUserData
 
 	client.mapOnState = map[bool]entities.LightEntityState{
 		true:  entities.OnLightEntityState,
@@ -561,7 +561,7 @@ func (c *DeconzClient) handleRemoveDevice(device *deconz.DeconzDevice) {
 func (c *DeconzClient) startDenonListenLoop() {
 	defer func() {
 		// disconnect and let RT make a new connection again
-		c.messages <- "disconnect"
+		c.Messages <- "disconnect"
 	}()
 
 	c.deconz.StartandListenLoop()
@@ -577,7 +577,7 @@ func (c *DeconzClient) deconzClientLoop() {
 			c.deconz.Stop()
 		}
 		ticker.Stop()
-		c.setDeviceState(integration.DisconnectedDeviceState)
+		c.SetDeviceState(integration.DisconnectedDeviceState)
 	}()
 
 	if c.deconz == nil {
@@ -595,7 +595,7 @@ func (c *DeconzClient) deconzClientLoop() {
 
 	// Handle connection to device this integration shall control
 	// Set Device state to connected when connection is established
-	c.setDeviceState(integration.ConnectedDeviceState)
+	c.SetDeviceState(integration.ConnectedDeviceState)
 
 	// Run Client Loop to handle entity changes from device
 	for {
@@ -603,7 +603,7 @@ func (c *DeconzClient) deconzClientLoop() {
 		case <-ticker.C:
 			// Run Discovery again
 			c.deconz.StartDiscovery(true)
-		case msg := <-c.messages:
+		case msg := <-c.Messages:
 
 			switch msg {
 			case "disconnect":
