@@ -27,19 +27,19 @@ func (d *DenonAVR) sendCommandToDevice(denonCommandType DenonCommand, command st
 }
 
 func (d *DenonAVR) SetMoni1Out() error {
-	_, err := d.sendCommandToDevice(DenonCommandCursorControl, "MONI1")
+	_, err := d.sendCommandToDevice(DenonCommandVS, "MONI1")
 
 	return err
 }
 
 func (d *DenonAVR) SetMoni2Out() error {
-	_, err := d.sendCommandToDevice(DenonCommandCursorControl, "MONI2")
+	_, err := d.sendCommandToDevice(DenonCommandVS, "MONI2")
 
 	return err
 }
 
 func (d *DenonAVR) SetMoniAutoOut() error {
-	_, err := d.sendCommandToDevice(DenonCommandCursorControl, "MONIAUTO")
+	_, err := d.sendCommandToDevice(DenonCommandVS, "MONIAUTO")
 
 	return err
 }
