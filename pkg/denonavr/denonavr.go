@@ -157,6 +157,9 @@ func (d *DenonAVR) StartListenLoop() {
 		ticker.Stop()
 	}()
 
+	// do an intial update to make sure we have up to date values
+	d.updateAndNotify()
+
 	for {
 		select {
 		case <-d.updateTrigger:
