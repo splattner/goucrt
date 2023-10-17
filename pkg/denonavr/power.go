@@ -22,10 +22,10 @@ func (d *DenonAVR) TurnOff() error {
 func (d *DenonAVR) TogglePower() error {
 
 	if d.IsOn() {
-		return d.TurnOn()
+		return d.TurnOff()
 	}
 
-	return d.TurnOff()
+	return d.TurnOn()
 }
 
 func (d *DenonAVR) IsOn() bool {
