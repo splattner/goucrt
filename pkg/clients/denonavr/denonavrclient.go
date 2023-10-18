@@ -53,7 +53,7 @@ func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
 		Name: integration.LanguageText{
 			En: "Denon AVR",
 		},
-		Version: "0.2.1",
+		Version: "0.2.3",
 		SetupDataSchema: integration.SetupDataSchema{
 			Title: integration.LanguageText{
 				En: "Configuration",
@@ -97,6 +97,7 @@ func (c *DenonAVRClient) initDenonAVRClient() {
 	c.mediaPlayer.AddFeature(entities.DPadMediaPlayerEntityFeatures)
 	c.mediaPlayer.AddFeature(entities.MediaTitleMediaPlayerEntityFeatures)
 	c.mediaPlayer.AddFeature(entities.MediaImageUrlMediaPlayerEntityFeatures)
+	c.mediaPlayer.AddFeature(entities.MenuMediaPlayerEntityFeatures)
 
 	if err := c.IntegrationDriver.AddEntity(c.mediaPlayer); err != nil {
 		log.WithError(err).Error("Cannot add Entity")
@@ -256,6 +257,14 @@ func (c *DenonAVRClient) configureDenon() {
 	c.mediaPlayer.AddCommand(entities.CursorEnterMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
 		log.WithField("entityId", mediaPlayer.Id).Debug("CursorEnterMediaPlayerEntityCommand called")
 		return c.denon.CursorControl(denonavr.DenonCursorControlEnter)
+	})
+	c.mediaPlayer.AddCommand(entities.BackMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
+		log.WithField("entityId", mediaPlayer.Id).Debug("BackMediaPlayerEntityCommand called")
+		return c.denon.CursorControl(denonavr.DenonCursorControlReturn)
+	})
+	c.mediaPlayer.AddCommand(entities.MenuMediaPlayerEntityCommand, func(mediaPlayer entities.MediaPlayerEntity, params map[string]interface{}) int {
+		log.WithField("entityId", mediaPlayer.Id).Debug("MenuMediaPlayerEntityCommand called")
+		return c.denon.CursorControl(denonavr.DenonCursorControlMenu)
 	})
 
 	// Sound Mode
