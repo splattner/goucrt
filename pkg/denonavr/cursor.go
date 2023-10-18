@@ -9,6 +9,7 @@ const (
 	DenonCursorControlRight  DenonCursorControl = "CRT"
 	DenonCursorControlEnter  DenonCursorControl = "ENT"
 	DenonCursorControlReturn DenonCursorControl = "RTN"
+	DenonCursorControlMenu   DenonCursorControl = "MEN ON"
 )
 
 func (d *DenonAVR) CursorControl(cursorControl DenonCursorControl) int {

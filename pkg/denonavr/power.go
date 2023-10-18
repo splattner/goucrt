@@ -30,7 +30,7 @@ func (d *DenonAVR) TogglePower() error {
 
 func (d *DenonAVR) IsOn() bool {
 
-	switch d.mainZoneData.Power {
+	switch d.mainZoneData.ZonePower {
 	case "ON":
 		return true
 	default:

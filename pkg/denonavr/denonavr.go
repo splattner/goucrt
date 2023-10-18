@@ -25,7 +25,7 @@ const (
 	DenonCommandNS            DenonCommand = "NS"
 	DenonCommandMS            DenonCommand = "MS"
 	DenonCommandVS            DenonCommand = "VS"
-	DenonVolumeStep           float64      = 1
+	DenonVolumeStep           float64      = 0.5
 )
 
 const (
@@ -163,6 +163,7 @@ func (d *DenonAVR) StartListenLoop() {
 	for {
 		select {
 		case <-d.updateTrigger:
+			log.Debug("Update Trigger")
 			// force manual update
 			d.updateAndNotify()
 		case <-ticker.C:

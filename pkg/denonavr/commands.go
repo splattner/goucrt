@@ -3,13 +3,14 @@ package denonavr
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	log "github.com/sirupsen/logrus"
 )
 
 func (d *DenonAVR) sendCommandToDevice(denonCommandType DenonCommand, command string) (int, error) {
 
-	url := "http://" + d.Host + COMMAND_URL + "?" + string(denonCommandType) + command
+	url := "http://" + d.Host + COMMAND_URL + "?" + url.QueryEscape(string(denonCommandType)+command)
 	log.WithFields(log.Fields{
 		"type":    string(denonCommandType),
 		"command": command,
