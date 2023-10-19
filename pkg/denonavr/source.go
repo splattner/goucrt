@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+	"k8s.io/utils/strings/slices"
 )
 
 var SOURCE_MAPPING = map[string]string{
@@ -14,10 +15,62 @@ var SOURCE_MAPPING = map[string]string{
 	"CBL/SAT":        "SAT/CBL",
 	"NETWORK":        "NET",
 	"Media Player":   "MPLAY",
-	"AUX1":           "AUX1",
+	"AUX":            "AUX1",
 	"Tuner":          "TUNER",
 	"FM":             "TUNER",
 	"SpotifyConnect": "Spotify Connect",
+}
+
+var CHANGE_INPUT_MAPPING = map[string]string{
+	"Favorites":      "FAVORITES",
+	"Flickr":         "FLICKR",
+	"Internet Radio": "IRADIO",
+	"Media Server":   "SERVER",
+	"Online Music":   "NET",
+	"Spotify":        "SPOTIFY",
+}
+
+var TELNET_SOURCES = []string{
+	"CD",
+	"PHONO",
+	"TUNER",
+	"DVD",
+	"BD",
+	"TV",
+	"SAT/CBL",
+	"MPLAY",
+	"GAME",
+	"HDRADIO",
+	"NET",
+	"PANDORA",
+	"SIRIUSXM",
+	"SOURCE",
+	"LASTFM",
+	"FLICKR",
+	"IRADIO",
+	"IRP",
+	"SERVER",
+	"FAVORITES",
+	"AUX1",
+	"AUX2",
+	"AUX3",
+	"AUX4",
+	"AUX5",
+	"AUX6",
+	"AUX7",
+	"BT",
+	"USB/IPOD",
+	"USB DIRECT",
+	"IPOD DIRECT",
+}
+
+var TELNET_MAPPING = map[string]string{
+	"FAVORITES": "Favorites",
+	"FLICKR":    "Flickr",
+	"IRADIO":    "Internet Radio",
+	"IRP":       "Internet Radio",
+	"SERVER":    "Media Server",
+	"SPOTIFY":   "Spotify",
 }
 
 var NETAUDIO_SOURCES = []string{
@@ -95,10 +148,14 @@ func (d *DenonAVR) SetSelectSourceMainZone(source string) int {
 			selectedSource = sourceOrigin
 			break
 		}
-
 	}
+
 	if SOURCE_MAPPING[selectedSource] != "" {
-		status, _ := d.sendCommandToDevice(DenonCommandSelectInput, SOURCE_MAPPING[selectedSource])
+		selectedSource = SOURCE_MAPPING[selectedSource]
+	}
+
+	if slices.Contains(TELNET_SOURCES, selectedSource) {
+		status, _ := d.sendCommandToDevice(DenonCommandSelectInput, selectedSource)
 		return status
 	}
 

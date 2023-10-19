@@ -53,7 +53,7 @@ func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
 		Name: integration.LanguageText{
 			En: "Denon AVR",
 		},
-		Version: "0.2.3",
+		Version: "0.2.4",
 		SetupDataSchema: integration.SetupDataSchema{
 			Title: integration.LanguageText{
 				En: "Configuration",
@@ -168,20 +168,11 @@ func (c *DenonAVRClient) configureDenon() {
 	})
 
 	c.denon.AddHandleEntityChangeFunc("MainZoneInputFuncList", func(value interface{}) {
-		var sourceList []string
-		mainZoneInputFuncSelectList := c.denon.GetZoneInputFuncList(denonavr.MainZone)
-		for _, renamedSource := range mainZoneInputFuncSelectList {
-			sourceList = append(sourceList, renamedSource)
-		}
-
-		c.mediaPlayer.SetAttribute(entities.SourceListMediaPlayerEntityAttribute, sourceList)
+		c.mediaPlayer.SetAttribute(entities.SourceListMediaPlayerEntityAttribute, value.([]string))
 	})
 
 	c.denon.AddHandleEntityChangeFunc("MainZoneInputFuncSelect", func(value interface{}) {
-
-		// We use the renamed Name
-		mainZoneInputFuncSelectList := c.denon.GetZoneInputFuncList(denonavr.MainZone)
-		c.mediaPlayer.SetAttribute(entities.SourceMediaPlayerEntityAttribute, mainZoneInputFuncSelectList[value.(string)])
+		c.mediaPlayer.SetAttribute(entities.SourceMediaPlayerEntityAttribute, value.(string))
 	})
 
 	c.denon.AddHandleEntityChangeFunc("MainZoneSurroundMode", func(value interface{}) {

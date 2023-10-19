@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -20,6 +21,9 @@ func (d *DenonAVR) sendCommandToDevice(denonCommandType DenonCommand, command st
 	if err != nil {
 		return req.StatusCode, fmt.Errorf("Error sending command: %w", err)
 	}
+
+	// Wait befor get an update
+	time.Sleep(1 * time.Second)
 
 	// Trigger a updata data, handeld in the Listen Loop
 	d.updateTrigger <- "update"
