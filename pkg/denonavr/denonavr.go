@@ -233,12 +233,35 @@ func (d *DenonAVR) updateAndNotify() {
 		d.callEntityChangeFunction("Zone3Mute", d.zone3Status.Mute)
 	}
 
-	// Video Select
+	// Input Func
 	if !reflect.DeepEqual(oldMainZoneStatus.InputFuncList, d.mainZoneStatus.InputFuncList) {
-		d.callEntityChangeFunction("MainZoneInputFuncList", d.mainZoneData.VideoSelectList)
+
+		var sourceList []string
+		mainZoneInputFuncSelectList := d.GetZoneInputFuncList(MainZone)
+		for _, renamedSource := range mainZoneInputFuncSelectList {
+			sourceList = append(sourceList, renamedSource)
+		}
+
+		d.callEntityChangeFunction("MainZoneInputFuncList", sourceList)
 	}
-	if oldMainZoneData.VideoSelect != d.mainZoneData.VideoSelect {
-		d.callEntityChangeFunction("MainZoneInputFuncSelect", d.mainZoneData.VideoSelect)
+	if oldMainZoneStatus.InputFuncSelect != d.mainZoneStatus.InputFuncSelect {
+
+		inputFuncSelect := d.mainZoneStatus.InputFuncSelect
+
+		// Rename Source with the SOURCE_MAPPING if necessary
+		for source, origin := range SOURCE_MAPPING {
+			if origin == d.mainZoneStatus.InputFuncSelect {
+				inputFuncSelect = source
+				break
+			}
+		}
+		// And then custom renames
+		mainZoneInputFuncSelectList := d.GetZoneInputFuncList(MainZone)
+		if mainZoneInputFuncSelectList[inputFuncSelect] != "" {
+			inputFuncSelect = mainZoneInputFuncSelectList[inputFuncSelect]
+		}
+
+		d.callEntityChangeFunction("MainZoneInputFuncSelect", inputFuncSelect)
 	}
 
 	// Surround Mode
