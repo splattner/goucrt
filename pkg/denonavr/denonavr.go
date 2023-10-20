@@ -35,44 +35,9 @@ const (
 )
 
 const (
-	STATUS_URL           string = "/goform/formMainZone_MainZoneXmlStatus.xml"
-	STATUS_Z2_URL        string = "/goform/formZone2_Zone2XmlStatus.xml"
-	STATUS_Z3_URL        string = "/goform/formZone3_Zone3XmlStatus.xml"
-	MAINZONE_URL         string = "/goform/formMainZone_MainZoneXml.xml"
 	COMMAND_URL          string = "/goform/formiPhoneAppDirect.xml"
 	NET_AUDIO_STATUR_URL string = "/goform/formNetAudio_StatusXml.xml"
 )
-
-type DenonXML struct {
-	XMLName          xml.Name     `xml:"item"`
-	FriendlyName     string       `xml:"FriendlyName>value"`
-	Power            string       `xml:"Power>value"`
-	ZonePower        string       `xml:"ZonePower>value"`
-	RenameZone       string       `xml:"RenameZone>value"`
-	TopMenuLink      string       `xml:"TopMenuLink>value"`
-	VideoSelectDisp  string       `xml:"VideoSelectDisp>value"`
-	VideoSelect      string       `xml:"VideoSelect>value"`
-	VideoSelectOnOff string       `xml:"VideoSelectOnOff>value"`
-	VideoSelectList  []ValueLists `xml:"VideoSelectLists>value"`
-	ECOModeDisp      string       `xml:"ECOModeDisp>value"`
-	ECOMode          string       `xml:"ECOMode>value"`
-	ECOModeList      []ValueLists `xml:"ECOModeLists>value"`
-	AddSourceDisplay string       `xml:"AddSourceDisplay>value"`
-	ModelId          string       `xml:"ModelId>value"`
-	BrandId          string       `xml:"BrandId>value"`
-	SalesArea        string       `xml:"SalesArea>value"`
-	InputFuncSelect  string       `xml:"InputFuncSelect>value"`
-	NetFuncSelect    string       `xml:"NetFuncSelect>value"`
-	SelectSurround   string       `xml:"selectSurround>value"`
-	VolumeDisplay    string       `xml:"VolumeDisplay>value"`
-	MasterVolume     string       `xml:"MasterVolume>value"`
-	Mute             string       `xml:"Mute>value"`
-}
-
-type ValueLists struct {
-	Index string `xml:"index,attr"`
-	Table string `xml:"table,attr"`
-}
 
 type DenonAVR struct {
 	Host string
@@ -90,9 +55,15 @@ type DenonAVR struct {
 	updateTrigger chan string
 
 	entityChangedFunction map[string][]func(interface{})
+
+	// Refactoring
+	Device  DenonAVRDeviceInfo
+	IsSetup bool
+	Name    string
+	Zones   map[string]DenonAVR
 }
 
-func NewDenonAVR(host string) *DenonAVR {
+func NewDenonAVR(host string, addZones map[string]string) *DenonAVR {
 
 	denonavr := DenonAVR{}
 
@@ -111,7 +82,39 @@ func NewDenonAVR(host string) *DenonAVR {
 
 	denonavr.updateTrigger = make(chan string)
 
+	// Refactoring
+
+	denonavr.Zones = make(map[string]DenonAVR)
+	// Add own instance to zone dictionary
+	// denonavr.zones[denonavr.device.Zone] = denonavr
+
+	if denonavr.Device.Zone == MAIN_ZONE && len(addZones) > 0 {
+		denonavr.createZone(addZones)
+	}
+
 	return &denonavr
+}
+
+// Create instances of additional zones for the receiver.
+func (d *DenonAVR) createZone(addZones map[string]string) {
+
+	for zone, zname := range addZones {
+		// Name either set explicitly or name of Main Zone with suffix
+		zonename := ""
+		if zname == "" && d.Name != "" {
+			zonename = d.Name + " " + zone
+		}
+
+		// TOOO: ?
+		//zone_device = attr.evolve(self._device, zone=zone)
+
+		zone_inst := DenonAVR{
+			Host:   d.Host,
+			Device: d.Device,
+			Name:   zonename,
+		}
+		d.Zones[zone] = zone_inst
+	}
 }
 
 // Add a new function that is called when a attribute of this entity has changed
