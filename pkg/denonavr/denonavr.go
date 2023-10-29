@@ -176,20 +176,12 @@ func (d *DenonAVR) StartListenLoop() {
 
 func (d *DenonAVR) updateAndNotify() {
 
-	// Make copy of data to compare and update on changes
-	oldMainZoneData := d.mainZoneData
-	oldMainZoneStatus := d.mainZoneStatus
-	oldZone2Status := d.zone2Status
-	oldZone3Status := d.zone3Status
+	go d.updateMainZoneDataAndNotify()
+	go d.updateMainZoneAndNotify()
+	go d.updateZone2andNotify()
+	go d.updateZone3andNotify()
 
-	// Get Data from Denon AVR
-	d.getMainZoneDataFromDevice()
-	d.getZoneStatus(MainZone)
-	d.getZoneStatus(Zone2)
-	d.getZoneStatus(Zone3)
 	d.getNetAudioStatus()
-
-	// TODO: make the following part nicer?
 
 	// Media Title
 	d.getMediaTitle()
@@ -197,40 +189,35 @@ func (d *DenonAVR) updateAndNotify() {
 	// Media Image URL
 	d.getMediaImageURL()
 
+}
+
+func (d *DenonAVR) updateMainZoneDataAndNotify() {
+	// Make copy of data to compare and update on changes
+	oldMainZoneData := d.mainZoneData
+
+	d.getMainZoneDataFromDevice()
+
 	// Power
 	if oldMainZoneData.Power != d.mainZoneData.Power {
 		d.callEntityChangeFunction("POWER", d.mainZoneData.Power)
 	}
+}
 
-	// Zone Power
+func (d *DenonAVR) updateMainZoneAndNotify() {
+	// Make copy of data to compare and update on changes
+	oldMainZoneStatus := d.mainZoneStatus
+
+	// Get Data from Denon AVR
+	d.getZoneStatus(MainZone)
+
 	if oldMainZoneStatus.Power != d.mainZoneStatus.Power {
 		d.callEntityChangeFunction("POWER", d.mainZoneStatus.Power)
 	}
-	if oldZone2Status.Power != d.zone2Status.Power {
-		d.callEntityChangeFunction("Zone2Power", d.zone2Status.Power)
-	}
-	if oldZone3Status.Power != d.zone3Status.Power {
-		d.callEntityChangeFunction("Zone3Power", d.zone3Status.Power)
-	}
-
-	// Volume
 	if oldMainZoneStatus.MasterVolume != d.mainZoneStatus.MasterVolume {
 		d.callEntityChangeFunction("MainZoneVolume", d.mainZoneStatus.MasterVolume)
 	}
-	if oldZone2Status.MasterVolume != d.zone2Status.MasterVolume {
-		d.callEntityChangeFunction("Zone2Volume", d.zone2Status.MasterVolume)
-	}
-	if oldZone3Status.MasterVolume != d.zone3Status.MasterVolume {
-		d.callEntityChangeFunction("Zone3Volume", d.zone3Status.MasterVolume)
-	}
 	if oldMainZoneStatus.Mute != d.mainZoneStatus.Mute {
 		d.callEntityChangeFunction("MainZoneMute", d.mainZoneStatus.Mute)
-	}
-	if oldZone2Status.Mute != d.zone2Status.Mute {
-		d.callEntityChangeFunction("Zone2Mute", d.zone2Status.Mute)
-	}
-	if oldZone3Status.Mute != d.zone3Status.Mute {
-		d.callEntityChangeFunction("Zone3Mute", d.zone3Status.Mute)
 	}
 
 	// Input Func
@@ -264,12 +251,48 @@ func (d *DenonAVR) updateAndNotify() {
 		d.callEntityChangeFunction("MainZoneInputFuncSelect", inputFuncSelect)
 	}
 
-	// Surround Mode
 	if oldMainZoneStatus.SurrMode != d.mainZoneStatus.SurrMode {
 		d.callEntityChangeFunction("MainZoneSurroundMode", strings.TrimRight(d.mainZoneStatus.SurrMode, " "))
 	}
+}
+
+func (d *DenonAVR) updateZone2andNotify() {
+
+	// Make copy of data to compare and update on changes
+	oldZone2Status := d.zone2Status
+
+	d.getZoneStatus(Zone2)
+
+	if oldZone2Status.Power != d.zone2Status.Power {
+		d.callEntityChangeFunction("Zone2Power", d.zone2Status.Power)
+	}
+	if oldZone2Status.MasterVolume != d.zone2Status.MasterVolume {
+		d.callEntityChangeFunction("Zone2Volume", d.zone2Status.MasterVolume)
+	}
+	if oldZone2Status.Mute != d.zone2Status.Mute {
+		d.callEntityChangeFunction("Zone2Mute", d.zone2Status.Mute)
+	}
 	if oldZone2Status.SurrMode != d.zone2Status.SurrMode {
 		d.callEntityChangeFunction("Zone2SurroundMode", strings.TrimRight(d.zone2Status.SurrMode, " "))
+	}
+
+}
+
+func (d *DenonAVR) updateZone3andNotify() {
+
+	// Make copy of data to compare and update on changes
+	oldZone3Status := d.zone3Status
+
+	d.getZoneStatus(Zone3)
+
+	if oldZone3Status.Power != d.zone3Status.Power {
+		d.callEntityChangeFunction("Zone3Power", d.zone3Status.Power)
+	}
+	if oldZone3Status.MasterVolume != d.zone3Status.MasterVolume {
+		d.callEntityChangeFunction("Zone3Volume", d.zone3Status.MasterVolume)
+	}
+	if oldZone3Status.Mute != d.zone3Status.Mute {
+		d.callEntityChangeFunction("Zone3Mute", d.zone3Status.Mute)
 	}
 	if oldZone3Status.SurrMode != d.zone3Status.SurrMode {
 		d.callEntityChangeFunction("Zone3SurroundMode", strings.TrimRight(d.zone3Status.SurrMode, " "))
