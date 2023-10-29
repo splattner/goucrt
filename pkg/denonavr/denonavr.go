@@ -181,14 +181,6 @@ func (d *DenonAVR) updateAndNotify() {
 	go d.updateZone2andNotify()
 	go d.updateZone3andNotify()
 
-	d.getNetAudioStatus()
-
-	// Media Title
-	d.getMediaTitle()
-
-	// Media Image URL
-	d.getMediaImageURL()
-
 }
 
 func (d *DenonAVR) updateMainZoneDataAndNotify() {
@@ -201,6 +193,14 @@ func (d *DenonAVR) updateMainZoneDataAndNotify() {
 	if oldMainZoneData.Power != d.mainZoneData.Power {
 		d.callEntityChangeFunction("POWER", d.mainZoneData.Power)
 	}
+
+	d.getNetAudioStatus()
+
+	// Media Title
+	d.getMediaTitle()
+
+	// Media Image URL
+	d.getMediaImageURL()
 }
 
 func (d *DenonAVR) updateMainZoneAndNotify() {
