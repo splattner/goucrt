@@ -3,6 +3,7 @@ package denonavr
 import (
 	"encoding/xml"
 	"io"
+	"sort"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -201,12 +202,15 @@ func (d *DenonAVR) updateZoneStatusAndNotify(zone DenonZone) {
 	d.SetAttribute(zoneName+"SurroundMode", zoneStatus.SurrMode)
 
 	// We use the renamed input sources
-	var sourceList []string
 	inputFuncSelectList := d.GetZoneInputFuncList(zone)
+	// map[string]string are unorderen and range gives a different result on each run
+	inputList := make([]string, 0, len(inputFuncSelectList))
 	for _, renamedSource := range inputFuncSelectList {
-		sourceList = append(sourceList, renamedSource)
+		inputList = append(inputList, renamedSource)
 	}
-	d.SetAttribute(zoneName+"InputFuncList", sourceList)
+	// sort the slice by keys
+	sort.Strings(inputList)
+	d.SetAttribute(zoneName+"InputFuncList", inputList)
 
 	inputFuncSelect := zoneStatus.InputFuncSelect
 	// Rename Source with the SOURCE_MAPPING if necessary
