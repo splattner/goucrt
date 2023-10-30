@@ -53,7 +53,7 @@ func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
 		Name: integration.LanguageText{
 			En: "Denon AVR",
 		},
-		Version: "0.2.5",
+		Version: "0.2.6",
 		SetupDataSchema: integration.SetupDataSchema{
 			Title: integration.LanguageText{
 				En: "Configuration",
@@ -149,7 +149,7 @@ func (c *DenonAVRClient) configureDenon() {
 	c.moniAutoButton.MapCommand(entities.PushButtonEntityCommand, c.denon.SetMoniAutoOut)
 
 	// Media Player
-	c.denon.AddHandleEntityChangeFunc("POWER", func(value interface{}) {
+	c.denon.AddHandleEntityChangeFunc("MainZonePower", func(value interface{}) {
 		c.mediaPlayer.SetAttribute(entities.StateMediaPlayerEntityAttribute, c.mapOnState[c.denon.IsOn()])
 	})
 

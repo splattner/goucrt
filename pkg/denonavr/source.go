@@ -107,17 +107,17 @@ func (d *DenonAVR) GetZoneInputFuncList(zone DenonZone) map[string]string {
 
 	switch zone {
 	case MainZone:
-		inputFuncList = d.getInputFuncList(d.mainZoneStatus)
+		inputFuncList = d.getInputFuncList(d.zoneStatus[MainZone])
 	case Zone2:
-		inputFuncList = d.getInputFuncList(d.zone2Status)
+		inputFuncList = d.getInputFuncList(d.zoneStatus[Zone2])
 	case Zone3:
-		inputFuncList = d.getInputFuncList(d.zone3Status)
+		inputFuncList = d.getInputFuncList(d.zoneStatus[Zone3])
 	}
 
 	return inputFuncList
 }
 
-func (d *DenonAVR) getInputFuncList(zoneStatus DenonStatus) map[string]string {
+func (d *DenonAVR) getInputFuncList(zoneStatus DenonZoneStatus) map[string]string {
 
 	inputFuncList := make(map[string]string)
 
