@@ -103,30 +103,14 @@ var PLAYING_SOURCES = append(append(append(NETAUDIO_SOURCES, NETAUDIO_SOURCES...
 
 func (d *DenonAVR) GetZoneInputFuncList(zone DenonZone) map[string]string {
 
-	var inputFuncList map[string]string
-
-	switch zone {
-	case MainZone:
-		inputFuncList = d.getInputFuncList(d.zoneStatus[MainZone])
-	case Zone2:
-		inputFuncList = d.getInputFuncList(d.zoneStatus[Zone2])
-	case Zone3:
-		inputFuncList = d.getInputFuncList(d.zoneStatus[Zone3])
-	}
-
-	return inputFuncList
-}
-
-func (d *DenonAVR) getInputFuncList(zoneStatus DenonZoneStatus) map[string]string {
-
 	inputFuncList := make(map[string]string)
 
 	// Only add those not deleted
 	// Use renamed value
-	for i, input := range zoneStatus.InputFuncList {
+	for i, input := range d.zoneStatus[zone].InputFuncList {
 		// only the ones active or empty (== Online Music)
-		if zoneStatus.SourceDelete[i] == "USE" || zoneStatus.SourceDelete[i] == "" {
-			inputFuncList[input] = strings.TrimRight(zoneStatus.RenameSource[i], " ")
+		if d.zoneStatus[zone].SourceDelete[i] == "USE" || d.zoneStatus[zone].SourceDelete[i] == "" {
+			inputFuncList[input] = strings.TrimRight(d.zoneStatus[zone].RenameSource[i], " ")
 		}
 	}
 
