@@ -9,7 +9,7 @@ import (
 
 func (d *DenonAVR) GetMainZoneVolume() string {
 
-	return d.mainZoneStatus.MasterVolume
+	return d.zoneStatus[MainZone].MasterVolume
 }
 
 func (d *DenonAVR) GetVolume() float64 {
@@ -38,7 +38,6 @@ func (d *DenonAVR) SetVolume(volume float64) error {
 	}
 
 	_, err := d.sendCommandToDevice(DenonCommandVolume, convertedVolume)
-
 	return err
 
 }
@@ -66,7 +65,7 @@ func (d *DenonAVR) MainZoneMuteToggle() error {
 
 func (d *DenonAVR) MainZoneMuted() bool {
 
-	switch d.mainZoneStatus.Mute {
+	switch d.zoneStatus[MainZone].Mute {
 	case "on":
 		return true
 	default:
@@ -76,14 +75,12 @@ func (d *DenonAVR) MainZoneMuted() bool {
 
 func (d *DenonAVR) SetVolumeUp() error {
 
-	newVolume := d.GetVolume() + DenonVolumeStep
-	return d.SetVolume(newVolume)
+	_, err := d.sendCommandToDevice(DenonCommandVolume, "UP")
+	return err
 
 }
 
 func (d *DenonAVR) SetVolumeDown() error {
-
-	newVolume := d.GetVolume() - DenonVolumeStep
-	return d.SetVolume(newVolume)
-
+	_, err := d.sendCommandToDevice(DenonCommandVolume, "DOWN")
+	return err
 }

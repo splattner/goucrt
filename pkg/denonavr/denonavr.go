@@ -25,7 +25,6 @@ const (
 	DenonCommandNS            DenonCommand = "NS"
 	DenonCommandMS            DenonCommand = "MS"
 	DenonCommandVS            DenonCommand = "VS"
-	DenonVolumeStep           float64      = 0.5
 )
 
 const (
@@ -80,9 +79,7 @@ type DenonAVR struct {
 	mainZoneData DenonXML
 
 	// Zone Status
-	mainZoneStatus DenonStatus
-	zone2Status    DenonStatus
-	zone3Status    DenonStatus
+	zoneStatus     map[DenonZone]DenonZoneStatus
 	netAudioStatus DenonNetAudioStatus
 
 	attributes map[string]interface{}
@@ -99,10 +96,7 @@ func NewDenonAVR(host string) *DenonAVR {
 	denonavr.Host = host
 
 	denonavr.mainZoneData = DenonXML{}
-
-	denonavr.mainZoneStatus = DenonStatus{}
-	denonavr.zone2Status = DenonStatus{}
-	denonavr.zone3Status = DenonStatus{}
+	denonavr.zoneStatus = make(map[DenonZone]DenonZoneStatus)
 	denonavr.netAudioStatus = DenonNetAudioStatus{}
 
 	denonavr.entityChangedFunction = make(map[string][]func(interface{}))
@@ -123,7 +117,7 @@ func (d *DenonAVR) AddHandleEntityChangeFunc(attribute string, f func(interface{
 func (d *DenonAVR) callEntityChangeFunction(attribute string, newValue interface{}) {
 	if len(d.entityChangedFunction[attribute]) > 0 {
 		for _, f := range d.entityChangedFunction[attribute] {
-			f(newValue)
+			go f(newValue)
 		}
 	}
 }
@@ -163,7 +157,6 @@ func (d *DenonAVR) StartListenLoop() {
 	for {
 		select {
 		case <-d.updateTrigger:
-			log.Debug("Update Trigger")
 			// force manual update
 			d.updateAndNotify()
 		case <-ticker.C:
@@ -176,17 +169,16 @@ func (d *DenonAVR) StartListenLoop() {
 
 func (d *DenonAVR) updateAndNotify() {
 
+	// Don't wait on each Call, handle them individually
 	go d.updateMainZoneDataAndNotify()
-	go d.updateMainZoneAndNotify()
-	go d.updateZone2andNotify()
-	go d.updateZone3andNotify()
-
+	go d.updateZoneStatusAndNotify(MainZone)
+	go d.updateZoneStatusAndNotify(Zone2)
+	go d.updateZoneStatusAndNotify(Zone3)
 }
 
 func (d *DenonAVR) updateMainZoneDataAndNotify() {
 	// Make copy of data to compare and update on changes
 	oldMainZoneData := d.mainZoneData
-
 	d.getMainZoneDataFromDevice()
 
 	// Power
@@ -203,99 +195,71 @@ func (d *DenonAVR) updateMainZoneDataAndNotify() {
 	d.getMediaImageURL()
 }
 
-func (d *DenonAVR) updateMainZoneAndNotify() {
+func (d *DenonAVR) updateZoneStatusAndNotify(zone DenonZone) {
 	// Make copy of data to compare and update on changes
-	oldMainZoneStatus := d.mainZoneStatus
-
+	oldZoneStatus := d.getZoneStatus(zone)
 	// Get Data from Denon AVR
-	d.getZoneStatus(MainZone)
+	newZoneStatus := d.getZoneStatus(zone)
+	zoneName := d.getZoneName(zone)
 
-	if oldMainZoneStatus.Power != d.mainZoneStatus.Power {
-		d.callEntityChangeFunction("POWER", d.mainZoneStatus.Power)
+	if oldZoneStatus.Power != newZoneStatus.Power {
+		d.callEntityChangeFunction(zoneName+"Power", newZoneStatus.Power)
 	}
-	if oldMainZoneStatus.MasterVolume != d.mainZoneStatus.MasterVolume {
-		d.callEntityChangeFunction("MainZoneVolume", d.mainZoneStatus.MasterVolume)
+	if oldZoneStatus.MasterVolume != newZoneStatus.MasterVolume {
+		d.callEntityChangeFunction(zoneName+"Volume", newZoneStatus.MasterVolume)
 	}
-	if oldMainZoneStatus.Mute != d.mainZoneStatus.Mute {
-		d.callEntityChangeFunction("MainZoneMute", d.mainZoneStatus.Mute)
+	if oldZoneStatus.Mute != newZoneStatus.Mute {
+		d.callEntityChangeFunction(zoneName+"MainZoneMute", newZoneStatus.Mute)
 	}
 
 	// Input Func
-	if !reflect.DeepEqual(oldMainZoneStatus.InputFuncList, d.mainZoneStatus.InputFuncList) {
+	if !reflect.DeepEqual(oldZoneStatus.InputFuncList, newZoneStatus.InputFuncList) {
 
 		var sourceList []string
-		mainZoneInputFuncSelectList := d.GetZoneInputFuncList(MainZone)
-		for _, renamedSource := range mainZoneInputFuncSelectList {
+		inputFuncSelectList := d.GetZoneInputFuncList(zone)
+		for _, renamedSource := range inputFuncSelectList {
 			sourceList = append(sourceList, renamedSource)
 		}
 
-		d.callEntityChangeFunction("MainZoneInputFuncList", sourceList)
+		d.callEntityChangeFunction(zoneName+"InputFuncList", sourceList)
 	}
-	if oldMainZoneStatus.InputFuncSelect != d.mainZoneStatus.InputFuncSelect {
+	if oldZoneStatus.InputFuncSelect != newZoneStatus.InputFuncSelect {
 
-		inputFuncSelect := d.mainZoneStatus.InputFuncSelect
+		inputFuncSelect := newZoneStatus.InputFuncSelect
 
 		// Rename Source with the SOURCE_MAPPING if necessary
 		for source, origin := range SOURCE_MAPPING {
-			if origin == d.mainZoneStatus.InputFuncSelect {
+			if origin == newZoneStatus.InputFuncSelect {
 				inputFuncSelect = source
 				break
 			}
 		}
 		// And then custom renames
-		mainZoneInputFuncSelectList := d.GetZoneInputFuncList(MainZone)
-		if mainZoneInputFuncSelectList[inputFuncSelect] != "" {
-			inputFuncSelect = mainZoneInputFuncSelectList[inputFuncSelect]
+		inputFuncSelectList := d.GetZoneInputFuncList(zone)
+		if inputFuncSelectList[inputFuncSelect] != "" {
+			inputFuncSelect = inputFuncSelectList[inputFuncSelect]
 		}
 
-		d.callEntityChangeFunction("MainZoneInputFuncSelect", inputFuncSelect)
+		d.callEntityChangeFunction(zoneName+"InputFuncSelect", inputFuncSelect)
 	}
 
-	if oldMainZoneStatus.SurrMode != d.mainZoneStatus.SurrMode {
-		d.callEntityChangeFunction("MainZoneSurroundMode", strings.TrimRight(d.mainZoneStatus.SurrMode, " "))
+	if oldZoneStatus.SurrMode != newZoneStatus.SurrMode {
+		d.callEntityChangeFunction(zoneName+"SurroundMode", strings.TrimRight(newZoneStatus.SurrMode, " "))
 	}
 }
 
-func (d *DenonAVR) updateZone2andNotify() {
+func (d *DenonAVR) getZoneName(zone DenonZone) string {
 
-	// Make copy of data to compare and update on changes
-	oldZone2Status := d.zone2Status
+	switch zone {
+	case MainZone:
+		return "MainZone"
 
-	d.getZoneStatus(Zone2)
+	case Zone2:
+		return "Zone2"
 
-	if oldZone2Status.Power != d.zone2Status.Power {
-		d.callEntityChangeFunction("Zone2Power", d.zone2Status.Power)
-	}
-	if oldZone2Status.MasterVolume != d.zone2Status.MasterVolume {
-		d.callEntityChangeFunction("Zone2Volume", d.zone2Status.MasterVolume)
-	}
-	if oldZone2Status.Mute != d.zone2Status.Mute {
-		d.callEntityChangeFunction("Zone2Mute", d.zone2Status.Mute)
-	}
-	if oldZone2Status.SurrMode != d.zone2Status.SurrMode {
-		d.callEntityChangeFunction("Zone2SurroundMode", strings.TrimRight(d.zone2Status.SurrMode, " "))
+	case Zone3:
+		return "Zone3"
 	}
 
-}
-
-func (d *DenonAVR) updateZone3andNotify() {
-
-	// Make copy of data to compare and update on changes
-	oldZone3Status := d.zone3Status
-
-	d.getZoneStatus(Zone3)
-
-	if oldZone3Status.Power != d.zone3Status.Power {
-		d.callEntityChangeFunction("Zone3Power", d.zone3Status.Power)
-	}
-	if oldZone3Status.MasterVolume != d.zone3Status.MasterVolume {
-		d.callEntityChangeFunction("Zone3Volume", d.zone3Status.MasterVolume)
-	}
-	if oldZone3Status.Mute != d.zone3Status.Mute {
-		d.callEntityChangeFunction("Zone3Mute", d.zone3Status.Mute)
-	}
-	if oldZone3Status.SurrMode != d.zone3Status.SurrMode {
-		d.callEntityChangeFunction("Zone3SurroundMode", strings.TrimRight(d.zone3Status.SurrMode, " "))
-	}
-
+	return ""
 }

@@ -18,10 +18,10 @@ func (d *DenonAVR) sendCommandToDevice(denonCommandType DenonCommand, command st
 
 	req, err := http.Get(url)
 	if err != nil {
-		return req.StatusCode, fmt.Errorf("Error sending command: %w", err)
+		return req.StatusCode, fmt.Errorf("error sending command: %w", err)
 	}
 
-	// Trigger a updata data, handeld in the Listen Loop
+	// Trigger a updata data, handled in the Listen Loop
 	d.updateTrigger <- "update"
 
 	return req.StatusCode, nil

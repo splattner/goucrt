@@ -124,21 +124,10 @@ func (d *DenonAVR) GetSoundModeList() []string {
 
 func (d *DenonAVR) GetSurroundMode(zone DenonZone) string {
 
-	var surroundMode string
-
-	switch zone {
-	case MainZone:
-		surroundMode = d.getZoneSurroundMode(d.mainZoneStatus)
-	case Zone2:
-		surroundMode = d.getZoneSurroundMode(d.zone2Status)
-	case Zone3:
-		surroundMode = d.getZoneSurroundMode(d.zone3Status)
-	}
-
-	return surroundMode
+	return d.getZoneSurroundMode(d.zoneStatus[zone])
 }
 
-func (d *DenonAVR) getZoneSurroundMode(zoneStatus DenonStatus) string {
+func (d *DenonAVR) getZoneSurroundMode(zoneStatus DenonZoneStatus) string {
 
 	var surroundMode string
 
