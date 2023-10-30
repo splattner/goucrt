@@ -3,8 +3,6 @@ package denonavr
 import (
 	"encoding/xml"
 	"io"
-	"reflect"
-	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -177,14 +175,10 @@ func (d *DenonAVR) updateAndNotify() {
 }
 
 func (d *DenonAVR) updateMainZoneDataAndNotify() {
-	// Make copy of data to compare and update on changes
-	oldMainZoneData := d.mainZoneData
+
 	d.getMainZoneDataFromDevice()
 
-	// Power
-	if oldMainZoneData.Power != d.mainZoneData.Power {
-		d.callEntityChangeFunction("POWER", d.mainZoneData.Power)
-	}
+	d.SetAttribute("POWER", d.mainZoneData.Power)
 
 	d.getNetAudioStatus()
 
@@ -196,56 +190,38 @@ func (d *DenonAVR) updateMainZoneDataAndNotify() {
 }
 
 func (d *DenonAVR) updateZoneStatusAndNotify(zone DenonZone) {
-	// Make copy of data to compare and update on changes
-	oldZoneStatus := d.getZoneStatus(zone)
+
 	// Get Data from Denon AVR
-	newZoneStatus := d.getZoneStatus(zone)
+	zoneStatus := d.getZoneStatus(zone)
 	zoneName := d.getZoneName(zone)
 
-	if oldZoneStatus.Power != newZoneStatus.Power {
-		d.callEntityChangeFunction(zoneName+"Power", newZoneStatus.Power)
-	}
-	if oldZoneStatus.MasterVolume != newZoneStatus.MasterVolume {
-		d.callEntityChangeFunction(zoneName+"Volume", newZoneStatus.MasterVolume)
-	}
-	if oldZoneStatus.Mute != newZoneStatus.Mute {
-		d.callEntityChangeFunction(zoneName+"MainZoneMute", newZoneStatus.Mute)
-	}
+	d.SetAttribute(zoneName+"Power", zoneStatus.Power)
+	d.SetAttribute(zoneName+"Volume", zoneStatus.MasterVolume)
+	d.SetAttribute(zoneName+"Mute", zoneStatus.Mute)
+	d.SetAttribute(zoneName+"SurroundMode", zoneStatus.SurrMode)
 
-	// Input Func
-	if !reflect.DeepEqual(oldZoneStatus.InputFuncList, newZoneStatus.InputFuncList) {
+	// We use the renamed input sources
+	var sourceList []string
+	inputFuncSelectList := d.GetZoneInputFuncList(zone)
+	for _, renamedSource := range inputFuncSelectList {
+		sourceList = append(sourceList, renamedSource)
+	}
+	d.SetAttribute(zoneName+"InputFuncList", sourceList)
 
-		var sourceList []string
-		inputFuncSelectList := d.GetZoneInputFuncList(zone)
-		for _, renamedSource := range inputFuncSelectList {
-			sourceList = append(sourceList, renamedSource)
+	inputFuncSelect := zoneStatus.InputFuncSelect
+	// Rename Source with the SOURCE_MAPPING if necessary
+	for source, origin := range SOURCE_MAPPING {
+		if origin == zoneStatus.InputFuncSelect {
+			inputFuncSelect = source
+			break
 		}
-
-		d.callEntityChangeFunction(zoneName+"InputFuncList", sourceList)
 	}
-	if oldZoneStatus.InputFuncSelect != newZoneStatus.InputFuncSelect {
-
-		inputFuncSelect := newZoneStatus.InputFuncSelect
-
-		// Rename Source with the SOURCE_MAPPING if necessary
-		for source, origin := range SOURCE_MAPPING {
-			if origin == newZoneStatus.InputFuncSelect {
-				inputFuncSelect = source
-				break
-			}
-		}
-		// And then custom renames
-		inputFuncSelectList := d.GetZoneInputFuncList(zone)
-		if inputFuncSelectList[inputFuncSelect] != "" {
-			inputFuncSelect = inputFuncSelectList[inputFuncSelect]
-		}
-
-		d.callEntityChangeFunction(zoneName+"InputFuncSelect", inputFuncSelect)
+	// And then custom renames
+	if inputFuncSelectList[inputFuncSelect] != "" {
+		inputFuncSelect = inputFuncSelectList[inputFuncSelect]
 	}
+	d.SetAttribute(zoneName+"InputFuncSelect", inputFuncSelect)
 
-	if oldZoneStatus.SurrMode != newZoneStatus.SurrMode {
-		d.callEntityChangeFunction(zoneName+"SurroundMode", strings.TrimRight(newZoneStatus.SurrMode, " "))
-	}
 }
 
 func (d *DenonAVR) getZoneName(zone DenonZone) string {
