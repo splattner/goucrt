@@ -110,16 +110,18 @@ func (d *DenonAVR) listenTelnet() {
 	}
 }
 
-// func (d *DenonAVR) sendTelnetCommand(cmd DenonCommand, payload string) {
+func (d *DenonAVR) sendTelnetCommand(cmd DenonCommand, payload string) error {
 
-// 	d.telnetMutex.Lock()
+	d.telnetMutex.Lock()
 
-// 	defer d.telnetMutex.Unlock()
+	defer d.telnetMutex.Unlock()
 
-// 	log.WithFields(log.Fields{
-// 		"cmd":     string(cmd),
-// 		"payload": payload,
-// 	}).Debug("send telnet command")
+	log.WithFields(log.Fields{
+		"cmd":     string(cmd),
+		"payload": payload,
+	}).Debug("send telnet command")
 
-// 	d.telnet.Write([]byte(string(cmd) + payload + "\r"))
-// }
+	_, err := d.telnet.Write([]byte(string(cmd) + payload + "\r"))
+
+	return err
+}
