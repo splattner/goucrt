@@ -1,9 +1,8 @@
-# A Unfolded Circle Remote Two Integration in Go
+# A Unfolded Circle Remote Two Integration Library in Go
 
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/splattner/goucrt/main.yaml)
 ![GitHub](https://img.shields.io/github/license/splattner/goucrt)
 ![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/splattner/goucrt)
-
 
 > **⚠️ DISCLAIMER**
 > This is Work in Progress and might not yet be functional.
@@ -12,22 +11,19 @@ This [Unfolded Circle Remote Two](https://www.unfoldedcircle.com/) integration d
 
 Currently this repository implements a driver for the following devices:
 
-* Denon Audio/Video Reveiver
 * [DeCONZ](https://dresden-elektronik.github.io/deconz-rest-doc/)
 * [Shelly](https://www.shelly.com/)
 * [Tasmota](https://tasmota.github.io/docs/)
+
+Intergrations implemented using this library:
+
+* [Denon Audio/Video Reveiver](https://github.com/splattner/remotetwo-integration-denonavr)
 
 ## Device / Clients
 
 ### Generic Client
 
 The generic client is not functional. You need to implement your own Client for the device you want to control
-
-### Denon Audio/Video Reveiver
-
-Run with `ucrt denon`
-
-This client currently implements a [`MediaPlayer` entity](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/entity_media_player.md) and some [`Button` entities](https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/entity_button.md)
 
 ### Deconz
 
@@ -65,7 +61,6 @@ Usage:
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
   deconz      Start Deconz Ingegration
-  denonavr    Start Denon AVR Ingegration
   help        Help about any command
   shelly      Start Shelly Ingegration
   tasmota     Start Tasmota Ingegration
