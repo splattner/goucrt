@@ -58,7 +58,7 @@ func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
 	}
 
 	metadata := integration.DriverMetadata{
-		DriverId: "denonavr-dev",
+		DriverId: "denonavr",
 		Developer: integration.Developer{
 			Name: "Sebastian Plattner",
 		},

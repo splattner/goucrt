@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func (d *DenonAVR) SetVolume(volume float64) error {
@@ -48,7 +50,13 @@ func (d *DenonAVR) MainZoneMuteToggle() error {
 
 func (d *DenonAVR) MainZoneMuted() bool {
 
-	switch d.zoneStatus[MainZone].Mute {
+	mainZoneMute, err := d.GetAttribute("MainZoneMute")
+	if err != nil {
+		log.WithError(err).Debug("MainZoneMute attribute not found")
+		return false
+	}
+
+	switch mainZoneMute.(string) {
 	case "on":
 		return true
 	default:

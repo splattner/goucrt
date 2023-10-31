@@ -88,7 +88,9 @@ type DenonAVR struct {
 	zoneStatus     map[DenonZone]DenonZoneStatus
 	netAudioStatus DenonNetAudioStatus
 
-	attributes map[string]interface{}
+	// Attributes
+	attributes     map[string]interface{}
+	attributeMutex sync.Mutex
 
 	updateTrigger chan string
 
@@ -157,8 +159,6 @@ func (d *DenonAVR) getMainZoneDataFromDevice() {
 func (d *DenonAVR) StartListenLoop() {
 
 	log.Info("Start Denon Listen Loop")
-	//@TOOD: replace "example.net:5555" with address you want to connect to.
-	//telnet.DialToAndCall(d.Host+":23", d)
 
 	updateInterval := 5 * time.Second
 	ticker := time.NewTicker(updateInterval)
@@ -169,7 +169,12 @@ func (d *DenonAVR) StartListenLoop() {
 
 	// Start listening to telnet
 	if d.telnetEnabled {
-		go d.listenTelnet()
+		go func() {
+			// just try to reconnect if connection lost
+			for {
+				d.listenTelnet()
+			}
+		}()
 	}
 
 	// do an intial update to make sure we have up to date values

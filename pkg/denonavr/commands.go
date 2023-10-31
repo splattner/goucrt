@@ -16,6 +16,8 @@ func (d *DenonAVR) sendCommandToDevice(cmd DenonCommand, payload string) (int, e
 		if err != nil {
 			return 404, err
 		}
+
+		return 200, nil
 	}
 
 	return d.sendHTTPCommand(cmd, payload)
