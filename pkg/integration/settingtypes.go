@@ -44,7 +44,7 @@ type SettingTypeCheckbox struct {
 }
 
 type SettingTypeCheckboxDefinition struct {
-	Value string `json:"value"`
+	Value bool `json:"value"`
 }
 
 type SettingTypeDropdown struct {

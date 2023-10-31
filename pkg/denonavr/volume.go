@@ -3,25 +3,10 @@ package denonavr
 import (
 	"fmt"
 	"math"
-	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
-
-func (d *DenonAVR) GetMainZoneVolume() string {
-
-	return d.zoneStatus[MainZone].MasterVolume
-}
-
-func (d *DenonAVR) GetVolume() float64 {
-
-	var volume float64
-	if s, err := strconv.ParseFloat(d.GetMainZoneVolume(), 64); err == nil {
-		volume = s
-	}
-
-	return volume + 80
-
-}
 
 func (d *DenonAVR) SetVolume(volume float64) error {
 
@@ -37,20 +22,20 @@ func (d *DenonAVR) SetVolume(volume float64) error {
 		convertedVolume = strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", volume), "0"), ".")
 	}
 
-	_, err := d.sendCommandToDevice(DenonCommandVolume, convertedVolume)
+	_, err := d.sendCommandToDevice(DenonCommandMainZoneVolume, convertedVolume)
 	return err
 
 }
 
 func (d *DenonAVR) MainZoneMute() error {
 
-	_, err := d.sendCommandToDevice(DenonCommandMute, "ON")
+	_, err := d.sendCommandToDevice(DenonCommandMainZoneMute, "ON")
 	return err
 }
 
 func (d *DenonAVR) MainZoneUnMute() error {
 
-	_, err := d.sendCommandToDevice(DenonCommandMute, "OFF")
+	_, err := d.sendCommandToDevice(DenonCommandMainZoneMute, "OFF")
 	return err
 }
 
@@ -65,7 +50,13 @@ func (d *DenonAVR) MainZoneMuteToggle() error {
 
 func (d *DenonAVR) MainZoneMuted() bool {
 
-	switch d.zoneStatus[MainZone].Mute {
+	mainZoneMute, err := d.GetAttribute("MainZoneMute")
+	if err != nil {
+		log.WithError(err).Debug("MainZoneMute attribute not found")
+		return false
+	}
+
+	switch mainZoneMute.(string) {
 	case "on":
 		return true
 	default:
@@ -75,12 +66,12 @@ func (d *DenonAVR) MainZoneMuted() bool {
 
 func (d *DenonAVR) SetVolumeUp() error {
 
-	_, err := d.sendCommandToDevice(DenonCommandVolume, "UP")
+	_, err := d.sendCommandToDevice(DenonCommandMainZoneVolume, "UP")
 	return err
 
 }
 
 func (d *DenonAVR) SetVolumeDown() error {
-	_, err := d.sendCommandToDevice(DenonCommandVolume, "DOWN")
+	_, err := d.sendCommandToDevice(DenonCommandMainZoneVolume, "DOWN")
 	return err
 }

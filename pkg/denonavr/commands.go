@@ -8,7 +8,22 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (d *DenonAVR) sendCommandToDevice(denonCommandType DenonCommand, command string) (int, error) {
+func (d *DenonAVR) sendCommandToDevice(cmd DenonCommand, payload string) (int, error) {
+
+	if d.telnetEnabled {
+
+		err := d.sendTelnetCommand(cmd, payload)
+		if err != nil {
+			return 404, err
+		}
+
+		return 200, nil
+	}
+
+	return d.sendHTTPCommand(cmd, payload)
+}
+
+func (d *DenonAVR) sendHTTPCommand(denonCommandType DenonCommand, command string) (int, error) {
 
 	url := "http://" + d.Host + COMMAND_URL + "?" + url.QueryEscape(string(denonCommandType)+command)
 	log.WithFields(log.Fields{
@@ -21,7 +36,7 @@ func (d *DenonAVR) sendCommandToDevice(denonCommandType DenonCommand, command st
 		return req.StatusCode, fmt.Errorf("error sending command: %w", err)
 	}
 
-	// Trigger a updata data, handled in the Listen Loop
+	// Trigger a update to get updated data handled in the Listen Loop
 	d.updateTrigger <- "update"
 
 	return req.StatusCode, nil

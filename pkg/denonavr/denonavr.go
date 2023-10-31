@@ -4,26 +4,31 @@ import (
 	"encoding/xml"
 	"io"
 	"sort"
+	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"net/http"
+
+	"github.com/ziutek/telnet"
 )
 
 type DenonCommand string
 type DenonZone string
 
 const (
-	DenonCommandPower         DenonCommand = "PW"
-	DennonCommandZoneMain     DenonCommand = "ZM"
-	DenonCommandVolume        DenonCommand = "MV"
-	DenonCommandMute          DenonCommand = "MU"
-	DenonCommandSelectInput   DenonCommand = "SI"
-	DenonCommandCursorControl DenonCommand = "MN"
-	DenonCommandNS            DenonCommand = "NS"
-	DenonCommandMS            DenonCommand = "MS"
-	DenonCommandVS            DenonCommand = "VS"
+	DenonCommandPower          DenonCommand = "PW"
+	DennonCommandZoneMain      DenonCommand = "ZM"
+	DenonCommandMainZoneVolume DenonCommand = "MV"
+	DenonCommandMainZoneMute   DenonCommand = "MU"
+	DenonCommandSelectInput    DenonCommand = "SI"
+	DenonCommandCursorControl  DenonCommand = "MN"
+	DenonCommandNS             DenonCommand = "NS"
+	DenonCommandMS             DenonCommand = "MS"
+	DenonCommandVS             DenonCommand = "VS"
+	DenonCommandZone2          DenonCommand = "Z2"
+	DenonCommandZone3          DenonCommand = "Z3"
 )
 
 const (
@@ -75,20 +80,29 @@ type ValueLists struct {
 type DenonAVR struct {
 	Host string
 
+	telnet *telnet.Conn
+
 	mainZoneData DenonXML
 
 	// Zone Status
 	zoneStatus     map[DenonZone]DenonZoneStatus
 	netAudioStatus DenonNetAudioStatus
 
-	attributes map[string]interface{}
+	// Attributes
+	attributes     map[string]interface{}
+	attributeMutex sync.Mutex
 
 	updateTrigger chan string
+
+	// Telnet
+	telnetEnabled bool
+	telnetEvents  chan *TelnetEvent
+	telnetMutex   sync.Mutex
 
 	entityChangedFunction map[string][]func(interface{})
 }
 
-func NewDenonAVR(host string) *DenonAVR {
+func NewDenonAVR(host string, telnetEnabled bool) *DenonAVR {
 
 	denonavr := DenonAVR{}
 
@@ -103,6 +117,9 @@ func NewDenonAVR(host string) *DenonAVR {
 	denonavr.attributes = make(map[string]interface{})
 
 	denonavr.updateTrigger = make(chan string)
+	denonavr.telnetEvents = make(chan *TelnetEvent)
+
+	denonavr.telnetEnabled = telnetEnabled
 
 	return &denonavr
 }
@@ -149,6 +166,16 @@ func (d *DenonAVR) StartListenLoop() {
 	defer func() {
 		ticker.Stop()
 	}()
+
+	// Start listening to telnet
+	if d.telnetEnabled {
+		go func() {
+			// just try to reconnect if connection lost
+			for {
+				d.listenTelnet()
+			}
+		}()
+	}
 
 	// do an intial update to make sure we have up to date values
 	d.updateAndNotify()
