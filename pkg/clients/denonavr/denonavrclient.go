@@ -33,7 +33,7 @@ func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
 
 	client.Messages = make(chan string)
 
-	inputSetting := integration.SetupDataSchemaSettings{
+	inputSetting_ipaddr := integration.SetupDataSchemaSettings{
 		Id: "ipaddr",
 		Label: integration.LanguageText{
 			En: "IP Address of your Denon Receiver",
@@ -45,21 +45,33 @@ func NewDenonAVRClient(i *integration.Integration) *DenonAVRClient {
 		},
 	}
 
+	inputSetting_telnet := integration.SetupDataSchemaSettings{
+		Id: "telnet",
+		Label: integration.LanguageText{
+			En: "Use telnet to communicate with your DenonAV",
+		},
+		Field: integration.SettingTypeCheckbox{
+			Checkbox: integration.SettingTypeCheckboxDefinition{
+				Value: false,
+			},
+		},
+	}
+
 	metadata := integration.DriverMetadata{
-		DriverId: "denonavr",
+		DriverId: "denonavr-dev",
 		Developer: integration.Developer{
 			Name: "Sebastian Plattner",
 		},
 		Name: integration.LanguageText{
 			En: "Denon AVR",
 		},
-		Version: "0.2.6",
+		Version: "0.2.7",
 		SetupDataSchema: integration.SetupDataSchema{
 			Title: integration.LanguageText{
 				En: "Configuration",
 				De: "KOnfiguration",
 			},
-			Settings: []integration.SetupDataSchemaSettings{inputSetting},
+			Settings: []integration.SetupDataSchemaSettings{inputSetting_ipaddr, inputSetting_telnet},
 		},
 		Icon: "custom:denon.png",
 	}
@@ -133,7 +145,11 @@ func (c *DenonAVRClient) denonHandleSetup(setup_data integration.SetupData) {
 
 func (c *DenonAVRClient) setupDenon() {
 	if c.IntegrationDriver.SetupData != nil && c.IntegrationDriver.SetupData["ipaddr"] != "" {
-		c.denon = denonavr.NewDenonAVR(c.IntegrationDriver.SetupData["ipaddr"])
+		telnetEnabled, err := strconv.ParseBool(c.IntegrationDriver.SetupData["telnet"])
+		if err != nil {
+			telnetEnabled = false
+		}
+		c.denon = denonavr.NewDenonAVR(c.IntegrationDriver.SetupData["ipaddr"], telnetEnabled)
 	} else {
 		log.Error("Cannot setup Denon, missing setupData")
 	}

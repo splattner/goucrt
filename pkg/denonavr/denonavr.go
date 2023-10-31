@@ -4,26 +4,31 @@ import (
 	"encoding/xml"
 	"io"
 	"sort"
+	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"net/http"
+
+	"github.com/ziutek/telnet"
 )
 
 type DenonCommand string
 type DenonZone string
 
 const (
-	DenonCommandPower         DenonCommand = "PW"
-	DennonCommandZoneMain     DenonCommand = "ZM"
-	DenonCommandVolume        DenonCommand = "MV"
-	DenonCommandMute          DenonCommand = "MU"
-	DenonCommandSelectInput   DenonCommand = "SI"
-	DenonCommandCursorControl DenonCommand = "MN"
-	DenonCommandNS            DenonCommand = "NS"
-	DenonCommandMS            DenonCommand = "MS"
-	DenonCommandVS            DenonCommand = "VS"
+	DenonCommandPower          DenonCommand = "PW"
+	DennonCommandZoneMain      DenonCommand = "ZM"
+	DenonCommandMainZoneVolume DenonCommand = "MV"
+	DenonCommandMainZoneMute   DenonCommand = "MU"
+	DenonCommandSelectInput    DenonCommand = "SI"
+	DenonCommandCursorControl  DenonCommand = "MN"
+	DenonCommandNS             DenonCommand = "NS"
+	DenonCommandMS             DenonCommand = "MS"
+	DenonCommandVS             DenonCommand = "VS"
+	DenonCommandZone2          DenonCommand = "Z2"
+	DenonCommandZone3          DenonCommand = "Z3"
 )
 
 const (
@@ -75,6 +80,8 @@ type ValueLists struct {
 type DenonAVR struct {
 	Host string
 
+	telnet *telnet.Conn
+
 	mainZoneData DenonXML
 
 	// Zone Status
@@ -85,10 +92,15 @@ type DenonAVR struct {
 
 	updateTrigger chan string
 
+	// Telnet
+	telnetEnabled bool
+	telnetEvents  chan *TelnetEvent
+	telnetMutex   sync.Mutex
+
 	entityChangedFunction map[string][]func(interface{})
 }
 
-func NewDenonAVR(host string) *DenonAVR {
+func NewDenonAVR(host string, telnetEnabled bool) *DenonAVR {
 
 	denonavr := DenonAVR{}
 
@@ -103,6 +115,9 @@ func NewDenonAVR(host string) *DenonAVR {
 	denonavr.attributes = make(map[string]interface{})
 
 	denonavr.updateTrigger = make(chan string)
+	denonavr.telnetEvents = make(chan *TelnetEvent)
+
+	denonavr.telnetEnabled = telnetEnabled
 
 	return &denonavr
 }
@@ -142,6 +157,8 @@ func (d *DenonAVR) getMainZoneDataFromDevice() {
 func (d *DenonAVR) StartListenLoop() {
 
 	log.Info("Start Denon Listen Loop")
+	//@TOOD: replace "example.net:5555" with address you want to connect to.
+	//telnet.DialToAndCall(d.Host+":23", d)
 
 	updateInterval := 5 * time.Second
 	ticker := time.NewTicker(updateInterval)
@@ -149,6 +166,11 @@ func (d *DenonAVR) StartListenLoop() {
 	defer func() {
 		ticker.Stop()
 	}()
+
+	// Start listening to telnet
+	if d.telnetEnabled {
+		go d.listenTelnet()
+	}
 
 	// do an intial update to make sure we have up to date values
 	d.updateAndNotify()
