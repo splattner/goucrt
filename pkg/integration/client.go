@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"strconv"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -57,25 +58,17 @@ func (c *Client) InitClient() {
 func (c *Client) HandleConnection(e *ConnectEvent) {
 	switch e.Msg {
 	case "connect":
-		// Only start connecting if in disconnected state or error state
-		if c.DeviceState == DisconnectedDeviceState || c.DeviceState == ErrorDeviceState {
-			c.SetDeviceState(ConnectingDeviceState)
+		c.SetDeviceState(ConnectingDeviceState)
+		// to make sure event is sent
+		time.Sleep(1 * time.Second)
 
-			// to make sure event is sent
-			time.Sleep(1 * time.Second)
-
-			// And then connect
-			go c.Connect()
-		} else {
-			// Just send the current state
-			c.SetDeviceState(c.DeviceState)
-		}
-
+		// And then connect
+		c.Connect()
 	case "disconnect":
 
 		if c.DeviceState == ConnectedDeviceState {
 			// And disconnect
-			go c.Disconnect()
+			c.Disconnect()
 		}
 
 	}
@@ -131,4 +124,23 @@ func (c *Client) ClientLoop() {
 		log.Fatal("Client loop not implemented")
 	}
 
+}
+
+func (c *Client) FinishIntegrationSetup() {
+
+	c.IntegrationDriver.SetupData["integrationSetupFinished"] = "true"
+	c.IntegrationDriver.PersistSetupData()
+
+	log.Debug("Integration Setup finished")
+
+}
+
+func (c *Client) IntegrationSetupFinished() bool {
+
+	finished, err := strconv.ParseBool(c.IntegrationDriver.SetupData["integrationSetupFinished"])
+	if err != nil {
+		return false
+	}
+
+	return finished
 }
