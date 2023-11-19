@@ -63,7 +63,7 @@ const (
 	ShuffleMediaPlayerEntityAttribute       MediaPlayerEntityAttributes = "shuffle"
 	SourceMediaPlayerEntityAttribute        MediaPlayerEntityAttributes = "source"
 	SourceListMediaPlayerEntityAttribute    MediaPlayerEntityAttributes = "source_list"
-	SoundModeMediaPlayerEntityAttribute     MediaPlayerEntityAttributes = "sound_mode"
+	SoundModeMediaPlayerEntityAttribute     MediaPlayerEntityAttributes = "mode"
 	SoundModeListMediaPlayerEntityAttribute MediaPlayerEntityAttributes = "sound_mode_list"
 )
 
