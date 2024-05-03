@@ -1,9 +1,12 @@
 package entities
 
+import "slices"
+
 type MediaPlayerEntityState string
 type MediaPlayerEntityFeatures string
 type MediaPlayerEntityAttributes string
 type MediaPlayerEntityCommand string
+type MediaPlayerEntityOption string
 type MediaPlayerDeviceClass string
 
 const (
@@ -40,12 +43,22 @@ const (
 	MediaImageUrlMediaPlayerEntityFeatures   MediaPlayerEntityFeatures = "media_image_url"
 	MediaTypeMediaPlayerEntityFeatures       MediaPlayerEntityFeatures = "media_type"
 	DPadMediaPlayerEntityFeatures            MediaPlayerEntityFeatures = "dpad"
+	NumPadMediaPlayerEntityFeatures          MediaPlayerEntityFeatures = "numpad"
 	HomeMediaPlayerEntityFeatures            MediaPlayerEntityFeatures = "home"
 	MenuMediaPlayerEntityFeatures            MediaPlayerEntityFeatures = "menu"
+	ContextMenuPlayerEntityFeatures          MediaPlayerEntityFeatures = "context_menu"
+	GuidePlayerEntityFeatures                MediaPlayerEntityFeatures = "guide"
+	InfoPlayerEntityFeatures                 MediaPlayerEntityFeatures = "info"
 	ColorButtonsMediaPlayerEntityFeatures    MediaPlayerEntityFeatures = "color_buttons"
 	ChannelSwitcherMediaPlayerEntityFeatures MediaPlayerEntityFeatures = "channel_switcher"
 	SelectSourceMediaPlayerEntityFeatures    MediaPlayerEntityFeatures = "select_source"
 	SelectSoundModeMediaPlayerEntityFeatures MediaPlayerEntityFeatures = "select_sound_mode"
+	EjectMediaPlayerEntityFeatures           MediaPlayerEntityFeatures = "eject"
+	OpenCloseMediaPlayerEntityFeatures       MediaPlayerEntityFeatures = "open_close"
+	AudioTrackMediaPlayerEntityFeatures      MediaPlayerEntityFeatures = "audio_track"
+	SubtitleMediaPlayerEntityFeatures        MediaPlayerEntityFeatures = "subtitle"
+	RecordMediaPlayerEntityFeatures          MediaPlayerEntityFeatures = "record"
+	SettingsMediaPlayerEntityFeatures        MediaPlayerEntityFeatures = "settings"
 )
 
 const (
@@ -63,46 +76,67 @@ const (
 	ShuffleMediaPlayerEntityAttribute       MediaPlayerEntityAttributes = "shuffle"
 	SourceMediaPlayerEntityAttribute        MediaPlayerEntityAttributes = "source"
 	SourceListMediaPlayerEntityAttribute    MediaPlayerEntityAttributes = "source_list"
-	SoundModeMediaPlayerEntityAttribute     MediaPlayerEntityAttributes = "mode"
+	SoundModeMediaPlayerEntityAttribute     MediaPlayerEntityAttributes = "sound_mode"
 	SoundModeListMediaPlayerEntityAttribute MediaPlayerEntityAttributes = "sound_mode_list"
 )
 
 const (
-	OnMediaPlayerEntityCommand              MediaPlayerEntityCommand = "on"
-	OffMediaPlayerEntityCommand             MediaPlayerEntityCommand = "off"
-	ToggleMediaPlayerEntityCommand          MediaPlayerEntityCommand = "toggle"
-	PlayPauseMediaPlayerEntityCommand       MediaPlayerEntityCommand = "play_pause"
-	StopMediaPlayerEntityCommand            MediaPlayerEntityCommand = "stop"
-	PreviusMediaPlayerEntityCommand         MediaPlayerEntityCommand = "previous"
-	NextMediaPlayerEntityCommand            MediaPlayerEntityCommand = "next"
-	FastForwardMediaPlayerEntityCommand     MediaPlayerEntityCommand = "fast_forward"
-	RewindMediaPlayerEntityCommand          MediaPlayerEntityCommand = "rewind"
-	SeekMediaPlayerEntityCommand            MediaPlayerEntityCommand = "seek"
-	VolumeMediaPlayerEntityCommand          MediaPlayerEntityCommand = "volume"
-	VolumeUpMediaPlayerEntityCommand        MediaPlayerEntityCommand = "volume_up"
-	VolumeDownMediaPlayerEntityCommand      MediaPlayerEntityCommand = "volume_down"
-	MuteToggleMediaPlayerEntityCommand      MediaPlayerEntityCommand = "mute_toggle"
-	MuteMediaPlayerEntityCommand            MediaPlayerEntityCommand = "mute"
-	UnmuteMediaPlayerEntityCommand          MediaPlayerEntityCommand = "unmute"
-	RepeatMediaPlayerEntityCommand          MediaPlayerEntityCommand = "repeat"
-	ShuffleMediaPlayerEntityCommand         MediaPlayerEntityCommand = "shuffle"
-	ChannelUpMediaPlayerEntityCommand       MediaPlayerEntityCommand = "channel_up"
-	ChannelDownMediaPlayerEntityCommand     MediaPlayerEntityCommand = "channel_down"
-	CursorUpMediaPlayerEntityCommand        MediaPlayerEntityCommand = "cursor_up"
-	CursorDownMediaPlayerEntityCommand      MediaPlayerEntityCommand = "cursor_down"
-	CursorLeftMediaPlayerEntityCommand      MediaPlayerEntityCommand = "cursor_left"
-	CursorRightMediaPlayerEntityCommand     MediaPlayerEntityCommand = "cursor_right"
-	CursorEnterMediaPlayerEntityCommand     MediaPlayerEntityCommand = "cursor_enter"
-	FunctionRedMediaPlayerEntityCommand     MediaPlayerEntityCommand = "function_red"
-	FunctionGreenMediaPlayerEntityCommand   MediaPlayerEntityCommand = "function_green"
-	FunctionYellowMediaPlayerEntityCommand  MediaPlayerEntityCommand = "function_yellow"
-	FunctionBlueMediaPlayerEntityCommand    MediaPlayerEntityCommand = "function_blue"
-	HomeMediaPlayerEntityCommand            MediaPlayerEntityCommand = "home"
-	MenuMediaPlayerEntityCommand            MediaPlayerEntityCommand = "menu"
-	BackMediaPlayerEntityCommand            MediaPlayerEntityCommand = "back"
-	SelectSourcMediaPlayerEntityCommand     MediaPlayerEntityCommand = "select_source"
-	SelectSoundModeMediaPlayerEntityCommand MediaPlayerEntityCommand = "select_sound_mode"
-	SearchMediaPlayerEntityCommand          MediaPlayerEntityCommand = "search"
+	OnMediaPlayerEntityCommand               MediaPlayerEntityCommand = "on"
+	OffMediaPlayerEntityCommand              MediaPlayerEntityCommand = "off"
+	ToggleMediaPlayerEntityCommand           MediaPlayerEntityCommand = "toggle"
+	PlayPauseMediaPlayerEntityCommand        MediaPlayerEntityCommand = "play_pause"
+	StopMediaPlayerEntityCommand             MediaPlayerEntityCommand = "stop"
+	PreviusMediaPlayerEntityCommand          MediaPlayerEntityCommand = "previous"
+	NextMediaPlayerEntityCommand             MediaPlayerEntityCommand = "next"
+	FastForwardMediaPlayerEntityCommand      MediaPlayerEntityCommand = "fast_forward"
+	RewindMediaPlayerEntityCommand           MediaPlayerEntityCommand = "rewind"
+	SeekMediaPlayerEntityCommand             MediaPlayerEntityCommand = "seek"
+	VolumeMediaPlayerEntityCommand           MediaPlayerEntityCommand = "volume"
+	VolumeUpMediaPlayerEntityCommand         MediaPlayerEntityCommand = "volume_up"
+	VolumeDownMediaPlayerEntityCommand       MediaPlayerEntityCommand = "volume_down"
+	MuteToggleMediaPlayerEntityCommand       MediaPlayerEntityCommand = "mute_toggle"
+	MuteMediaPlayerEntityCommand             MediaPlayerEntityCommand = "mute"
+	UnmuteMediaPlayerEntityCommand           MediaPlayerEntityCommand = "unmute"
+	RepeatMediaPlayerEntityCommand           MediaPlayerEntityCommand = "repeat"
+	ShuffleMediaPlayerEntityCommand          MediaPlayerEntityCommand = "shuffle"
+	ChannelUpMediaPlayerEntityCommand        MediaPlayerEntityCommand = "channel_up"
+	ChannelDownMediaPlayerEntityCommand      MediaPlayerEntityCommand = "channel_down"
+	CursorUpMediaPlayerEntityCommand         MediaPlayerEntityCommand = "cursor_up"
+	CursorDownMediaPlayerEntityCommand       MediaPlayerEntityCommand = "cursor_down"
+	CursorLeftMediaPlayerEntityCommand       MediaPlayerEntityCommand = "cursor_left"
+	CursorRightMediaPlayerEntityCommand      MediaPlayerEntityCommand = "cursor_right"
+	CursorEnterMediaPlayerEntityCommand      MediaPlayerEntityCommand = "cursor_enter"
+	Digit0MediaPlayerEntityCommand           MediaPlayerEntityCommand = "digit_0"
+	Digit1MediaPlayerEntityCommand           MediaPlayerEntityCommand = "digit_1"
+	Digit2MediaPlayerEntityCommand           MediaPlayerEntityCommand = "digit_2"
+	Digit3MediaPlayerEntityCommand           MediaPlayerEntityCommand = "digit_3"
+	Digit4MediaPlayerEntityCommand           MediaPlayerEntityCommand = "digit_4"
+	Digit5MediaPlayerEntityCommand           MediaPlayerEntityCommand = "digit_5"
+	Digit6MediaPlayerEntityCommand           MediaPlayerEntityCommand = "digit_6"
+	Digit7MediaPlayerEntityCommand           MediaPlayerEntityCommand = "digit_7"
+	Digit8MediaPlayerEntityCommand           MediaPlayerEntityCommand = "digit_8"
+	Digit9MediaPlayerEntityCommand           MediaPlayerEntityCommand = "digit_9"
+	FunctionRedMediaPlayerEntityCommand      MediaPlayerEntityCommand = "function_red"
+	FunctionGreenMediaPlayerEntityCommand    MediaPlayerEntityCommand = "function_green"
+	FunctionYellowMediaPlayerEntityCommand   MediaPlayerEntityCommand = "function_yellow"
+	FunctionBlueMediaPlayerEntityCommand     MediaPlayerEntityCommand = "function_blue"
+	HomeMediaPlayerEntityCommand             MediaPlayerEntityCommand = "home"
+	MenuMediaPlayerEntityCommand             MediaPlayerEntityCommand = "menu"
+	ContextMenuMediaPlayerEntityCommand      MediaPlayerEntityCommand = "context_menu"
+	GuideMediaPlayerEntityCommand            MediaPlayerEntityCommand = "guide"
+	InfoMediaPlayerEntityCommand             MediaPlayerEntityCommand = "info"
+	BackMediaPlayerEntityCommand             MediaPlayerEntityCommand = "back"
+	SelectSourcMediaPlayerEntityCommand      MediaPlayerEntityCommand = "select_source"
+	SelectSoundModeMediaPlayerEntityCommand  MediaPlayerEntityCommand = "select_sound_mode"
+	RecordMediaPlayerEntityCommand           MediaPlayerEntityCommand = "record"
+	MyRecordingsMenuMediaPlayerEntityCommand MediaPlayerEntityCommand = "my_recordings"
+	LiveMediaPlayerEntityCommand             MediaPlayerEntityCommand = "live"
+	EjectMediaPlayerEntityCommand            MediaPlayerEntityCommand = "eject"
+	OpenCloseMediaPlayerEntityCommand        MediaPlayerEntityCommand = "open_close"
+	AudioTrackMediaPlayerEntityCommand       MediaPlayerEntityCommand = "audio_track"
+	SubtitleMediaPlayerEntityCommand         MediaPlayerEntityCommand = "subtitle"
+	SettingsMediaPlayerEntityCommand         MediaPlayerEntityCommand = "settings"
+	SearchMediaPlayerEntityCommand           MediaPlayerEntityCommand = "search"
 )
 
 const (
@@ -113,10 +147,16 @@ const (
 	TVMediaPlayerDeviceClass            MediaPlayerDeviceClass = "tv"
 )
 
+const (
+	SimpleCommandsMediaPlayerEntityOption MediaPlayerEntityOption = "simple_commands"
+	VolumeStepsMediaPlayerEntityOption    MediaPlayerEntityOption = "volume_steps"
+)
+
 type MediaPlayerEntity struct {
 	Entity
 	DeviceClass MediaPlayerDeviceClass
 	Commands    map[MediaPlayerEntityCommand]func(MediaPlayerEntity, map[string]interface{}) int `json:"-"`
+	Options     map[MediaPlayerEntityOption]interface{}                                          `json:"options"`
 }
 
 func NewMediaPlayerEntity(id string, name LanguageText, area string, deviceClass MediaPlayerDeviceClass) *MediaPlayerEntity {
@@ -131,6 +171,8 @@ func NewMediaPlayerEntity(id string, name LanguageText, area string, deviceClass
 
 	mediaPlayerEntity.Commands = make(map[MediaPlayerEntityCommand]func(MediaPlayerEntity, map[string]interface{}) int)
 	mediaPlayerEntity.Attributes = make(map[string]interface{})
+
+	mediaPlayerEntity.Options = make(map[MediaPlayerEntityOption]interface{})
 
 	return &mediaPlayerEntity
 }
@@ -282,5 +324,21 @@ func (e *MediaPlayerEntity) HandleCommand(cmd_id string, params map[string]inter
 		return e.Commands[MediaPlayerEntityCommand(cmd_id)](*e, params)
 	}
 
+	// When simple_commands are enabled and the command exists, call the regstisered function if one is set
+	if e.Options[SimpleCommandsMediaPlayerEntityOption] != nil &&
+		slices.Contains(e.Options[SimpleCommandsMediaPlayerEntityOption].([]string), cmd_id) {
+
+		if e.Commands[MediaPlayerEntityCommand(cmd_id)] != nil {
+			return e.Commands[MediaPlayerEntityCommand(cmd_id)](*e, params)
+		}
+	}
+
 	return 404
+}
+
+// Add an option to the MediaPlayer Entity
+func (e *MediaPlayerEntity) AddOption(option MediaPlayerEntityOption, value interface{}) {
+
+	e.Options[option] = value
+
 }

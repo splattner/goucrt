@@ -11,7 +11,7 @@ import (
 	"github.com/grandcat/zeroconf"
 )
 
-const API_VERSION = "0.8.1-alpha"
+const API_VERSION = "0.10.0"
 
 type Integration struct {
 	DeviceId string
@@ -47,7 +47,7 @@ func NewIntegration(config Config) (*Integration, error) {
 
 	i := Integration{
 		Config: config,
-		// TODO: for the moment, only IPv4, as somehow the behaviour seems strange when both.. not investigatet though
+		// TODO: for the moment, only IPv4, as somehow the behaviour seems strange when both.. not investigated though
 		listenAddress: fmt.Sprintf("0.0.0.0:%d", config.ListenPort),
 		deviceState:   DisconnectedDeviceState,
 		DeviceId:      "", // I think device_id is not yet implemented in Remote TV, used for multi-device integrati
@@ -110,7 +110,7 @@ func (i *Integration) SetHandleConnectionFunction(f func(*ConnectEvent)) {
 	i.handleConnectionFunction = f
 }
 
-// Set the function which is called when the connect/disconnect request was sent by the remote
+// Set the function which is called when the setDriverUsaerData request was sent by the remote
 func (i *Integration) SetHandleSetDriverUserDataFunction(f func(map[string]string, bool)) {
 	i.handleSetDriverUserDataFunction = f
 }
