@@ -1,9 +1,12 @@
 package entities
 
+import "slices"
+
 type MediaPlayerEntityState string
 type MediaPlayerEntityFeatures string
 type MediaPlayerEntityAttributes string
 type MediaPlayerEntityCommand string
+type MediaPlayerEntityOption string
 type MediaPlayerDeviceClass string
 
 const (
@@ -144,10 +147,16 @@ const (
 	TVMediaPlayerDeviceClass            MediaPlayerDeviceClass = "tv"
 )
 
+const (
+	SimpleCommandsMediaPlayerEntityOption MediaPlayerEntityOption = "simple_commands"
+	VolumeStepsMediaPlayerEntityOption    MediaPlayerEntityOption = "volume_steps"
+)
+
 type MediaPlayerEntity struct {
 	Entity
 	DeviceClass MediaPlayerDeviceClass
 	Commands    map[MediaPlayerEntityCommand]func(MediaPlayerEntity, map[string]interface{}) int `json:"-"`
+	Options     map[MediaPlayerEntityOption]interface{}                                          `json:"options"`
 }
 
 func NewMediaPlayerEntity(id string, name LanguageText, area string, deviceClass MediaPlayerDeviceClass) *MediaPlayerEntity {
@@ -162,6 +171,8 @@ func NewMediaPlayerEntity(id string, name LanguageText, area string, deviceClass
 
 	mediaPlayerEntity.Commands = make(map[MediaPlayerEntityCommand]func(MediaPlayerEntity, map[string]interface{}) int)
 	mediaPlayerEntity.Attributes = make(map[string]interface{})
+
+	mediaPlayerEntity.Options = make(map[MediaPlayerEntityOption]interface{})
 
 	return &mediaPlayerEntity
 }
@@ -313,5 +324,21 @@ func (e *MediaPlayerEntity) HandleCommand(cmd_id string, params map[string]inter
 		return e.Commands[MediaPlayerEntityCommand(cmd_id)](*e, params)
 	}
 
+	// When simple_commands are enabled and the command exists, call the regstisered function if one is set
+	if e.Options[SimpleCommandsMediaPlayerEntityOption] != nil &&
+		slices.Contains(e.Options[SimpleCommandsMediaPlayerEntityOption].([]string), cmd_id) {
+
+		if e.Commands[MediaPlayerEntityCommand(cmd_id)] != nil {
+			return e.Commands[MediaPlayerEntityCommand(cmd_id)](*e, params)
+		}
+	}
+
 	return 404
+}
+
+// Add an option to the MediaPlayer Entity
+func (e *MediaPlayerEntity) AddOption(option MediaPlayerEntityOption, value interface{}) {
+
+	e.Options[option] = value
+
 }
