@@ -203,7 +203,8 @@ type SetupDriverMessageReq struct {
 }
 
 type SetupDataValue struct {
-	Value SetupData `json:"setup_data"`
+	Reconfigure bool      `json:"reconfigure,omitempty"`
+	Value       SetupData `json:"setup_data"`
 }
 
 type SetupData map[string]string
