@@ -1,5 +1,7 @@
 package entities
 
+import "slices"
+
 type RemoteEntityState EntityState
 type RemoteEntityFeatures EntityFeature
 type RemoteEntityAttributes EntityAttribute
@@ -14,7 +16,7 @@ const (
 const (
 	SendCmdRemoteEntityFeatures RemoteEntityFeatures = "send_cmd"
 	OnOffRemoteEntityFeatures   RemoteEntityFeatures = "on_off"
-	ToggleRemoteEntityyFeatures RemoteEntityFeatures = "toggle"
+	ToggleRemoteEntityFeatures  RemoteEntityFeatures = "toggle"
 )
 
 const (
@@ -47,8 +49,14 @@ func NewRemoteEntity(id string, name LanguageText, area string) *RemoteEntity {
 	remoteEntity.Name = name
 	remoteEntity.Area = area
 
+	remoteEntity.EntityType.Type = "remote"
+
 	remoteEntity.Commands = make(map[RemoteEntityCommand]func(RemoteEntity, map[string]interface{}) int)
 	remoteEntity.Attributes = make(map[string]interface{})
+
+	// SendCmdRemoteEntityFeatures is always present even if not specified
+	// https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/entity_remote.md
+	remoteEntity.AddFeature(SendCmdRemoteEntityFeatures)
 
 	remoteEntity.Options = make(map[RemoteEntityOption]interface{})
 
@@ -90,6 +98,15 @@ func (e *RemoteEntity) AddCommand(command RemoteEntityCommand, function func(Rem
 func (e *RemoteEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
 	if e.Commands[RemoteEntityCommand(cmd_id)] != nil {
 		return e.Commands[RemoteEntityCommand(cmd_id)](*e, params)
+	}
+
+	// When simple_commands are enabled and the command exists, call the regstisered function if one is set
+	if e.Options[SimpleCommandsRemoteEntityOption] != nil &&
+		slices.Contains(e.Options[SimpleCommandsRemoteEntityOption].([]string), cmd_id) {
+
+		if e.Commands[RemoteEntityCommand(cmd_id)] != nil {
+			return e.Commands[RemoteEntityCommand(cmd_id)](*e, params)
+		}
 	}
 
 	return 404
