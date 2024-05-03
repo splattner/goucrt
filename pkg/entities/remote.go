@@ -1,10 +1,10 @@
 package entities
 
-type RemoteEntityState string
-type RemoteEntityFeatures string
-type RemoteEntityAttributes string
-type RemoteEntityCommand string
-type RemoteEntityOption string
+type RemoteEntityState EntityState
+type RemoteEntityFeatures EntityFeature
+type RemoteEntityAttributes EntityAttribute
+type RemoteEntityCommand EntityCommand
+type RemoteEntityOption EntityOption
 
 const (
 	OnRemoteEntityState  RemoteEntityState = "ON"

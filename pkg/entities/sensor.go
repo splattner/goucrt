@@ -1,9 +1,9 @@
 package entities
 
-type SensorEntityState string
-type SensorEntityFeatures string
-type SensorEntityAttributes string
-type SensorEntityCommand string
+type SensorEntityState EntityState
+type SensorEntityFeatures EntityFeature
+type SensorEntityAttributes EntityAttribute
+type SensorEntityCommand EntityCommand
 type SensorDeviceClass string
 
 const (

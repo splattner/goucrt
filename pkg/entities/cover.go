@@ -1,9 +1,9 @@
 package entities
 
-type CoverEntityState string
-type CoverEntityFeatures string
-type CoverEntityAttributes string
-type CoverEntityCommand string
+type CoverEntityState EntityState
+type CoverEntityFeatures EntityFeature
+type CoverEntityAttributes EntityAttribute
+type CoverEntityCommand EntityCommand
 
 const (
 	OpeningCoverEntityState CoverEntityState = "OPENING"

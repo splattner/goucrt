@@ -2,11 +2,11 @@ package entities
 
 import "slices"
 
-type MediaPlayerEntityState string
-type MediaPlayerEntityFeatures string
-type MediaPlayerEntityAttributes string
-type MediaPlayerEntityCommand string
-type MediaPlayerEntityOption string
+type MediaPlayerEntityState EntityState
+type MediaPlayerEntityFeatures EntityFeature
+type MediaPlayerEntityAttributes EntityAttribute
+type MediaPlayerEntityCommand EntityCommand
+type MediaPlayerEntityOption EntityOption
 type MediaPlayerDeviceClass string
 
 const (

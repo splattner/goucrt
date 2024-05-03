@@ -363,13 +363,13 @@ type RequireUserAction struct {
 	Confirmation interface{} `json:"confirmation,omitempty"`
 }
 
-type RemoteButtonMapping struct {
-	Button     string        `json:"string"`
-	ShortPress RemoteCommand `json:"short_press,omitempty"`
-	LongPress  RemoteCommand `json:"long_press,omitempty"`
+type ButtonMapping struct {
+	Button     string  `json:"string"`
+	ShortPress Command `json:"short_press,omitempty"`
+	LongPress  Command `json:"long_press,omitempty"`
 }
 
-type RemoteCommand struct {
+type Command struct {
 	CmdId  string            `json:"cmd_id"`
 	Params map[string]string `json:"params,omitempty"`
 }
@@ -389,10 +389,10 @@ type UserInterfacePage struct {
 }
 
 type UserInterfaceItem struct {
-	Type     string        `json:"type"`
-	Icon     string        `json:"icon"`
-	Text     string        `json:"text"`
-	Command  RemoteCommand `json:"command"`
+	Type     string  `json:"type"`
+	Icon     string  `json:"icon"`
+	Text     string  `json:"text"`
+	Command  Command `json:"command"`
 	Location struct {
 		X int `json:"x"`
 		Y int `json:"y"`

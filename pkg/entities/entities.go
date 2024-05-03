@@ -5,6 +5,10 @@ import (
 )
 
 type EntityState string
+type EntityCommand string
+type EntityAttribute string
+type EntityFeature string
+type EntityOption string
 
 const (
 	UnavailableEntityState EntityState = "UNAVAILABLE"

@@ -4,10 +4,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type LightEntityState string
-type LightEntityFeatures string
-type LightEntityAttributes string
-type LightEntityCommand string
+type LightEntityState EntityState
+type LightEntityFeatures EntityFeature
+type LightEntityAttributes EntityAttribute
+type LightEntityCommand EntityCommand
 
 const (
 	OnLightEntityState          LightEntityState = "ON"

@@ -1,9 +1,9 @@
 package entities
 
-type SwitchEntityState string
-type SwitchEntityFeatures string
-type SwitchEntityAttributes string
-type SwitchEntityCommand string
+type SwitchEntityState EntityState
+type SwitchEntityFeatures EntityFeature
+type SwitchEntityAttributes EntityAttribute
+type SwitchEntityCommand EntityCommand
 
 const (
 	OnSwitchtEntityState  SwitchEntityState = "ON"

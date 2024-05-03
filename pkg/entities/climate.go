@@ -1,9 +1,9 @@
 package entities
 
-type ClimateEntityState string
-type ClimateEntityFeatures string
-type ClimateEntityAttributes string
-type ClimateEntityCommand string
+type ClimateEntityState EntityState
+type ClimateEntityFeatures EntityFeature
+type ClimateEntityAttributes EntityAttribute
+type ClimateEntityCommand EntityCommand
 
 const (
 	OffClimateEntityState      ClimateEntityState = "OFF"
