@@ -22,26 +22,22 @@ const (
 )
 
 const (
+	OnRemoteEntityCommand              RemoteEntityCommand = "on"
+	OffRemoteEntityCommand             RemoteEntityCommand = "off"
+	SendCmdRemoteEntityCommand         RemoteEntityCommand = "send_cmd"
+	SendCmdSequenceRemoteEntityCommand RemoteEntityCommand = "send_cmd_sequence"
+)
+
+const (
 	SimpleCommandsRemoteEntityOption RemoteEntityOption = "simple_commands"
 	ButtonMappingRemoteEntityOption  RemoteEntityOption = "button_mapping"
 	UserInterfaceRemoteEntityOption  RemoteEntityOption = "user_interface"
 )
 
-type RemoteButtonMapping struct {
-	Button     string        `json:"string"`
-	ShortPress RemoteCommand `json:"short_press,omitempty"`
-	LongPress  RemoteCommand `json:"long_press,omitempty"`
-}
-
-type RemoteCommand struct {
-	CmdId  string            `json:"cmd_id"`
-	Params map[string]string `json:"params,omitempty"`
-}
-
 type RemoteEntity struct {
 	Entity
-	Commands map[RemoteEntityCommand]func(RemoteEntity) int `json:"-"`
-	Options  map[RemoteEntityOption]interface{}             `json:"options"`
+	Commands map[RemoteEntityCommand]func(RemoteEntity, map[string]interface{}) int `json:"-"`
+	Options  map[RemoteEntityOption]interface{}                                     `json:"options"`
 }
 
 func NewRemoteEntity(id string, name LanguageText, area string) *RemoteEntity {
@@ -51,7 +47,7 @@ func NewRemoteEntity(id string, name LanguageText, area string) *RemoteEntity {
 	remoteEntity.Name = name
 	remoteEntity.Area = area
 
-	remoteEntity.Commands = make(map[RemoteEntityCommand]func(RemoteEntity) int)
+	remoteEntity.Commands = make(map[RemoteEntityCommand]func(RemoteEntity, map[string]interface{}) int)
 	remoteEntity.Attributes = make(map[string]interface{})
 
 	remoteEntity.Options = make(map[RemoteEntityOption]interface{})
@@ -85,15 +81,15 @@ func (e RemoteEntity) AddFeature(feature RemoteEntityFeatures) {
 }
 
 // Register a function for the Entity command
-func (e *RemoteEntity) AddCommand(command RemoteEntityCommand, function func(RemoteEntity) int) {
+func (e *RemoteEntity) AddCommand(command RemoteEntityCommand, function func(RemoteEntity, map[string]interface{}) int) {
 	e.Commands[command] = function
 
 }
 
 // Call the registred function for this entity_command
-func (e *RemoteEntity) HandleCommand(cmd_id string) int {
+func (e *RemoteEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
 	if e.Commands[RemoteEntityCommand(cmd_id)] != nil {
-		return e.Commands[RemoteEntityCommand(cmd_id)](*e)
+		return e.Commands[RemoteEntityCommand(cmd_id)](*e, params)
 	}
 
 	return 404

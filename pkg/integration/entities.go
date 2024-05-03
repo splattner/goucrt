@@ -298,7 +298,7 @@ func (i *Integration) handleCommand(entity interface{}, req *EntityCommandReq) i
 		// Sensor do not have commands
 
 	case *entities.RemoteEntity:
-		return e.HandleCommand(cmd_id)
+		return e.HandleCommand(cmd_id, params)
 	}
 
 	return 404
