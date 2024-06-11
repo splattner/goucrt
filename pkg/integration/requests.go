@@ -14,6 +14,8 @@ import (
 func (i *Integration) handleRequest(req *RequestMessage, p []byte) {
 	var res interface{}
 
+	log.WithField("RawMessage", string(p)).Debug("Request received")
+
 	switch req.Msg {
 	case "auth":
 		authRequiredReq := AuthRequestMessage{}

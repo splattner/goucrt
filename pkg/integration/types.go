@@ -370,8 +370,8 @@ type ButtonMapping struct {
 }
 
 type Command struct {
-	CmdId  string            `json:"cmd_id"`
-	Params map[string]string `json:"params,omitempty"`
+	CmdId  string                 `json:"cmd_id"`
+	Params map[string]interface{} `json:"params,omitempty"`
 }
 
 type UserInterface struct {

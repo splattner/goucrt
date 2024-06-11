@@ -1,6 +1,9 @@
 package entities
 
-import "slices"
+import (
+	"slices"
+	"time"
+)
 
 type RemoteEntityState EntityState
 type RemoteEntityFeatures EntityFeature
@@ -100,12 +103,60 @@ func (e *RemoteEntity) HandleCommand(cmd_id string, params map[string]interface{
 		return e.Commands[RemoteEntityCommand(cmd_id)](*e, params)
 	}
 
-	// When simple_commands are enabled and the command exists, call the regstisered function if one is set
-	if e.Options[SimpleCommandsRemoteEntityOption] != nil &&
-		slices.Contains(e.Options[SimpleCommandsRemoteEntityOption].([]string), cmd_id) {
+	// When simple_commands are enabled and the command exists, call the registered function if one is set
+	if e.Options[SimpleCommandsRemoteEntityOption] != nil {
 
-		if e.Commands[RemoteEntityCommand(cmd_id)] != nil {
-			return e.Commands[RemoteEntityCommand(cmd_id)](*e, params)
+		switch RemoteEntityCommand(cmd_id) {
+		case SendCmdRemoteEntityCommand:
+			command := params["command"].(string)
+			delay := 0
+			repeat := 1
+
+			if e.Commands[RemoteEntityCommand(command)] != nil && slices.Contains(e.Options[SimpleCommandsRemoteEntityOption].([]string), command) {
+				go func() {
+					if params["repeat"] != nil {
+						repeat = int(params["repeat"].(float64))
+					}
+
+					if params["delay"] != nil {
+						delay = int(params["delay"].(float64))
+					}
+
+					for i := 0; i < repeat; i++ {
+						e.Commands[RemoteEntityCommand(command)](*e, params)
+						time.Sleep(time.Duration(delay) * time.Millisecond)
+					}
+				}()
+
+				return 200
+			}
+
+		case SendCmdSequenceRemoteEntityCommand:
+			commandSeq := params["sequence"].([]interface{})
+			delay := 0
+			repeat := 1
+
+			if params["repeat"] != nil {
+				repeat = int(params["repeat"].(float64))
+			}
+
+			if params["delay"] != nil {
+				delay = int(params["delay"].(float64))
+			}
+
+			go func() {
+				for _, command := range commandSeq {
+					if e.Commands[RemoteEntityCommand(command.(string))] != nil && slices.Contains(e.Options[SimpleCommandsRemoteEntityOption].([]string), command.(string)) {
+						for i := 0; i < repeat; i++ {
+							e.Commands[RemoteEntityCommand(command.(string))](*e, params)
+							time.Sleep(time.Duration(delay) * time.Millisecond)
+						}
+					}
+
+				}
+			}()
+
+			return 200
 		}
 	}
 
@@ -127,9 +178,7 @@ func (e *RemoteEntity) UpdateAttribute(attribute RemoteEntityAttributes, value i
 	}
 }
 
-// Add an option to the MediaPlayer Entity
+// Add an option to the Remote Entity
 func (e *RemoteEntity) AddOption(option RemoteEntityOption, value interface{}) {
-
 	e.Options[option] = value
-
 }
