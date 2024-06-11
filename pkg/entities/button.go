@@ -1,9 +1,9 @@
 package entities
 
-type ButtonEntityState string
-type ButtonEntityFeatures string
-type ButtonEntityAttribute string
-type ButtonEntityCommand string
+type ButtonEntityState EntityState
+type ButtonEntityFeatures EntityFeature
+type ButtonEntityAttribute EntityAttribute
+type ButtonEntityCommand EntityCommand
 
 const (
 	AvailableButtonEntityState EntityState = "AVAILABLE"

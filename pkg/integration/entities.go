@@ -36,6 +36,9 @@ func (i *Integration) getEntityId(entity interface{}) string {
 
 	case *entities.CoverEntity:
 		id = e.Id
+
+	case *entities.RemoteEntity:
+		id = e.Id
 	}
 
 	return id
@@ -68,6 +71,9 @@ func (i *Integration) getDeviceId(entity interface{}) string {
 		device_id = e.DeviceId
 
 	case *entities.CoverEntity:
+		device_id = e.DeviceId
+
+	case *entities.RemoteEntity:
 		device_id = e.DeviceId
 	}
 
@@ -102,6 +108,9 @@ func (i *Integration) getEntityType(entity interface{}) entities.EntityType {
 
 	case *entities.CoverEntity:
 		entity_type = e.EntityType
+
+	case *entities.RemoteEntity:
+		entity_type = e.EntityType
 	}
 
 	return entity_type
@@ -128,6 +137,8 @@ func (i *Integration) getEntityAttributes(entity interface{}) map[string]interfa
 	case *entities.ClimateEntity:
 		attributes = e.GetAttribute()
 	case *entities.CoverEntity:
+		attributes = e.GetAttribute()
+	case *entities.RemoteEntity:
 		attributes = e.GetAttribute()
 	}
 
@@ -191,6 +202,9 @@ func (i *Integration) UpdateEntity(entity interface{}, newEntity interface{}) er
 
 	case *entities.CoverEntity:
 		return e.UpdateEntity(newEntity.(entities.CoverEntity))
+
+	case *entities.RemoteEntity:
+		return e.UpdateEntity(newEntity.(entities.RemoteEntity))
 	}
 
 	return nil
@@ -282,6 +296,9 @@ func (i *Integration) handleCommand(entity interface{}, req *EntityCommandReq) i
 
 	case *entities.SensorEntity:
 		// Sensor do not have commands
+
+	case *entities.RemoteEntity:
+		return e.HandleCommand(cmd_id, params)
 	}
 
 	return 404
@@ -307,6 +324,8 @@ func (i *Integration) setEntityChangeFunc(entity interface{}, f func(interface{}
 	case *entities.ClimateEntity:
 		e.SetHandleEntityChangeFunc(f)
 	case *entities.CoverEntity:
+		e.SetHandleEntityChangeFunc(f)
+	case *entities.RemoteEntity:
 		e.SetHandleEntityChangeFunc(f)
 	}
 }
@@ -350,6 +369,11 @@ func (i *Integration) callSubscribeCallback(entity interface{}) {
 		if e.SubscribeCallbackFunc != nil {
 			e.SubscribeCallbackFunc()
 		}
+
+	case *entities.RemoteEntity:
+		if e.SubscribeCallbackFunc != nil {
+			e.SubscribeCallbackFunc()
+		}
 	}
 }
 
@@ -389,6 +413,11 @@ func (i *Integration) callUnubscribeCallback(entity interface{}) {
 		}
 
 	case *entities.SensorEntity:
+		if e.UnsubscribeCallbackFunc != nil {
+			e.UnsubscribeCallbackFunc()
+		}
+
+	case *entities.RemoteEntity:
 		if e.UnsubscribeCallbackFunc != nil {
 			e.UnsubscribeCallbackFunc()
 		}

@@ -363,3 +363,43 @@ type RequireUserAction struct {
 	Input        interface{} `json:"input,omitempty"`
 	Confirmation interface{} `json:"confirmation,omitempty"`
 }
+
+type ButtonMapping struct {
+	Button     string  `json:"string"`
+	ShortPress Command `json:"short_press,omitempty"`
+	LongPress  Command `json:"long_press,omitempty"`
+}
+
+type Command struct {
+	CmdId  string                 `json:"cmd_id"`
+	Params map[string]interface{} `json:"params,omitempty"`
+}
+
+type UserInterface struct {
+	Pages []UserInterfacePage `json:"pages"`
+}
+
+type UserInterfacePage struct {
+	PageID string `json:"page_id"`
+	Name   string `json:"name,omitempty"`
+	Grid   struct {
+		Width  int `json:"width"`
+		Height int `json:"height"`
+	} `json:"grid"`
+	Items []UserInterfaceItem `json:"items"`
+}
+
+type UserInterfaceItem struct {
+	Type     string  `json:"type"`
+	Icon     string  `json:"icon"`
+	Text     string  `json:"text"`
+	Command  Command `json:"command"`
+	Location struct {
+		X int `json:"x"`
+		Y int `json:"y"`
+	} `json:"location"`
+	Size struct {
+		Width  int `json:"width"`
+		Height int `json:"height"`
+	} `json:"size"`
+}
