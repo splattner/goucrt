@@ -8,7 +8,7 @@ require (
 	github.com/grandcat/zeroconf v1.0.0
 	github.com/jurgen-kluft/go-conbee v0.0.0-20211124004556-1d2ff903ea59
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
 )
