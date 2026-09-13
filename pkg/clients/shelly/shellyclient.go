@@ -83,6 +83,9 @@ func NewShellyClient(i *integration.Integration) *ShellyClient {
 		Name: integration.LanguageText{
 			En: "Shelly",
 		},
+		Description: integration.LanguageText{
+			En: "Control Shelly devices discovered over MQTT.",
+		},
 		Version: "0.2.0",
 		SetupDataSchema: integration.SetupDataSchema{
 			Title: integration.LanguageText{

@@ -145,7 +145,9 @@ func (i *Integration) registerWithRemoteTwo(remoteTwoIP string, remoteTwoPort in
 		}
 
 		i.SetupData["driver_id"] = driverRegistration.DriverId
-		i.PersistSetupData()
+		if err := i.PersistSetupData(); err != nil {
+			return fmt.Errorf("cannot persist setup data: %w", err)
+		}
 	}
 
 	return nil

@@ -65,12 +65,17 @@ func NewDeconzClient(i *integration.Integration) *DeconzClient {
 	}
 
 	metadata := integration.DriverMetadata{
-		DriverId: "deCONZ",
+		// Per the Core-API spec, driver_id must be lower-case letters, digits, "-" and "_" only
+		// (custom-installed drivers are rejected otherwise); "deCONZ" isn't valid.
+		DriverId: "deconz",
 		Developer: integration.Developer{
 			Name: "Sebastian Plattner",
 		},
 		Name: integration.LanguageText{
 			En: "DeCONZ",
+		},
+		Description: integration.LanguageText{
+			En: "Control lights, groups and sensors connected to a deCONZ gateway.",
 		},
 		Version: "0.2.0",
 		SetupDataSchema: integration.SetupDataSchema{
@@ -122,7 +127,9 @@ func (c *DeconzClient) handleSetDriverUserData(user_data map[string]string, conf
 		}
 
 		c.IntegrationDriver.SetupData["apikey"] = apikey
-		c.IntegrationDriver.PersistSetupData()
+		if err := c.IntegrationDriver.PersistSetupData(); err != nil {
+			log.WithError(err).Error("Cannot persist setup data")
+		}
 
 		c.IntegrationDriver.SetDriverSetupState(integration.StopEvent, integration.OkState, "", nil)
 
