@@ -24,6 +24,9 @@ type Client struct {
 	// Handles connect/disconnect calls from RemoteTwo
 	ClientLoopFunc        func()
 	SetDriverUserDataFunc func(map[string]string, bool)
+	// Called when the remote sends abort_driver_setup, e.g. to stop in-progress discovery or
+	// close a connection opened during setup. Optional.
+	AbortSetupFunc func()
 }
 
 func NewClient(i *Integration) *Client {
@@ -48,6 +51,8 @@ func (c *Client) InitClient() {
 	c.IntegrationDriver.SetHandleConnectionFunction(c.HandleConnection)
 	// Pass function to the integration driver that is called when the remote want to send data from required user input page
 	c.IntegrationDriver.SetHandleSetDriverUserDataFunction(c.HandleSetDriverUserDataFunction)
+	// Pass function to the integration driver that is called when the remote aborts driver setup
+	c.IntegrationDriver.SetHandleAbortSetupFunction(c.HandleAbortSetup)
 
 	// Call setup Function if its set
 	if c.InitFunc != nil {
@@ -101,6 +106,15 @@ func (c *Client) HandleSetDriverUserDataFunction(userdata map[string]string, con
 
 }
 
+// Called when the remote sends abort_driver_setup, i.e. the user cancelled the setup flow.
+func (c *Client) HandleAbortSetup() {
+	log.Debug("Handle Abort Setup")
+
+	if c.AbortSetupFunc != nil {
+		c.AbortSetupFunc()
+	}
+}
+
 func (c *Client) Connect() {
 	c.ClientLoop()
 }
@@ -121,7 +135,9 @@ func (c *Client) ClientLoop() {
 	if c.ClientLoopFunc != nil {
 		go c.ClientLoopFunc()
 	} else {
-		log.Fatal("Client loop not implemented")
+		// A driver author's setup mistake (ClientLoopFunc was never set), not a runtime failure -
+		// log it clearly and do nothing, rather than taking down the whole host process for it.
+		log.Error("Cannot connect: ClientLoopFunc is not set on this Client")
 	}
 
 }

@@ -208,8 +208,13 @@ func (i *Integration) handleConnectEvent(e *ConnectEvent) {
 // If the user aborts the setup process, the Remote Two sends this event.
 // Further messages from the integration from the setup process will be ignored afterwards.
 func (i *Integration) handleAbortDriverSetupEvent(e *AbortDriverSetupEvent) {
-	log.Info("Abort Driver Setup")
-	// TODO: implement something?
+	log.WithField("error", e.MsgData.Error).Info("Abort Driver Setup")
+
+	i.SetupState = ErrorState
+
+	if i.handleAbortSetupFunction != nil {
+		i.handleAbortSetupFunction()
+	}
 }
 
 // Emitted when an attribute of an entity changes, e.g. is switched off.
