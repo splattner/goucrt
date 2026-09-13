@@ -315,3 +315,165 @@ func TestHandleEntityCommandRequest_NewEntityTypesDispatchCorrectly(t *testing.T
 	}
 }
 
+// TestHandleBrowseMediaRequest_MatchesSpecExample drives the exact "browse media at root" request
+// from doc/entities/entity_media_player.md's "Home Assistant Integration Example with Spotify Media
+// Player" section through handleRequest, with a BrowseFunc returning that same example's response
+// content, and checks the decoded reply matches it field-for-field.
+func TestHandleBrowseMediaRequest_MatchesSpecExample(t *testing.T) {
+	i := newTestIntegration(t)
+
+	mp := entities.NewMediaPlayerEntity("media_player.spotify", entities.LanguageText{En: "Spotify"}, "", "")
+	var gotReq entities.BrowseMediaRequest
+	mp.SetBrowseFunc(func(req entities.BrowseMediaRequest) (*entities.BrowseMediaResult, error) {
+		gotReq = req
+		count := 9
+		return &entities.BrowseMediaResult{
+			Media: &entities.BrowseMediaItem{
+				Title:      "Media Library",
+				CanBrowse:  true,
+				MediaClass: entities.DirectoryMediaClass,
+				MediaId:    "library",
+				MediaType:  "spotify://library",
+				Items: []entities.BrowseMediaItem{
+					{CanBrowse: true, MediaClass: entities.DirectoryMediaClass, MediaId: "current_user_playlists", MediaType: "spotify://current_user_playlists", Title: "Playlists"},
+				},
+			},
+			Pagination: entities.MediaPagination{Count: &count, Limit: 9, Page: 1},
+		}, nil
+	})
+	i.Entities = append(i.Entities, mp)
+
+	raw, err := json.Marshal(BrowseMediaMessageReq{
+		CommonReq: CommonReq{Kind: "req", Id: 50, Msg: "browse_media"},
+		MsgData:   BrowseMediaData{EntityId: "media_player.spotify"},
+	})
+	if err != nil {
+		t.Fatalf("marshal request: %v", err)
+	}
+
+	resp := awaitOneMessage(i)
+	i.handleRequest(&RequestMessage{CommonReq: CommonReq{Kind: "req", Id: 50, Msg: "browse_media"}}, raw)
+	respRaw := <-resp
+
+	var decoded MediaBrowseMessage
+	if err := json.Unmarshal(respRaw, &decoded); err != nil {
+		t.Fatalf("decode response as MediaBrowseMessage: %v", err)
+	}
+
+	if decoded.Code != 200 || decoded.Msg != "media_browse" || decoded.Id != 50 {
+		t.Fatalf("envelope = {code: %d, msg: %q, req_id: %d}, want {200, media_browse, 50}", decoded.Code, decoded.Msg, decoded.Id)
+	}
+	if decoded.MsgData.Media == nil || decoded.MsgData.Media.Title != "Media Library" || decoded.MsgData.Media.MediaId != "library" {
+		t.Errorf("MsgData.Media = %+v, want the Media Library root item", decoded.MsgData.Media)
+	}
+	if len(decoded.MsgData.Media.Items) != 1 || decoded.MsgData.Media.Items[0].Title != "Playlists" {
+		t.Errorf("MsgData.Media.Items = %+v, want one \"Playlists\" child item", decoded.MsgData.Media.Items)
+	}
+	if decoded.MsgData.Pagination.Count == nil || *decoded.MsgData.Pagination.Count != 9 {
+		t.Errorf("MsgData.Pagination.Count = %v, want 9", decoded.MsgData.Pagination.Count)
+	}
+	if gotReq.MediaId != "" {
+		t.Errorf("BrowseFunc received MediaId = %q, want empty (root browse)", gotReq.MediaId)
+	}
+}
+
+func TestHandleBrowseMediaRequest_UnknownEntityReturnsNotFound(t *testing.T) {
+	i := newTestIntegration(t)
+
+	raw, err := json.Marshal(BrowseMediaMessageReq{
+		CommonReq: CommonReq{Kind: "req", Id: 51, Msg: "browse_media"},
+		MsgData:   BrowseMediaData{EntityId: "does-not-exist"},
+	})
+	if err != nil {
+		t.Fatalf("marshal request: %v", err)
+	}
+
+	resp := awaitOneMessage(i)
+	i.handleRequest(&RequestMessage{CommonReq: CommonReq{Kind: "req", Id: 51, Msg: "browse_media"}}, raw)
+
+	res := decodeResponse(t, <-resp)
+	if res.Code != 404 || res.Msg != "result" {
+		t.Errorf("response = {code: %d, msg: %q}, want {404, result}", res.Code, res.Msg)
+	}
+}
+
+func TestHandleBrowseMediaRequest_NoBrowseFuncReturnsNotFound(t *testing.T) {
+	i := newTestIntegration(t)
+
+	mp := entities.NewMediaPlayerEntity("media-1", entities.LanguageText{En: "Player"}, "", "")
+	i.Entities = append(i.Entities, mp) // BrowseFunc deliberately left unset
+
+	raw, err := json.Marshal(BrowseMediaMessageReq{
+		CommonReq: CommonReq{Kind: "req", Id: 52, Msg: "browse_media"},
+		MsgData:   BrowseMediaData{EntityId: "media-1"},
+	})
+	if err != nil {
+		t.Fatalf("marshal request: %v", err)
+	}
+
+	resp := awaitOneMessage(i)
+	i.handleRequest(&RequestMessage{CommonReq: CommonReq{Kind: "req", Id: 52, Msg: "browse_media"}}, raw)
+
+	res := decodeResponse(t, <-resp)
+	if res.Code != 404 {
+		t.Errorf("response code = %d, want 404 when no BrowseFunc is registered", res.Code)
+	}
+}
+
+// TestHandleSearchMediaRequest_MatchesSpecExample drives the exact request from
+// doc/entities/entity_media_player.md's Media Searching "Example" section through handleRequest.
+func TestHandleSearchMediaRequest_MatchesSpecExample(t *testing.T) {
+	i := newTestIntegration(t)
+
+	mp := entities.NewMediaPlayerEntity("media-1", entities.LanguageText{En: "Player"}, "", "")
+	var gotReq entities.SearchMediaRequest
+	mp.SetSearchFunc(func(req entities.SearchMediaRequest) (*entities.SearchMediaResult, error) {
+		gotReq = req
+		return &entities.SearchMediaResult{
+			Media: []entities.BrowseMediaItem{
+				{MediaId: "track-1", Title: "Live at Glastonbury", Artist: "Tricky", Album: "Pieces", CanPlay: true},
+			},
+			Pagination: entities.MediaPagination{Limit: 5, Page: 1},
+		}, nil
+	})
+	i.Entities = append(i.Entities, mp)
+
+	raw, err := json.Marshal(SearchMediaMessageReq{
+		CommonReq: CommonReq{Kind: "req", Id: 124, Msg: "search_media"},
+		MsgData: SearchMediaData{
+			EntityId: "media-1",
+			Query:    "live",
+			Filter: &entities.MediaSearchFilter{
+				MediaClasses: []entities.MediaClass{entities.ArtistMediaClass, entities.AlbumMediaClass},
+				Artist:       "Tricky",
+				Album:        "Pieces",
+			},
+			Paging: &entities.MediaPaging{Limit: 5, Page: 1},
+		},
+	})
+	if err != nil {
+		t.Fatalf("marshal request: %v", err)
+	}
+
+	resp := awaitOneMessage(i)
+	i.handleRequest(&RequestMessage{CommonReq: CommonReq{Kind: "req", Id: 124, Msg: "search_media"}}, raw)
+	respRaw := <-resp
+
+	var decoded MediaSearchMessage
+	if err := json.Unmarshal(respRaw, &decoded); err != nil {
+		t.Fatalf("decode response as MediaSearchMessage: %v", err)
+	}
+
+	if decoded.Code != 200 || decoded.Msg != "media_search" {
+		t.Fatalf("envelope = {code: %d, msg: %q}, want {200, media_search}", decoded.Code, decoded.Msg)
+	}
+	if len(decoded.MsgData.Media) != 1 || decoded.MsgData.Media[0].Title != "Live at Glastonbury" {
+		t.Errorf("MsgData.Media = %+v, want one \"Live at Glastonbury\" result", decoded.MsgData.Media)
+	}
+	if gotReq.Query != "live" {
+		t.Errorf("SearchFunc received Query = %q, want \"live\"", gotReq.Query)
+	}
+	if gotReq.Filter == nil || gotReq.Filter.Artist != "Tricky" {
+		t.Errorf("SearchFunc received Filter = %+v, want Artist \"Tricky\"", gotReq.Filter)
+	}
+}
