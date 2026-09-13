@@ -6,6 +6,8 @@ type ClimateEntityState EntityState
 type ClimateEntityFeatures EntityFeature
 type ClimateEntityAttributes EntityAttribute
 type ClimateEntityCommand EntityCommand
+type ClimateEntityOption EntityOption
+type ClimateTemperatureUnit string
 
 const (
 	OffClimateEntityState      ClimateEntityState = "OFF"
@@ -44,9 +46,29 @@ const (
 	FanModeClimateEntityAttribute               ClimateEntityAttributes = "fan_mode"
 )
 
+const (
+	// TemperatureUnitClimateEntityOption: ClimateTemperatureUnit, default CelsiusClimateTemperatureUnit.
+	TemperatureUnitClimateEntityOption ClimateEntityOption = "temperature_unit"
+	// TargetTemperatureStepClimateEntityOption: number, minimum 0.1, default 0.5 (CELSIUS) / 1 (FAHRENHEIT).
+	// Step value for the UI when setting the target temperature.
+	TargetTemperatureStepClimateEntityOption ClimateEntityOption = "target_temperature_step"
+	// MaxTemperatureClimateEntityOption: int, default 30 (CELSIUS) / 90 (FAHRENHEIT). Maximum
+	// temperature to show in the UI for the target temperature range.
+	MaxTemperatureClimateEntityOption ClimateEntityOption = "max_temperature"
+	// MinTemperatureClimateEntityOption: int, default 10 (CELSIUS) / 50 (FAHRENHEIT). Minimum
+	// temperature to show in the UI for the target temperature range.
+	MinTemperatureClimateEntityOption ClimateEntityOption = "min_temperature"
+)
+
+const (
+	CelsiusClimateTemperatureUnit    ClimateTemperatureUnit = "CELSIUS"
+	FahrenheitClimateTemperatureUnit ClimateTemperatureUnit = "FAHRENHEIT"
+)
+
 type ClimateEntity struct {
 	BaseEntity
 	Commands map[ClimateEntityCommand]func(ClimateEntity, map[string]interface{}) int `json:"-"`
+	Options  map[ClimateEntityOption]interface{}                                      `json:"options,omitempty"`
 }
 
 func NewClimateEntity(id string, name LanguageText, area string) *ClimateEntity {
@@ -60,8 +82,14 @@ func NewClimateEntity(id string, name LanguageText, area string) *ClimateEntity 
 
 	climateEntity.Commands = make(map[ClimateEntityCommand]func(ClimateEntity, map[string]interface{}) int)
 	climateEntity.Attributes = make(map[string]interface{})
+	climateEntity.Options = make(map[ClimateEntityOption]interface{})
 
 	return &climateEntity
+}
+
+// Add an option to the Climate Entity
+func (e *ClimateEntity) AddOption(option ClimateEntityOption, value interface{}) {
+	e.Options[option] = value
 }
 
 func (e *ClimateEntity) UpdateEntity(newEntity interface{}) error {
@@ -75,6 +103,7 @@ func (e *ClimateEntity) UpdateEntity(newEntity interface{}) error {
 	e.Commands = updated.Commands
 	e.Features = updated.Features
 	e.Attributes = updated.Attributes
+	e.Options = updated.Options
 
 	return nil
 }

@@ -43,7 +43,7 @@ const (
 type RemoteEntity struct {
 	BaseEntity
 	Commands map[RemoteEntityCommand]func(RemoteEntity, map[string]interface{}) int `json:"-"`
-	Options  map[RemoteEntityOption]interface{}                                     `json:"options"`
+	Options  map[RemoteEntityOption]interface{}                                     `json:"options,omitempty"`
 }
 
 func NewRemoteEntity(id string, name LanguageText, area string) *RemoteEntity {
@@ -78,6 +78,7 @@ func (e *RemoteEntity) UpdateEntity(newEntity interface{}) error {
 	e.Commands = updated.Commands
 	e.Features = updated.Features
 	e.Attributes = updated.Attributes
+	e.Options = updated.Options
 
 	return nil
 }

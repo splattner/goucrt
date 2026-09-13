@@ -6,6 +6,7 @@ type SwitchEntityState EntityState
 type SwitchEntityFeatures EntityFeature
 type SwitchEntityAttributes EntityAttribute
 type SwitchEntityCommand EntityCommand
+type SwitchEntityOption EntityOption
 
 const (
 	OnSwitchtEntityState  SwitchEntityState = "ON"
@@ -27,9 +28,16 @@ const (
 	ToggleSwitchEntityCommand SwitchEntityCommand = "toggle"
 )
 
+const (
+	// ReadableSwitchEntityOption: bool, default true. If set to false, the current state of the
+	// switch cannot be read - the switch becomes stateless and the UI may ask the user for it.
+	ReadableSwitchEntityOption SwitchEntityOption = "readable"
+)
+
 type SwitchsEntity struct {
 	BaseEntity
 	Commands map[SwitchEntityCommand]func(SwitchsEntity, map[string]interface{}) int `json:"-"`
+	Options  map[SwitchEntityOption]interface{}                                      `json:"options,omitempty"`
 }
 
 func NewSwitchEntity(id string, name LanguageText, area string) *SwitchsEntity {
@@ -43,8 +51,14 @@ func NewSwitchEntity(id string, name LanguageText, area string) *SwitchsEntity {
 
 	switchEntity.Commands = make(map[SwitchEntityCommand]func(SwitchsEntity, map[string]interface{}) int)
 	switchEntity.Attributes = make(map[string]interface{})
+	switchEntity.Options = make(map[SwitchEntityOption]interface{})
 
 	return &switchEntity
+}
+
+// Add an option to the Switch Entity
+func (e *SwitchsEntity) AddOption(option SwitchEntityOption, value interface{}) {
+	e.Options[option] = value
 }
 
 func (e *SwitchsEntity) UpdateEntity(newEntity interface{}) error {
@@ -58,6 +72,7 @@ func (e *SwitchsEntity) UpdateEntity(newEntity interface{}) error {
 	e.Commands = updated.Commands
 	e.Features = updated.Features
 	e.Attributes = updated.Attributes
+	e.Options = updated.Options
 
 	return nil
 }

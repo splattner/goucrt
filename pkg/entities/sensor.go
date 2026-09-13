@@ -6,6 +6,7 @@ type SensorEntityState EntityState
 type SensorEntityFeatures EntityFeature
 type SensorEntityAttributes EntityAttribute
 type SensorEntityCommand EntityCommand
+type SensorEntityOption EntityOption
 type SensorDeviceClass string
 
 const (
@@ -27,11 +28,31 @@ const (
 	PowerSensorDeviceClass       SensorDeviceClass = "power"
 	TemperatureSensorDeviceClass SensorDeviceClass = "temperature"
 	VoltageSensorDeviceClass     SensorDeviceClass = "voltage"
+	// BinarySensorDeviceClass: a sensor with two states ("on"/"off") in the value attribute. The
+	// specific binary sensor type (e.g. "window", "motion") goes in the unit attribute - unlike the
+	// other device classes, there's no single default unit to set here, so callers set it directly.
+	BinarySensorDeviceClass SensorDeviceClass = "binary"
+)
+
+const (
+	// CustomLabelSensorEntityOption: LanguageText. Label for a custom sensor, if device_class isn't
+	// set, or to override a default device class label.
+	CustomLabelSensorEntityOption SensorEntityOption = "custom_label"
+	// CustomUnitSensorEntityOption: LanguageText. Unit label for a custom sensor, if device_class
+	// isn't set, or to override a default unit.
+	CustomUnitSensorEntityOption SensorEntityOption = "custom_unit"
+	// NativeUnitSensorEntityOption: string. The sensor's native unit of measurement, to perform
+	// automatic conversion. Applies to the temperature device class.
+	NativeUnitSensorEntityOption SensorEntityOption = "native_unit"
+	// DecimalsSensorEntityOption: int, default 0. Number of decimal places to show in the UI for a
+	// numeric value; not applicable to string values.
+	DecimalsSensorEntityOption SensorEntityOption = "decimals"
 )
 
 type SensorEntity struct {
 	BaseEntity
-	DeviceClass SensorDeviceClass `json:"device_class,omitempty"`
+	DeviceClass SensorDeviceClass                  `json:"device_class,omitempty"`
+	Options     map[SensorEntityOption]interface{} `json:"options,omitempty"`
 }
 
 func NewSensorEntity(id string, name LanguageText, area string, deviceClass SensorDeviceClass) *SensorEntity {
@@ -46,6 +67,7 @@ func NewSensorEntity(id string, name LanguageText, area string, deviceClass Sens
 	sensorEntity.Type = "sensor"
 
 	sensorEntity.Attributes = make(map[string]interface{})
+	sensorEntity.Options = make(map[SensorEntityOption]interface{})
 
 	sensorEntity.AddAttribute("state", OnSensorEntityState)
 	sensorEntity.AddAttribute("value", 0)
@@ -81,8 +103,14 @@ func (e *SensorEntity) UpdateEntity(newEntity interface{}) error {
 	e.Name = updated.Name
 	e.Area = updated.Area
 	e.Attributes["unit"] = updated.Attributes["unit"]
+	e.Options = updated.Options
 
 	return nil
+}
+
+// Add an option to the Sensor Entity
+func (e *SensorEntity) AddOption(option SensorEntityOption, value interface{}) {
+	e.Options[option] = value
 }
 
 // A sensor has no commands; HandleCommand always reports the command as unrecognized. Exists only
