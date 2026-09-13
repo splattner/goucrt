@@ -8,10 +8,10 @@ type ClimateEntityCommand EntityCommand
 const (
 	OffClimateEntityState      ClimateEntityState = "OFF"
 	HeatClimateEntityState     ClimateEntityState = "HEAT"
-	CoolClimateEntityState     ClimateEntityState = "Cool"
+	CoolClimateEntityState     ClimateEntityState = "COOL"
 	HeatCoolClimateEntityState ClimateEntityState = "HEAT_COOL"
 	FanClimateEntityState      ClimateEntityState = "FAN"
-	AutoClimateEntityStat      ClimateEntityState = "Auto"
+	AutoClimateEntityState     ClimateEntityState = "AUTO"
 )
 
 const (
@@ -19,7 +19,7 @@ const (
 	HeatClimateEntityFeatures                  ClimateEntityFeatures = "heat"
 	CoolClimateEntityFeatures                  ClimateEntityFeatures = "cool"
 	CurrentTemperatureClimateEntityFeatures    ClimateEntityFeatures = "current_temperature"
-	TargetTemperaturClimateEntityFeatures      ClimateEntityFeatures = "target_temperatur"
+	TargetTemperatureClimateEntityFeatures     ClimateEntityFeatures = "target_temperature"
 	TargetTemperaturRangeClimateEntityFeatures ClimateEntityFeatures = "target_temperature_range"
 	FanClimateEntityFeatures                   ClimateEntityFeatures = "fan"
 )
@@ -39,7 +39,7 @@ const (
 	TargetTemperatureClimateEntityAttribute     ClimateEntityAttributes = "target_temperature"
 	TargetTemperatureHighClimateEntityAttribute ClimateEntityAttributes = "target_temperature_high"
 	TargetTemperatureLowClimateEntityAttribute  ClimateEntityAttributes = "target_temperature_low"
-	FanModeClimateEntityAttribute               ClimateEntityAttributes = " fan_mode"
+	FanModeClimateEntityAttribute               ClimateEntityAttributes = "fan_mode"
 )
 
 type ClimateEntity struct {
@@ -54,7 +54,7 @@ func NewClimateEntity(id string, name LanguageText, area string) *ClimateEntity 
 	climateEntity.Name = name
 	climateEntity.Area = area
 
-	climateEntity.EntityType.Type = "climate"
+	climateEntity.Type = "climate"
 
 	climateEntity.Commands = make(map[ClimateEntityCommand]func(ClimateEntity, map[string]interface{}) int)
 	climateEntity.Attributes = make(map[string]interface{})
@@ -85,7 +85,7 @@ func (e *ClimateEntity) AddFeature(feature ClimateEntityFeatures) {
 		e.AddAttribute(string(StateClimateEntityAttribute), OffClimateEntityState)
 	case CurrentTemperatureClimateEntityFeatures:
 		e.AddAttribute(string(CurrentTemperatureClimateEntityAttribute), 0)
-	case TargetTemperaturClimateEntityFeatures:
+	case TargetTemperatureClimateEntityFeatures:
 		e.AddAttribute(string(TargetTemperatureClimateEntityAttribute), 0)
 	case TargetTemperaturRangeClimateEntityFeatures:
 		e.AddAttribute(string(TargetTemperatureHighClimateEntityAttribute), 0)
