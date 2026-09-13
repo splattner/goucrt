@@ -17,6 +17,8 @@ coverage/
 cmd/ucrt/ucrt
 cmd/ucrt/*.json
 dist/
+custom-driver-dist/
 
 ucrt-amd64
 ucrt-arm64
+cmd/*-driver/*-driver
