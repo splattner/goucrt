@@ -25,7 +25,7 @@ const (
 	VolumeUpDownMediaPlayerEntityFeatures    MediaPlayerEntityFeatures = "volume_up_down"
 	MuteToggleMediaPlayerEntityFeatures      MediaPlayerEntityFeatures = "mute_toggle"
 	MuteMediaPlayerEntityFeatures            MediaPlayerEntityFeatures = "mute"
-	UnmuteMediaPlayerEntityFeatures          MediaPlayerEntityFeatures = "unmtue"
+	UnmuteMediaPlayerEntityFeatures          MediaPlayerEntityFeatures = "unmute"
 	PlayPauseMediaPlayerEntityFeatures       MediaPlayerEntityFeatures = "play_pause"
 	StopMediaPlayerEntityFeatures            MediaPlayerEntityFeatures = "stop"
 	NextMediaPlayerEntityFeatures            MediaPlayerEntityFeatures = "next"
@@ -154,7 +154,7 @@ const (
 
 type MediaPlayerEntity struct {
 	Entity
-	DeviceClass MediaPlayerDeviceClass
+	DeviceClass MediaPlayerDeviceClass                                                           `json:"device_class,omitempty"`
 	Commands    map[MediaPlayerEntityCommand]func(MediaPlayerEntity, map[string]interface{}) int `json:"-"`
 	Options     map[MediaPlayerEntityOption]interface{}                                          `json:"options"`
 }
@@ -167,7 +167,7 @@ func NewMediaPlayerEntity(id string, name LanguageText, area string, deviceClass
 	mediaPlayerEntity.Area = area
 	mediaPlayerEntity.DeviceClass = deviceClass
 
-	mediaPlayerEntity.EntityType.Type = "media_player"
+	mediaPlayerEntity.Type = "media_player"
 
 	mediaPlayerEntity.Commands = make(map[MediaPlayerEntityCommand]func(MediaPlayerEntity, map[string]interface{}) int)
 	mediaPlayerEntity.Attributes = make(map[string]interface{})

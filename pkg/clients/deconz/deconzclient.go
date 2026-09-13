@@ -196,7 +196,7 @@ func (c *DeconzClient) handleNewSensorDeviceDiscovered(device *deconz.DeconzDevi
 
 	var sensor *entities.SensorEntity
 	if device.Sensor.State.Temperature != nil {
-		sensor = entities.NewSensorEntity(fmt.Sprintf("sensor%d", device.GetID()), entities.LanguageText{En: device.GetName()}, "", entities.TemperaturSensorDeviceClass)
+		sensor = entities.NewSensorEntity(fmt.Sprintf("sensor%d", device.GetID()), entities.LanguageText{En: device.GetName()}, "", entities.TemperatureSensorDeviceClass)
 	}
 
 	if device.Sensor.State.Humidity != nil {
@@ -216,7 +216,7 @@ func (c *DeconzClient) handleNewSensorDeviceDiscovered(device *deconz.DeconzDevi
 			attributes := make(map[string]interface{})
 
 			switch sensor.DeviceClass {
-			case entities.TemperaturSensorDeviceClass:
+			case entities.TemperatureSensorDeviceClass:
 				if state.Temperature != nil {
 					attributes["value"] = *state.Temperature / int16(100.0)
 					attributes["unit"] = "°C"

@@ -17,19 +17,19 @@ const (
 )
 
 const (
-	CustomSensorDeviceClass     SensorDeviceClass = "custom"
-	BatterySensorDeviceClass    SensorDeviceClass = "battery"
-	CurrentSensorDeviceClass    SensorDeviceClass = "current"
-	EnegrySensorDeviceClass     SensorDeviceClass = "energy"
-	HumiditySensorDeviceClass   SensorDeviceClass = "humidity"
-	PowerSensorDeviceClass      SensorDeviceClass = "power"
-	TemperaturSensorDeviceClass SensorDeviceClass = "temperatur"
-	VoltageSensorDeviceClass    SensorDeviceClass = "voltage"
+	CustomSensorDeviceClass      SensorDeviceClass = "custom"
+	BatterySensorDeviceClass     SensorDeviceClass = "battery"
+	CurrentSensorDeviceClass     SensorDeviceClass = "current"
+	EnergySensorDeviceClass      SensorDeviceClass = "energy"
+	HumiditySensorDeviceClass    SensorDeviceClass = "humidity"
+	PowerSensorDeviceClass       SensorDeviceClass = "power"
+	TemperatureSensorDeviceClass SensorDeviceClass = "temperature"
+	VoltageSensorDeviceClass     SensorDeviceClass = "voltage"
 )
 
 type SensorEntity struct {
 	Entity
-	DeviceClass SensorDeviceClass
+	DeviceClass SensorDeviceClass `json:"device_class,omitempty"`
 }
 
 func NewSensorEntity(id string, name LanguageText, area string, deviceClass SensorDeviceClass) *SensorEntity {
@@ -41,7 +41,7 @@ func NewSensorEntity(id string, name LanguageText, area string, deviceClass Sens
 
 	sensorEntity.DeviceClass = deviceClass
 
-	sensorEntity.EntityType.Type = "sensor"
+	sensorEntity.Type = "sensor"
 
 	sensorEntity.Attributes = make(map[string]interface{})
 
@@ -54,13 +54,13 @@ func NewSensorEntity(id string, name LanguageText, area string, deviceClass Sens
 		sensorEntity.Attributes["unit"] = "%"
 	case CurrentSensorDeviceClass:
 		sensorEntity.Attributes["unit"] = "A"
-	case EnegrySensorDeviceClass:
+	case EnergySensorDeviceClass:
 		sensorEntity.Attributes["unit"] = "kWh"
 	case HumiditySensorDeviceClass:
 		sensorEntity.Attributes["unit"] = "%"
 	case PowerSensorDeviceClass:
 		sensorEntity.Attributes["unit"] = "W"
-	case TemperaturSensorDeviceClass:
+	case TemperatureSensorDeviceClass:
 		sensorEntity.Attributes["unit"] = "°C"
 	case VoltageSensorDeviceClass:
 		sensorEntity.Attributes["unit"] = "V"

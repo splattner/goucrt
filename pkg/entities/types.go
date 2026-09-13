@@ -21,8 +21,8 @@ type CommonEvent struct {
 }
 
 type LanguageText struct {
-	En string `json:"en"`
-	De string `json:"de"`
+	En string `json:"en,omitempty"`
+	De string `json:"de,omitempty"`
 }
 
 type EntityCommandReq struct {
