@@ -22,46 +22,47 @@ const (
 )
 
 const (
-	OnOffMediaPlayerEntityFeatures           MediaPlayerEntityFeatures = "on_off"
-	ToggleMediaPlayerEntityyFeatures         MediaPlayerEntityFeatures = "toggle"
-	VolumeMediaPlayerEntityyFeatures         MediaPlayerEntityFeatures = "volume"
-	VolumeUpDownMediaPlayerEntityFeatures    MediaPlayerEntityFeatures = "volume_up_down"
-	MuteToggleMediaPlayerEntityFeatures      MediaPlayerEntityFeatures = "mute_toggle"
-	MuteMediaPlayerEntityFeatures            MediaPlayerEntityFeatures = "mute"
-	UnmuteMediaPlayerEntityFeatures          MediaPlayerEntityFeatures = "unmute"
-	PlayPauseMediaPlayerEntityFeatures       MediaPlayerEntityFeatures = "play_pause"
-	StopMediaPlayerEntityFeatures            MediaPlayerEntityFeatures = "stop"
-	NextMediaPlayerEntityFeatures            MediaPlayerEntityFeatures = "next"
-	PreviusMediaPlayerEntityFeatures         MediaPlayerEntityFeatures = "previous"
-	FastForwardMediaPlayerEntityFeatures     MediaPlayerEntityFeatures = "fast_forward"
-	RewindMediaPlayerEntityFeatures          MediaPlayerEntityFeatures = "rewind"
-	RepeatMediaPlayerEntityFeatures          MediaPlayerEntityFeatures = "repeat"
-	ShuffleMediaPlayerEntityFeatures         MediaPlayerEntityFeatures = "shuffle"
-	SeekMediaPlayerEntityFeatures            MediaPlayerEntityFeatures = "seek"
-	MediaDurationMediaPlayerEntityFeatures   MediaPlayerEntityFeatures = "media_duration"
-	MediaPositionMediaPlayerEntityFeatures   MediaPlayerEntityFeatures = "media_position"
-	MediaTitleMediaPlayerEntityFeatures      MediaPlayerEntityFeatures = "media_title"
-	MediaArtistMediaPlayerEntityFeatures     MediaPlayerEntityFeatures = "media_artist"
-	MediaAlbumMediaPlayerEntityFeatures      MediaPlayerEntityFeatures = "media_album"
-	MediaImageUrlMediaPlayerEntityFeatures   MediaPlayerEntityFeatures = "media_image_url"
-	MediaTypeMediaPlayerEntityFeatures       MediaPlayerEntityFeatures = "media_type"
-	DPadMediaPlayerEntityFeatures            MediaPlayerEntityFeatures = "dpad"
-	NumPadMediaPlayerEntityFeatures          MediaPlayerEntityFeatures = "numpad"
-	HomeMediaPlayerEntityFeatures            MediaPlayerEntityFeatures = "home"
-	MenuMediaPlayerEntityFeatures            MediaPlayerEntityFeatures = "menu"
-	ContextMenuPlayerEntityFeatures          MediaPlayerEntityFeatures = "context_menu"
-	GuidePlayerEntityFeatures                MediaPlayerEntityFeatures = "guide"
-	InfoPlayerEntityFeatures                 MediaPlayerEntityFeatures = "info"
-	ColorButtonsMediaPlayerEntityFeatures    MediaPlayerEntityFeatures = "color_buttons"
-	ChannelSwitcherMediaPlayerEntityFeatures MediaPlayerEntityFeatures = "channel_switcher"
-	SelectSourceMediaPlayerEntityFeatures    MediaPlayerEntityFeatures = "select_source"
-	SelectSoundModeMediaPlayerEntityFeatures MediaPlayerEntityFeatures = "select_sound_mode"
-	EjectMediaPlayerEntityFeatures           MediaPlayerEntityFeatures = "eject"
-	OpenCloseMediaPlayerEntityFeatures       MediaPlayerEntityFeatures = "open_close"
-	AudioTrackMediaPlayerEntityFeatures      MediaPlayerEntityFeatures = "audio_track"
-	SubtitleMediaPlayerEntityFeatures        MediaPlayerEntityFeatures = "subtitle"
-	RecordMediaPlayerEntityFeatures          MediaPlayerEntityFeatures = "record"
-	SettingsMediaPlayerEntityFeatures        MediaPlayerEntityFeatures = "settings"
+	OnOffMediaPlayerEntityFeatures                  MediaPlayerEntityFeatures = "on_off"
+	ToggleMediaPlayerEntityyFeatures                MediaPlayerEntityFeatures = "toggle"
+	VolumeMediaPlayerEntityyFeatures                MediaPlayerEntityFeatures = "volume"
+	VolumeUpDownMediaPlayerEntityFeatures           MediaPlayerEntityFeatures = "volume_up_down"
+	MuteToggleMediaPlayerEntityFeatures             MediaPlayerEntityFeatures = "mute_toggle"
+	MuteMediaPlayerEntityFeatures                   MediaPlayerEntityFeatures = "mute"
+	UnmuteMediaPlayerEntityFeatures                 MediaPlayerEntityFeatures = "unmute"
+	PlayPauseMediaPlayerEntityFeatures              MediaPlayerEntityFeatures = "play_pause"
+	StopMediaPlayerEntityFeatures                   MediaPlayerEntityFeatures = "stop"
+	NextMediaPlayerEntityFeatures                   MediaPlayerEntityFeatures = "next"
+	PreviusMediaPlayerEntityFeatures                MediaPlayerEntityFeatures = "previous"
+	FastForwardMediaPlayerEntityFeatures            MediaPlayerEntityFeatures = "fast_forward"
+	RewindMediaPlayerEntityFeatures                 MediaPlayerEntityFeatures = "rewind"
+	RepeatMediaPlayerEntityFeatures                 MediaPlayerEntityFeatures = "repeat"
+	ShuffleMediaPlayerEntityFeatures                MediaPlayerEntityFeatures = "shuffle"
+	SeekMediaPlayerEntityFeatures                   MediaPlayerEntityFeatures = "seek"
+	MediaDurationMediaPlayerEntityFeatures          MediaPlayerEntityFeatures = "media_duration"
+	MediaPositionMediaPlayerEntityFeatures          MediaPlayerEntityFeatures = "media_position"
+	MediaPositionUpdatedAtMediaPlayerEntityFeatures MediaPlayerEntityFeatures = "media_position_updated_at"
+	MediaTitleMediaPlayerEntityFeatures             MediaPlayerEntityFeatures = "media_title"
+	MediaArtistMediaPlayerEntityFeatures            MediaPlayerEntityFeatures = "media_artist"
+	MediaAlbumMediaPlayerEntityFeatures             MediaPlayerEntityFeatures = "media_album"
+	MediaImageUrlMediaPlayerEntityFeatures          MediaPlayerEntityFeatures = "media_image_url"
+	MediaTypeMediaPlayerEntityFeatures              MediaPlayerEntityFeatures = "media_type"
+	DPadMediaPlayerEntityFeatures                   MediaPlayerEntityFeatures = "dpad"
+	NumPadMediaPlayerEntityFeatures                 MediaPlayerEntityFeatures = "numpad"
+	HomeMediaPlayerEntityFeatures                   MediaPlayerEntityFeatures = "home"
+	MenuMediaPlayerEntityFeatures                   MediaPlayerEntityFeatures = "menu"
+	ContextMenuPlayerEntityFeatures                 MediaPlayerEntityFeatures = "context_menu"
+	GuidePlayerEntityFeatures                       MediaPlayerEntityFeatures = "guide"
+	InfoPlayerEntityFeatures                        MediaPlayerEntityFeatures = "info"
+	ColorButtonsMediaPlayerEntityFeatures           MediaPlayerEntityFeatures = "color_buttons"
+	ChannelSwitcherMediaPlayerEntityFeatures        MediaPlayerEntityFeatures = "channel_switcher"
+	SelectSourceMediaPlayerEntityFeatures           MediaPlayerEntityFeatures = "select_source"
+	SelectSoundModeMediaPlayerEntityFeatures        MediaPlayerEntityFeatures = "select_sound_mode"
+	EjectMediaPlayerEntityFeatures                  MediaPlayerEntityFeatures = "eject"
+	OpenCloseMediaPlayerEntityFeatures              MediaPlayerEntityFeatures = "open_close"
+	AudioTrackMediaPlayerEntityFeatures             MediaPlayerEntityFeatures = "audio_track"
+	SubtitleMediaPlayerEntityFeatures               MediaPlayerEntityFeatures = "subtitle"
+	RecordMediaPlayerEntityFeatures                 MediaPlayerEntityFeatures = "record"
+	SettingsMediaPlayerEntityFeatures               MediaPlayerEntityFeatures = "settings"
 )
 
 const (
@@ -70,17 +71,20 @@ const (
 	MutedMediaPlayeEntityAttribute          MediaPlayerEntityAttributes = "muted"
 	MediaDurationMediaPlayerEntityAttribute MediaPlayerEntityAttributes = "media_duration"
 	MediaPositionMediaPlayerEntityAttribute MediaPlayerEntityAttributes = "media_position"
-	MediaTypeMediaPlayerEntityAttribute     MediaPlayerEntityAttributes = "media_type"
-	MediaImageUrlMediaPlayerEntityAttribute MediaPlayerEntityAttributes = "media_image_url"
-	MediaTitleMediaPlayerEntityAttribute    MediaPlayerEntityAttributes = "media_title"
-	MediaArtistMediaPlayerEntityAttribute   MediaPlayerEntityAttributes = "media_artist"
-	MediaAlbumMediaPlayerEntityAttribute    MediaPlayerEntityAttributes = "media_album"
-	RepeatMediaPlayerEntityAttribute        MediaPlayerEntityAttributes = "repeat"
-	ShuffleMediaPlayerEntityAttribute       MediaPlayerEntityAttributes = "shuffle"
-	SourceMediaPlayerEntityAttribute        MediaPlayerEntityAttributes = "source"
-	SourceListMediaPlayerEntityAttribute    MediaPlayerEntityAttributes = "source_list"
-	SoundModeMediaPlayerEntityAttribute     MediaPlayerEntityAttributes = "sound_mode"
-	SoundModeListMediaPlayerEntityAttribute MediaPlayerEntityAttributes = "sound_mode_list"
+	// MediaPositionUpdatedAtMediaPlayerEntityAttribute: string, ISO 8601 datetime. Optional
+	// timestamp when media_position was last updated. Requires integration support.
+	MediaPositionUpdatedAtMediaPlayerEntityAttribute MediaPlayerEntityAttributes = "media_position_updated_at"
+	MediaTypeMediaPlayerEntityAttribute              MediaPlayerEntityAttributes = "media_type"
+	MediaImageUrlMediaPlayerEntityAttribute          MediaPlayerEntityAttributes = "media_image_url"
+	MediaTitleMediaPlayerEntityAttribute             MediaPlayerEntityAttributes = "media_title"
+	MediaArtistMediaPlayerEntityAttribute            MediaPlayerEntityAttributes = "media_artist"
+	MediaAlbumMediaPlayerEntityAttribute             MediaPlayerEntityAttributes = "media_album"
+	RepeatMediaPlayerEntityAttribute                 MediaPlayerEntityAttributes = "repeat"
+	ShuffleMediaPlayerEntityAttribute                MediaPlayerEntityAttributes = "shuffle"
+	SourceMediaPlayerEntityAttribute                 MediaPlayerEntityAttributes = "source"
+	SourceListMediaPlayerEntityAttribute             MediaPlayerEntityAttributes = "source_list"
+	SoundModeMediaPlayerEntityAttribute              MediaPlayerEntityAttributes = "sound_mode"
+	SoundModeListMediaPlayerEntityAttribute          MediaPlayerEntityAttributes = "sound_mode_list"
 )
 
 const (
@@ -159,7 +163,7 @@ type MediaPlayerEntity struct {
 	BaseEntity
 	DeviceClass MediaPlayerDeviceClass                                                           `json:"device_class,omitempty"`
 	Commands    map[MediaPlayerEntityCommand]func(MediaPlayerEntity, map[string]interface{}) int `json:"-"`
-	Options     map[MediaPlayerEntityOption]interface{}                                          `json:"options"`
+	Options     map[MediaPlayerEntityOption]interface{}                                          `json:"options,omitempty"`
 }
 
 func NewMediaPlayerEntity(id string, name LanguageText, area string, deviceClass MediaPlayerDeviceClass) *MediaPlayerEntity {
@@ -191,6 +195,7 @@ func (e *MediaPlayerEntity) UpdateEntity(newEntity interface{}) error {
 	e.Commands = updated.Commands
 	e.Features = updated.Features
 	e.Attributes = updated.Attributes
+	e.Options = updated.Options
 
 	return nil
 }
@@ -241,6 +246,9 @@ func (e *MediaPlayerEntity) AddFeature(feature MediaPlayerEntityFeatures) {
 
 	case MediaPositionMediaPlayerEntityFeatures:
 		e.AddAttribute(string(MediaPositionMediaPlayerEntityAttribute), 0)
+
+	case MediaPositionUpdatedAtMediaPlayerEntityFeatures:
+		e.AddAttribute(string(MediaPositionUpdatedAtMediaPlayerEntityAttribute), "")
 
 	case FastForwardMediaPlayerEntityFeatures:
 		e.AddAttribute(string(MediaPositionMediaPlayerEntityAttribute), 0)

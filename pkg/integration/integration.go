@@ -42,6 +42,7 @@ type Integration struct {
 	handleSetupFunction             func(SetupData)
 	handleConnectionFunction        func(*ConnectEvent)
 	handleSetDriverUserDataFunction func(map[string]string, bool)
+	handleAbortSetupFunction        func()
 
 	SetupState DriverSetupState
 
@@ -83,8 +84,7 @@ func (i *Integration) Run() error {
 	}()
 
 	if i.Metadata == nil {
-		log.Panic("Metadata not set, cannot start Remote Two integration")
-		return fmt.Errorf("Metadata not set")
+		return fmt.Errorf("metadata not set, cannot start Remote Two integration")
 	}
 
 	http.HandleFunc(i.Config.WebsocketPath, i.wsEndpoint)
@@ -96,14 +96,16 @@ func (i *Integration) Run() error {
 
 	// Register the integration
 	if i.Config.EnableRegistration && i.Config.RegistrationPin != "" {
-		go i.registerIntegration()
+		go func() {
+			if err := i.registerIntegration(); err != nil {
+				log.WithError(err).Error("Cannot register integration with the Remote")
+			}
+		}()
 	}
 
 	log.Debug("Listen for new Websocket connection")
 
-	log.Fatal(http.ListenAndServe(i.listenAddress, nil))
-
-	return nil
+	return http.ListenAndServe(i.listenAddress, nil)
 
 }
 
@@ -122,6 +124,14 @@ func (i *Integration) SetHandleSetDriverUserDataFunction(f func(map[string]strin
 	i.handleSetDriverUserDataFunction = f
 }
 
+// Set the function which is called when the remote sends abort_driver_setup, i.e. the user
+// cancelled the setup flow. Use it to stop any in-progress setup work (discovery, open
+// connections, etc.) - per the spec, further messages from the driver about this setup attempt
+// are ignored by the remote after this point.
+func (i *Integration) SetHandleAbortSetupFunction(f func()) {
+	i.handleAbortSetupFunction = f
+}
+
 // Set and then Send the Driver Setup State to Remote two
 func (i *Integration) SetDriverSetupState(event_Type DriverSetupEventType, state DriverSetupState, err DriverSetupError, requireUserAction *RequireUserAction) {
 
@@ -135,6 +145,8 @@ func (i *Integration) SetDriverSetupState(event_Type DriverSetupEventType, state
 	if requireUserAction != nil {
 		state = WaitUserActionState
 	}
+
+	i.SetupState = state
 
 	i.sendDriverSetupChangeEvent(event_Type, state, err, requireUserAction)
 

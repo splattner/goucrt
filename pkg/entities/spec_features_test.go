@@ -76,6 +76,7 @@ func TestFeaturesAndDeviceClassMatchSpec(t *testing.T) {
 				string(SeekMediaPlayerEntityFeatures),
 				string(MediaDurationMediaPlayerEntityFeatures),
 				string(MediaPositionMediaPlayerEntityFeatures),
+				string(MediaPositionUpdatedAtMediaPlayerEntityFeatures),
 				string(MediaTitleMediaPlayerEntityFeatures),
 				string(MediaArtistMediaPlayerEntityFeatures),
 				string(MediaAlbumMediaPlayerEntityFeatures),
@@ -120,6 +121,11 @@ func TestFeaturesAndDeviceClassMatchSpec(t *testing.T) {
 		},
 		{
 			entityType: "sensor",
+			// BinarySensorDeviceClass ("binary") is deliberately not checked here: like
+			// media_player's device_class above, the vendored YAML's sensor device_class enum
+			// doesn't include it, while doc/entities/entity_sensor.md's "Device Classes" section
+			// (and its dedicated "Binary Device Class" subsection) documents it as a real,
+			// finalized value. The schema lags its own prose here too.
 			deviceClass: []string{
 				string(CustomSensorDeviceClass),
 				string(BatterySensorDeviceClass),

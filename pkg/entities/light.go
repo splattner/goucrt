@@ -10,6 +10,7 @@ type LightEntityState EntityState
 type LightEntityFeatures EntityFeature
 type LightEntityAttributes EntityAttribute
 type LightEntityCommand EntityCommand
+type LightEntityOption EntityOption
 
 const (
 	OnLightEntityState          LightEntityState = "ON"
@@ -40,9 +41,16 @@ const (
 	ColorTemperatureLightEntityAttribute LightEntityAttributes = "color_temperature"
 )
 
+const (
+	// ColorTemperatureStepsLightEntityOption: int, 2..100, default 100. Number of color
+	// temperature steps the light source supports; some lamps only support a few fixed modes.
+	ColorTemperatureStepsLightEntityOption LightEntityOption = "color_temperature_steps"
+)
+
 type LightEntity struct {
 	BaseEntity
 	Commands map[LightEntityCommand]func(LightEntity, map[string]interface{}) int `json:"-"`
+	Options  map[LightEntityOption]interface{}                                    `json:"options,omitempty"`
 }
 
 func NewLightEntity(id string, name LanguageText, area string) *LightEntity {
@@ -61,8 +69,14 @@ func NewLightEntity(id string, name LanguageText, area string) *LightEntity {
 
 	lightEntity.Commands = make(map[LightEntityCommand]func(LightEntity, map[string]interface{}) int)
 	lightEntity.Attributes = make(map[string]interface{})
+	lightEntity.Options = make(map[LightEntityOption]interface{})
 
 	return &lightEntity
+}
+
+// Add an option to the Light Entity
+func (e *LightEntity) AddOption(option LightEntityOption, value interface{}) {
+	e.Options[option] = value
 }
 
 func (e *LightEntity) UpdateEntity(newEntity interface{}) error {
@@ -76,6 +90,7 @@ func (e *LightEntity) UpdateEntity(newEntity interface{}) error {
 	e.Commands = updated.Commands
 	e.Features = updated.Features
 	e.Attributes = updated.Attributes
+	e.Options = updated.Options
 
 	return nil
 }

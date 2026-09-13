@@ -32,50 +32,54 @@ type DriverRegistration struct {
 
 // Register the integration with Remote Two
 // TODO: make this more robust and nicer
-func (i *Integration) registerIntegration() {
+func (i *Integration) registerIntegration() error {
 
 	// Use configured IP for registration instead of Remote Two discovery
 	if i.Config.RegistrationPin != "" && i.Config.RemoteTwoPort > 0 {
-		i.registerWithRemoteTwo(i.Config.RemoteTwoHost, i.Config.RemoteTwoPort)
-	} else {
-
-		entries := make(chan *zeroconf.ServiceEntry)
-
-		go func(results <-chan *zeroconf.ServiceEntry) {
-			for entry := range results {
-
-				log.WithField("MDNS Record", entry).Debug("Found Remote Two instance")
-
-				if len(entry.AddrIPv4) == 0 {
-					// TODO: IPv6?
-					log.Debug("No IPv4 address available. Not using this record")
-					continue
-				}
-
-				i.registerWithRemoteTwo(entry.AddrIPv4[0].String(), entry.Port)
-
-			}
-		}(entries)
-
-		resolver, err := zeroconf.NewResolver(nil)
-		if err != nil {
-			log.Fatalln("Failed to initialize resolver:", err.Error())
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
-
-		defer cancel()
-
-		err = resolver.Browse(ctx, "_uc-remote._tcp", "local.", entries)
-		if err != nil {
-			log.Fatalln("Failed to browse:", err.Error())
-		}
-
-		<-ctx.Done()
+		return i.registerWithRemoteTwo(i.Config.RemoteTwoHost, i.Config.RemoteTwoPort)
 	}
+
+	entries := make(chan *zeroconf.ServiceEntry)
+
+	go func(results <-chan *zeroconf.ServiceEntry) {
+		for entry := range results {
+
+			log.WithField("MDNS Record", entry).Debug("Found Remote Two instance")
+
+			if len(entry.AddrIPv4) == 0 {
+				// TODO: IPv6?
+				log.Debug("No IPv4 address available. Not using this record")
+				continue
+			}
+
+			// Each discovered remote registers independently; one failing shouldn't stop the
+			// driver from registering with any others found during this discovery window.
+			if err := i.registerWithRemoteTwo(entry.AddrIPv4[0].String(), entry.Port); err != nil {
+				log.WithError(err).Error("Cannot register with discovered Remote Two instance")
+			}
+
+		}
+	}(entries)
+
+	resolver, err := zeroconf.NewResolver(nil)
+	if err != nil {
+		return fmt.Errorf("failed to initialize mDNS resolver: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+
+	defer cancel()
+
+	if err := resolver.Browse(ctx, "_uc-remote._tcp", "local.", entries); err != nil {
+		return fmt.Errorf("failed to browse for Remote Two instances: %w", err)
+	}
+
+	<-ctx.Done()
+
+	return nil
 }
 
-func (i *Integration) registerWithRemoteTwo(remoteTwoIP string, remoteTwoPort int) {
+func (i *Integration) registerWithRemoteTwo(remoteTwoIP string, remoteTwoPort int) error {
 
 	myip := GetLocalIP()
 	driverURL := "ws://" + net.JoinHostPort(myip, fmt.Sprint(i.Config.ListenPort)) + i.Config.WebsocketPath
@@ -101,11 +105,11 @@ func (i *Integration) registerWithRemoteTwo(remoteTwoIP string, remoteTwoPort in
 
 	data, err := json.Marshal(driverRegistration)
 	if err != nil {
-		log.WithError(err).Error("Cannot unmarshal driverRegistration")
+		return fmt.Errorf("cannot marshal driverRegistration: %w", err)
 	}
 	req, err := http.NewRequest("POST", remoteTwoURL+"/api/intg/drivers", bytes.NewReader(data))
 	if err != nil {
-		log.WithError(err).Fatal("impossible to build request")
+		return fmt.Errorf("cannot build registration request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
@@ -117,7 +121,7 @@ func (i *Integration) registerWithRemoteTwo(remoteTwoIP string, remoteTwoPort in
 	client := http.Client{Timeout: 10 * time.Second}
 	res, err := client.Do(req)
 	if err != nil {
-		log.WithError(err).Fatal("Failed to send the request")
+		return fmt.Errorf("failed to send registration request: %w", err)
 	}
 
 	defer res.Body.Close()
@@ -125,7 +129,7 @@ func (i *Integration) registerWithRemoteTwo(remoteTwoIP string, remoteTwoPort in
 	statusCode := res.StatusCode
 	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatalf("impossible to read all body of response: %s", err)
+		return fmt.Errorf("cannot read registration response body: %w", err)
 	}
 
 	log.WithFields(log.Fields{
@@ -137,12 +141,14 @@ func (i *Integration) registerWithRemoteTwo(remoteTwoIP string, remoteTwoPort in
 
 	case http.StatusCreated:
 		if err := json.Unmarshal(resBody, &driverRegistration); err != nil {
-			log.WithError(err).Error("Cannot unmarshall driverRegistration")
+			return fmt.Errorf("cannot unmarshal driverRegistration response: %w", err)
 		}
 
 		i.SetupData["driver_id"] = driverRegistration.DriverId
 		i.PersistSetupData()
 	}
+
+	return nil
 }
 
 // GetLocalIP returns the non loopback local IP of the host
