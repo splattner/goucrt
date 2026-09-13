@@ -78,7 +78,7 @@ func (i *Integration) registerIntegration() {
 func (i *Integration) registerWithRemoteTwo(remoteTwoIP string, remoteTwoPort int) {
 
 	myip := GetLocalIP()
-	driverURL := "ws://" + myip + i.listenAddress + i.Config.WebsocketPath
+	driverURL := "ws://" + net.JoinHostPort(myip, fmt.Sprint(i.Config.ListenPort)) + i.Config.WebsocketPath
 	remoteTwoURL := "http://" + remoteTwoIP + ":" + fmt.Sprint(remoteTwoPort)
 
 	driverRegistration := DriverRegistration{
