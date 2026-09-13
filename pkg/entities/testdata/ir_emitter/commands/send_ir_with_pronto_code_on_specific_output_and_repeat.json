@@ -1,0 +1,15 @@
+{
+  "id": 123,
+  "kind": "req",
+  "msg": "entity_command",
+  "msg_data": {
+    "cmd_id": "send_ir",
+    "entity_id": "emitter-2",
+    "entity_type": "ir_emitter",
+    "params": {
+      "code": "0000 006D 0004 0002 0155 00AB 0015 0015 0015 0015 0015 0015 0155 0055 0015 0E4C",
+      "port": "port1",
+      "repeat": 3
+    }
+  }
+}

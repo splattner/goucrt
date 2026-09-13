@@ -1,0 +1,13 @@
+{
+  "id": 124,
+  "kind": "req",
+  "msg": "entity_command",
+  "msg_data": {
+    "cmd_id": "select_option",
+    "entity_id": "select-1",
+    "entity_type": "select",
+    "params": {
+      "option": "foobar"
+    }
+  }
+}

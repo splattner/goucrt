@@ -99,6 +99,8 @@ func TestFeaturesAndDeviceClassMatchSpec(t *testing.T) {
 				string(SubtitleMediaPlayerEntityFeatures),
 				string(RecordMediaPlayerEntityFeatures),
 				string(SettingsMediaPlayerEntityFeatures),
+				string(BrowseMediaMediaPlayerEntityFeatures),
+				string(SearchMediaMediaPlayerEntityFeatures),
 			},
 			// media_player's device_class is deliberately not checked here: the vendored YAML's
 			// media_player schema has no device_class property at all (confirmed against the
@@ -143,6 +145,16 @@ func TestFeaturesAndDeviceClassMatchSpec(t *testing.T) {
 				string(SendCmdRemoteEntityFeatures),
 				string(OnOffRemoteEntityFeatures),
 				string(ToggleRemoteEntityFeatures),
+			},
+		},
+		{
+			// select has no features and no device_class per the spec.
+			entityType: "select",
+		},
+		{
+			entityType: "ir_emitter",
+			features: []string{
+				string(SendIrEmitterEntityFeatures),
 			},
 		},
 	}

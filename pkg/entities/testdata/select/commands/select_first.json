@@ -1,0 +1,10 @@
+{
+  "id": 124,
+  "kind": "req",
+  "msg": "entity_command",
+  "msg_data": {
+    "cmd_id": "select_first",
+    "entity_id": "select-1",
+    "entity_type": "select"
+  }
+}

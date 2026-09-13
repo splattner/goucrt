@@ -96,6 +96,22 @@ func (i *Integration) handleRequest(req *RequestMessage, p []byte) {
 
 		res = i.handleEntityCommandRequest(&entityCommandReq)
 
+	case "browse_media":
+		browseMediaReq := BrowseMediaMessageReq{}
+		if err := json.Unmarshal(p, &browseMediaReq); err != nil {
+			log.WithError(err).Error("Cannot unmarshall browseMediaReq")
+		}
+
+		res = i.handleBrowseMediaRequest(&browseMediaReq)
+
+	case "search_media":
+		searchMediaReq := SearchMediaMessageReq{}
+		if err := json.Unmarshal(p, &searchMediaReq); err != nil {
+			log.WithError(err).Error("Cannot unmarshall searchMediaReq")
+		}
+
+		res = i.handleSearchMediaRequest(&searchMediaReq)
+
 	case "setup_driver":
 		setupDriverReq := SetupDriverMessageReq{}
 		if err := json.Unmarshal(p, &setupDriverReq); err != nil {
@@ -114,10 +130,7 @@ func (i *Integration) handleRequest(req *RequestMessage, p []byte) {
 
 	default:
 		log.WithField("Message", req.Msg).Warn("Unknown request message, replying with result code 404")
-		res = ResponseMessage{
-			CommonResp{Kind: "resp", Id: req.Id, Msg: "result", Code: 404},
-			ErrorData{Code: "NOT_FOUND", Message: fmt.Sprintf("message not known: %s", req.Msg)},
-		}
+		res = i.resultErrorMessage(req.Id, 404, ErrorData{Code: "NOT_FOUND", Message: fmt.Sprintf("message not known: %s", req.Msg)})
 	}
 
 	if res != nil {
@@ -383,6 +396,103 @@ func (i *Integration) handleEntityCommandRequest(req *EntityCommandReq) *EntityC
 
 	return &res
 
+}
+
+// Called to browse the contents of a media_player entity's media library (or its root, if no
+// media_id is given). Requires a registered BrowseFunc on the target entity (see
+// entities.MediaPlayerEntity.SetBrowseFunc); otherwise produces a "message not known"-style result
+// error.
+func (i *Integration) handleBrowseMediaRequest(req *BrowseMediaMessageReq) interface{} {
+
+	log.WithFields(log.Fields{
+		"entity_id":  req.MsgData.EntityId,
+		"media_id":   req.MsgData.MediaId,
+		"media_type": req.MsgData.MediaType,
+	}).Debug("Browse Media")
+
+	mp, resultErr := i.mediaPlayerForBrowsing(req.MsgData.EntityId)
+	if resultErr != nil {
+		return i.resultErrorMessage(req.Id, 404, *resultErr)
+	}
+	if mp.BrowseFunc == nil {
+		return i.resultErrorMessage(req.Id, 404, ErrorData{Code: "NOT_FOUND", Message: "entity has no registered browse handler"})
+	}
+
+	result, err := mp.BrowseFunc(entities.BrowseMediaRequest{
+		MediaId:   req.MsgData.MediaId,
+		MediaType: req.MsgData.MediaType,
+		StableIds: req.MsgData.StableIds,
+		Paging:    req.MsgData.Paging,
+	})
+	if err != nil {
+		log.WithError(err).Error("BrowseFunc failed")
+		return i.resultErrorMessage(req.Id, 500, ErrorData{Code: "OTHER", Message: err.Error()})
+	}
+
+	return MediaBrowseMessage{
+		CommonResp{Kind: "resp", Id: req.Id, Msg: "media_browse", Code: 200},
+		MediaBrowseResponseData{Media: result.Media, Pagination: result.Pagination},
+	}
+}
+
+// Called to search a media_player entity's active media system. Requires a registered SearchFunc
+// on the target entity (see entities.MediaPlayerEntity.SetSearchFunc); otherwise produces a
+// "message not known"-style result error.
+func (i *Integration) handleSearchMediaRequest(req *SearchMediaMessageReq) interface{} {
+
+	log.WithFields(log.Fields{
+		"entity_id": req.MsgData.EntityId,
+		"query":     req.MsgData.Query,
+	}).Debug("Search Media")
+
+	mp, resultErr := i.mediaPlayerForBrowsing(req.MsgData.EntityId)
+	if resultErr != nil {
+		return i.resultErrorMessage(req.Id, 404, *resultErr)
+	}
+	if mp.SearchFunc == nil {
+		return i.resultErrorMessage(req.Id, 404, ErrorData{Code: "NOT_FOUND", Message: "entity has no registered search handler"})
+	}
+
+	result, err := mp.SearchFunc(entities.SearchMediaRequest{
+		Query:     req.MsgData.Query,
+		MediaId:   req.MsgData.MediaId,
+		MediaType: req.MsgData.MediaType,
+		StableIds: req.MsgData.StableIds,
+		Filter:    req.MsgData.Filter,
+		Paging:    req.MsgData.Paging,
+	})
+	if err != nil {
+		log.WithError(err).Error("SearchFunc failed")
+		return i.resultErrorMessage(req.Id, 500, ErrorData{Code: "OTHER", Message: err.Error()})
+	}
+
+	return MediaSearchMessage{
+		CommonResp{Kind: "resp", Id: req.Id, Msg: "media_search", Code: 200},
+		MediaSearchResponseData{Media: result.Media, Pagination: result.Pagination},
+	}
+}
+
+// mediaPlayerForBrowsing resolves entityId and asserts it's a media_player entity, since browsing
+// and searching only make sense for that entity type. Returns a non-nil error if the entity
+// doesn't exist or isn't a media_player.
+func (i *Integration) mediaPlayerForBrowsing(entityId string) (*entities.MediaPlayerEntity, *ErrorData) {
+	entity, _, err := i.GetEntityById(entityId)
+	if err != nil {
+		return nil, &ErrorData{Code: "NOT_FOUND", Message: "entity not found"}
+	}
+
+	mp, ok := entity.(*entities.MediaPlayerEntity)
+	if !ok {
+		return nil, &ErrorData{Code: "NOT_FOUND", Message: "entity is not a media_player"}
+	}
+
+	return mp, nil
+}
+
+// resultErrorMessage builds a "result" response carrying an ErrorData payload, the shape used
+// throughout this package for a failed request (see handleRequest's default case).
+func (i *Integration) resultErrorMessage(reqId int, code int, errData ErrorData) ResponseMessage {
+	return ResponseMessage{CommonResp{Kind: "resp", Id: reqId, Msg: "result", Code: code}, errData}
 }
 
 func (i *Integration) handleSetDriverUserDataRequest(req *SetDriverUserDataRequest) *ResponseMessage {

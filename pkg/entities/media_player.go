@@ -63,6 +63,12 @@ const (
 	SubtitleMediaPlayerEntityFeatures               MediaPlayerEntityFeatures = "subtitle"
 	RecordMediaPlayerEntityFeatures                 MediaPlayerEntityFeatures = "record"
 	SettingsMediaPlayerEntityFeatures               MediaPlayerEntityFeatures = "settings"
+	// BrowseMediaMediaPlayerEntityFeatures: the entity supports the browse_media request. See
+	// SetBrowseFunc.
+	BrowseMediaMediaPlayerEntityFeatures MediaPlayerEntityFeatures = "browse_media"
+	// SearchMediaMediaPlayerEntityFeatures: the entity supports the search_media request. See
+	// SetSearchFunc.
+	SearchMediaMediaPlayerEntityFeatures MediaPlayerEntityFeatures = "search_media"
 )
 
 const (
@@ -164,6 +170,11 @@ type MediaPlayerEntity struct {
 	DeviceClass MediaPlayerDeviceClass                                                           `json:"device_class,omitempty"`
 	Commands    map[MediaPlayerEntityCommand]func(MediaPlayerEntity, map[string]interface{}) int `json:"-"`
 	Options     map[MediaPlayerEntityOption]interface{}                                          `json:"options,omitempty"`
+	// BrowseFunc/SearchFunc handle browse_media/search_media requests for this entity. Set via
+	// SetBrowseFunc/SetSearchFunc; nil means unsupported, even if the corresponding feature is
+	// declared.
+	BrowseFunc func(BrowseMediaRequest) (*BrowseMediaResult, error) `json:"-"`
+	SearchFunc func(SearchMediaRequest) (*SearchMediaResult, error) `json:"-"`
 }
 
 func NewMediaPlayerEntity(id string, name LanguageText, area string, deviceClass MediaPlayerDeviceClass) *MediaPlayerEntity {
@@ -196,6 +207,8 @@ func (e *MediaPlayerEntity) UpdateEntity(newEntity interface{}) error {
 	e.Features = updated.Features
 	e.Attributes = updated.Attributes
 	e.Options = updated.Options
+	e.BrowseFunc = updated.BrowseFunc
+	e.SearchFunc = updated.SearchFunc
 
 	return nil
 }

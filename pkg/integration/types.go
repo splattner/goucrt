@@ -197,6 +197,54 @@ type EntityCommandData struct {
 	Params   map[string]interface{} `json:"params"`
 }
 
+type BrowseMediaMessageReq struct {
+	CommonReq
+	MsgData BrowseMediaData `json:"msg_data"`
+}
+
+type BrowseMediaData struct {
+	EntityId  string                    `json:"entity_id"`
+	MediaId   string                    `json:"media_id,omitempty"`
+	MediaType entities.MediaContentType `json:"media_type,omitempty"`
+	StableIds bool                      `json:"stable_ids,omitempty"`
+	Paging    *entities.MediaPaging     `json:"paging,omitempty"`
+}
+
+type SearchMediaMessageReq struct {
+	CommonReq
+	MsgData SearchMediaData `json:"msg_data"`
+}
+
+type SearchMediaData struct {
+	EntityId  string                      `json:"entity_id"`
+	Query     string                      `json:"query"`
+	MediaId   string                      `json:"media_id,omitempty"`
+	MediaType entities.MediaContentType   `json:"media_type,omitempty"`
+	StableIds bool                        `json:"stable_ids,omitempty"`
+	Filter    *entities.MediaSearchFilter `json:"filter,omitempty"`
+	Paging    *entities.MediaPaging       `json:"paging,omitempty"`
+}
+
+type MediaBrowseMessage struct {
+	CommonResp
+	MsgData MediaBrowseResponseData `json:"msg_data"`
+}
+
+type MediaBrowseResponseData struct {
+	Media      *entities.BrowseMediaItem `json:"media,omitempty"`
+	Pagination entities.MediaPagination  `json:"pagination"`
+}
+
+type MediaSearchMessage struct {
+	CommonResp
+	MsgData MediaSearchResponseData `json:"msg_data"`
+}
+
+type MediaSearchResponseData struct {
+	Media      []entities.BrowseMediaItem `json:"media"`
+	Pagination entities.MediaPagination   `json:"pagination"`
+}
+
 type SetupDriverMessageReq struct {
 	CommonReq
 	MsgData SetupDataValue `json:"msg_data"`

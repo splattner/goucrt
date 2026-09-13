@@ -1,0 +1,12 @@
+{
+  "cat": "ENTITY",
+  "kind": "event",
+  "msg": "entity_change",
+  "msg_data": {
+    "attributes": {
+      "current_option": "Foobar"
+    },
+    "entity_id": "select-1",
+    "entity_type": "select"
+  }
+}

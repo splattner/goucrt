@@ -38,6 +38,8 @@ var implementedEntities = map[string]string{
 	"climate":      "climate",
 	"sensor":       "sensor",
 	"remote":       "remote",
+	"select":       "select",
+	"ir_emitter":   "ir_emitter",
 }
 
 var (
