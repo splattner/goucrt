@@ -181,12 +181,12 @@ func (i *Integration) handleGetAvailableEntitiesRequest(req *AvailableEntityMess
 	var res interface{}
 
 	for _, e := range i.Entities {
-		if req.MsgData.Filter.EntityType.Type == "" || i.getEntityType(e).Type == req.MsgData.Filter.EntityType.Type {
+		if req.MsgData.Filter.Type == "" || i.getEntityType(e).Type == req.MsgData.Filter.Type {
 			entities = append(entities, e)
 		}
 	}
 
-	if req.MsgData.Filter.EntityType.Type == "" {
+	if req.MsgData.Filter.Type == "" {
 		res = AvailableEntityNoFilterMessage{
 			CommonResp{Kind: "resp", Id: req.Id, Msg: "available_entities", Code: 200},
 			AvailableEntityNoFilterData{
@@ -257,7 +257,7 @@ func (i *Integration) handleSubscribeEventRequest(req *SubscribeEventMessageReq)
 				log.WithField("entity_id", entity_id).Info("RT subscribed to entity")
 				i.SubscribedEntities = append(i.SubscribedEntities, entity_id)
 
-				if entity, _, err := i.GetEntityById(entity_id); err != nil {
+				if entity, _, err := i.GetEntityById(entity_id); err == nil {
 					i.callSubscribeCallback(entity)
 				}
 			}
@@ -286,7 +286,7 @@ func (i *Integration) handleUnsubscribeEventsRequest(req *UnubscribeEventMessage
 			i.SubscribedEntities[len(i.SubscribedEntities)-1] = ""                       // Erase last element (write zero value).
 			i.SubscribedEntities = i.SubscribedEntities[:len(i.SubscribedEntities)-1]    // Truncate slice.
 
-			if entity, _, err := i.GetEntityById(e); err != nil {
+			if entity, _, err := i.GetEntityById(e); err == nil {
 				i.callUnubscribeCallback(entity)
 			}
 		}
