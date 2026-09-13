@@ -111,4 +111,4 @@ $(BIN_FILENAME_ARM64):
 	$(go_build_arm64)
 
 $(golangci_bin): | $(go_bin)
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$(go_bin)" $(golangci_version)
+	GOBIN="$(go_bin)" go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(golangci_version)
