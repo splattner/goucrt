@@ -2,6 +2,7 @@ package integration
 
 import (
 	"encoding/json"
+	"fmt"
 
 	log "github.com/sirupsen/logrus"
 
@@ -23,8 +24,15 @@ func (i *Integration) handleRequest(req *RequestMessage, p []byte) {
 			log.WithError(err).Error("Cannot unmarshall authRequiredReq")
 		}
 
-		// TODO
-		//res = i.handleAuthRequired(&authRequiredReq)
+		// goucrt doesn't yet support requiring/verifying a token (see DriverMetadata.AuthMethod
+		// and the mDNS `pwd` flag, neither of which are wired up to anything). Until it does,
+		// every "auth" request succeeds unconditionally - this at least answers the request
+		// instead of leaving it hanging, matching what SendAuthenticationResponse already does
+		// unconditionally for the connection-time auth flow.
+		res = ResponseMessage{
+			CommonResp{Kind: "resp", Id: req.Id, Msg: "auth", Code: 200},
+			nil,
+		}
 
 	case "get_driver_version":
 		driverVersionReq := DriverVersionReq{}
@@ -105,7 +113,11 @@ func (i *Integration) handleRequest(req *RequestMessage, p []byte) {
 		res = i.handleSetDriverUserDataRequest(&setUserData)
 
 	default:
-		log.Debug("mesage not know")
+		log.WithField("Message", req.Msg).Warn("Unknown request message, replying with result code 404")
+		res = ResponseMessage{
+			CommonResp{Kind: "resp", Id: req.Id, Msg: "result", Code: 404},
+			ErrorData{Code: "NOT_FOUND", Message: fmt.Sprintf("message not known: %s", req.Msg)},
+		}
 	}
 
 	if res != nil {

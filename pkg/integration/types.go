@@ -232,6 +232,13 @@ type ResponseMessage struct {
 	MsgData interface{} `json:"msg_data,omitempty"`
 }
 
+// ErrorData is a result message's optional error payload: a short machine-readable code plus a
+// human-readable message, e.g. {"code": "NOT_FOUND", "message": "message not known: foo"}.
+type ErrorData struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
 type AvailableEntityData struct {
 	Filter            AvailableEntityFilter `json:"filter,omitempty"`
 	AvailableEntities []interface{}         `json:"available_entities"`
