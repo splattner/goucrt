@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"fmt"
 	"slices"
 	"time"
 )
@@ -40,7 +41,7 @@ const (
 )
 
 type RemoteEntity struct {
-	Entity
+	BaseEntity
 	Commands map[RemoteEntityCommand]func(RemoteEntity, map[string]interface{}) int `json:"-"`
 	Options  map[RemoteEntityOption]interface{}                                     `json:"options"`
 }
@@ -66,20 +67,24 @@ func NewRemoteEntity(id string, name LanguageText, area string) *RemoteEntity {
 	return &remoteEntity
 }
 
-func (e *RemoteEntity) UpdateEntity(newEntity RemoteEntity) error {
+func (e *RemoteEntity) UpdateEntity(newEntity interface{}) error {
+	updated, ok := newEntity.(RemoteEntity)
+	if !ok {
+		return fmt.Errorf("cannot update RemoteEntity from %T", newEntity)
+	}
 
-	e.Name = newEntity.Name
-	e.Area = newEntity.Area
-	e.Commands = newEntity.Commands
-	e.Features = newEntity.Features
-	e.Attributes = newEntity.Attributes
+	e.Name = updated.Name
+	e.Area = updated.Area
+	e.Commands = updated.Commands
+	e.Features = updated.Features
+	e.Attributes = updated.Attributes
 
 	return nil
 }
 
 // Register a function for the Entity command
 // Based on the Feature, the correct Attributes will be added
-func (e RemoteEntity) AddFeature(feature RemoteEntityFeatures) {
+func (e *RemoteEntity) AddFeature(feature RemoteEntityFeatures) {
 	e.Features = append(e.Features, feature)
 
 	// Add Attributes based on enabled features

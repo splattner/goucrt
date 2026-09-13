@@ -176,21 +176,23 @@ func (i *Integration) handleGetAvailableEntitiesRequest(req *AvailableEntityMess
 		"MsgData": req.MsgData,
 	}).Debug("Get available Entities")
 
-	var entities []interface{}
+	var available []interface{}
 
 	var res interface{}
 
+	i.entitiesMu.RLock()
 	for _, e := range i.Entities {
-		if req.MsgData.Filter.Type == "" || i.getEntityType(e).Type == req.MsgData.Filter.Type {
-			entities = append(entities, e)
+		if req.MsgData.Filter.Type == "" || e.GetEntityType().Type == req.MsgData.Filter.Type {
+			available = append(available, e)
 		}
 	}
+	i.entitiesMu.RUnlock()
 
 	if req.MsgData.Filter.Type == "" {
 		res = AvailableEntityNoFilterMessage{
 			CommonResp{Kind: "resp", Id: req.Id, Msg: "available_entities", Code: 200},
 			AvailableEntityNoFilterData{
-				AvailableEntities: entities,
+				AvailableEntities: available,
 			},
 		}
 	} else {
@@ -198,7 +200,7 @@ func (i *Integration) handleGetAvailableEntitiesRequest(req *AvailableEntityMess
 			CommonResp{Kind: "resp", Id: req.Id, Msg: "available_entities", Code: 200},
 			AvailableEntityData{
 				Filter:            req.MsgData.Filter,
-				AvailableEntities: entities,
+				AvailableEntities: available,
 			},
 		}
 	}
@@ -238,16 +240,19 @@ func (i *Integration) handleSetupDriverRequest(req *SetupDriverMessageReq) *Resp
 // If no entity IDs are specified then events for all available entities are sent to the Remote Two.
 func (i *Integration) handleSubscribeEventRequest(req *SubscribeEventMessageReq) *SubscribeEventMessage {
 
-	// Add entities to SubscribedEntities if not already in there
+	// Mutate SubscribedEntities and collect the entities that newly became subscribed under one
+	// lock, but fire their subscribe callbacks after releasing it - a callback runs arbitrary
+	// driver code, which must not be blocked on (or able to deadlock against) entitiesMu.
+	i.entitiesMu.Lock()
+	var newlySubscribed []entities.Entity
 	if req.MsgData.EntityIds == nil {
 		// Subscribe to all available entities
 		for _, e := range i.Entities {
-			entity_id := i.getEntityId(e)
+			entity_id := e.GetID()
 			if !slices.Contains(i.SubscribedEntities, entity_id) {
 				log.WithField("entity_id", entity_id).Info("RT subscribed to entity")
 				i.SubscribedEntities = append(i.SubscribedEntities, entity_id)
-				i.callSubscribeCallback(e)
-
+				newlySubscribed = append(newlySubscribed, e)
 			}
 		}
 
@@ -257,14 +262,18 @@ func (i *Integration) handleSubscribeEventRequest(req *SubscribeEventMessageReq)
 				log.WithField("entity_id", entity_id).Info("RT subscribed to entity")
 				i.SubscribedEntities = append(i.SubscribedEntities, entity_id)
 
-				if entity, _, err := i.GetEntityById(entity_id); err == nil {
-					i.callSubscribeCallback(entity)
+				if entity, _ := i.findEntityByIdLocked(entity_id); entity != nil {
+					newlySubscribed = append(newlySubscribed, entity)
 				}
 			}
 		}
 	}
-
 	log.WithField("subscribedEtities", i.SubscribedEntities).Debug("Change in subscribed entities")
+	i.entitiesMu.Unlock()
+
+	for _, e := range newlySubscribed {
+		e.CallSubscribeCallback()
+	}
 
 	res := SubscribeEventMessage{
 		CommonResp{Kind: "resp", Id: req.Id, Msg: "result", Code: 200},
@@ -278,21 +287,32 @@ func (i *Integration) handleSubscribeEventRequest(req *SubscribeEventMessageReq)
 // This message is sent by the Remote Two if a previously configured entity is no longer used and therefore no longer interested in entity updates. If the integration driver keeps sending events for the unsubscribed entities then they are simply discarded.
 func (i *Integration) handleUnsubscribeEventsRequest(req *UnubscribeEventMessageReq) *UnubscribeEventMessage {
 
-	for ix, e := range i.SubscribedEntities {
-		if req.MsgData.EntityIds == nil || slices.Contains(req.MsgData.EntityIds, e) {
-			log.WithField("entity_id", e).Info("RT subscribed from entity")
-
-			i.SubscribedEntities[ix] = i.SubscribedEntities[len(i.SubscribedEntities)-1] // Copy last element to index i.
-			i.SubscribedEntities[len(i.SubscribedEntities)-1] = ""                       // Erase last element (write zero value).
-			i.SubscribedEntities = i.SubscribedEntities[:len(i.SubscribedEntities)-1]    // Truncate slice.
-
-			if entity, _, err := i.GetEntityById(e); err == nil {
-				i.callUnubscribeCallback(entity)
+	// Same lock-then-release-then-callback shape as handleSubscribeEventRequest. Filters
+	// SubscribedEntities in place (the standard two-index idiom: `remaining` shares
+	// SubscribedEntities' backing array but its write position never outruns the read position),
+	// rather than the previous swap-last-element-in approach, which mutated the slice while a
+	// range over that same slice was still in progress - skipping or double-visiting entries
+	// depending on where in the slice the removed id happened to be.
+	i.entitiesMu.Lock()
+	var toUnsubscribe []entities.Entity
+	remaining := i.SubscribedEntities[:0]
+	for _, entity_id := range i.SubscribedEntities {
+		if req.MsgData.EntityIds == nil || slices.Contains(req.MsgData.EntityIds, entity_id) {
+			log.WithField("entity_id", entity_id).Info("RT unsubscribed from entity")
+			if entity, _ := i.findEntityByIdLocked(entity_id); entity != nil {
+				toUnsubscribe = append(toUnsubscribe, entity)
 			}
+			continue
 		}
+		remaining = append(remaining, entity_id)
 	}
-
+	i.SubscribedEntities = remaining
 	log.WithField("subscribedEtities", i.SubscribedEntities).Debug("Change in subscribed entities")
+	i.entitiesMu.Unlock()
+
+	for _, e := range toUnsubscribe {
+		e.CallUnsubscribeCallback()
+	}
 
 	res := UnubscribeEventMessage{
 		CommonResp{Kind: "resp", Id: req.Id, Msg: "result", Code: 200},
@@ -306,21 +326,16 @@ func (i *Integration) handleGetEntityStatesRequest(req *GetEntityStatesMessageRe
 
 	var entityStates []entities.EntityStateData
 
+	i.entitiesMu.RLock()
 	for _, e := range i.Entities {
-
-		entity_id := i.getEntityId(e)
-		device_id := i.getDeviceId(e)
-		entity_type := i.getEntityType(e)
-		attributes := i.getEntityAttributes(e)
-
-		entity_state := entities.EntityStateData{
-			EntityId:   entity_id,
-			DeviceId:   device_id,
-			EntityType: entity_type,
-			Attributes: attributes,
-		}
-		entityStates = append(entityStates, entity_state)
+		entityStates = append(entityStates, entities.EntityStateData{
+			EntityId:   e.GetID(),
+			DeviceId:   e.GetDeviceID(),
+			EntityType: e.GetEntityType(),
+			Attributes: e.GetAttribute(),
+		})
 	}
+	i.entitiesMu.RUnlock()
 
 	res := GetEntityStatesMessage{
 		CommonResp{Kind: "resp", Id: req.Id, Msg: "entity_states", Code: 200},

@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/grandcat/zeroconf"
+	"github.com/splattner/goucrt/pkg/entities"
 )
 
 const API_VERSION = "0.10.0"
@@ -28,7 +30,12 @@ type Integration struct {
 
 	Remote remote
 
-	Entities []interface{}
+	// entitiesMu guards Entities and SubscribedEntities: the WebSocket read loop (handleRequest/
+	// handleEvent) and a driver's own goroutines (discovery callbacks, MQTT/WS handlers calling
+	// AddEntity, RemoveEntity, SendEntityChangeEvent) both touch them concurrently.
+	entitiesMu sync.RWMutex
+
+	Entities []entities.Entity
 
 	SubscribedEntities []string
 

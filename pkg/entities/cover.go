@@ -1,5 +1,7 @@
 package entities
 
+import "fmt"
+
 type CoverEntityState EntityState
 type CoverEntityFeatures EntityFeature
 type CoverEntityAttributes EntityAttribute
@@ -40,7 +42,7 @@ const (
 )
 
 type CoverEntity struct {
-	Entity
+	BaseEntity
 	Commands map[CoverEntityCommand]func(CoverEntity, map[string]interface{}) int `json:"-"`
 }
 
@@ -59,13 +61,17 @@ func NewCoverEntity(id string, name LanguageText, area string) *CoverEntity {
 	return &coverEntity
 }
 
-func (e *CoverEntity) UpdateEntity(newEntity CoverEntity) error {
+func (e *CoverEntity) UpdateEntity(newEntity interface{}) error {
+	updated, ok := newEntity.(CoverEntity)
+	if !ok {
+		return fmt.Errorf("cannot update CoverEntity from %T", newEntity)
+	}
 
-	e.Name = newEntity.Name
-	e.Area = newEntity.Area
-	e.Commands = newEntity.Commands
-	e.Features = newEntity.Features
-	e.Attributes = newEntity.Attributes
+	e.Name = updated.Name
+	e.Area = updated.Area
+	e.Commands = updated.Commands
+	e.Features = updated.Features
+	e.Attributes = updated.Attributes
 
 	return nil
 
@@ -88,7 +94,7 @@ func (e *CoverEntity) AddFeature(feature CoverEntityFeatures) {
 		e.AddAttribute(string(PositionCoverEntityAttribute), 0)
 
 	case StopCoverEntityFeatures:
-		e.AddAttribute(string(StateClimateEntityAttribute), OpenCoverEntityState)
+		e.AddAttribute(string(StateCoverEntityAttribute), OpenCoverEntityState)
 
 	case PositionCoverEntityFeatures:
 		e.AddAttribute(string(PositionCoverEntityAttribute), 0)

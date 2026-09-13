@@ -184,7 +184,7 @@ func (c *TasmotaClient) handleNewDeviceDiscovered(device *tasmota.TasmotaDevice)
 		"MAC Address": device.MACAddress,
 	}).Debug("New Tasmota Device discovered")
 
-	var tasmotaDevice interface{}
+	var tasmotaDevice entities.Entity
 
 	switch device.LightSubtype {
 	case 0:

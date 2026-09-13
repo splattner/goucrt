@@ -1,5 +1,7 @@
 package entities
 
+import "fmt"
+
 type ButtonEntityState EntityState
 type ButtonEntityFeatures EntityFeature
 type ButtonEntityAttribute EntityAttribute
@@ -22,7 +24,7 @@ const (
 )
 
 type ButtonEntity struct {
-	Entity
+	BaseEntity
 	Commands map[ButtonEntityCommand]func(ButtonEntity) int `json:"-"`
 }
 
@@ -47,13 +49,17 @@ func NewButtonEntity(id string, name LanguageText, area string) *ButtonEntity {
 	return &buttonEntity
 }
 
-func (e *ButtonEntity) UpdateEntity(newEntity ButtonEntity) error {
+func (e *ButtonEntity) UpdateEntity(newEntity interface{}) error {
+	updated, ok := newEntity.(ButtonEntity)
+	if !ok {
+		return fmt.Errorf("cannot update ButtonEntity from %T", newEntity)
+	}
 
-	e.Name = newEntity.Name
-	e.Area = newEntity.Area
-	e.Commands = newEntity.Commands
-	e.Features = newEntity.Features
-	e.Attributes = newEntity.Attributes
+	e.Name = updated.Name
+	e.Area = updated.Area
+	e.Commands = updated.Commands
+	e.Features = updated.Features
+	e.Attributes = updated.Attributes
 
 	return nil
 }
@@ -81,8 +87,9 @@ func (e *ButtonEntity) MapCommand(command ButtonEntityCommand, f func() error) {
 	})
 }
 
-// Call the registred function for this entity_command
-func (e *ButtonEntity) HandleCommand(cmd_id string) int {
+// Call the registred function for this entity_command. A button has no command parameters; params
+// is accepted only to satisfy the Entity interface and is ignored.
+func (e *ButtonEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
 
 	if e.Commands[ButtonEntityCommand(cmd_id)] != nil {
 		return e.Commands[ButtonEntityCommand(cmd_id)](*e)

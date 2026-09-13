@@ -1,6 +1,9 @@
 package entities
 
-import "slices"
+import (
+	"fmt"
+	"slices"
+)
 
 type MediaPlayerEntityState EntityState
 type MediaPlayerEntityFeatures EntityFeature
@@ -153,7 +156,7 @@ const (
 )
 
 type MediaPlayerEntity struct {
-	Entity
+	BaseEntity
 	DeviceClass MediaPlayerDeviceClass                                                           `json:"device_class,omitempty"`
 	Commands    map[MediaPlayerEntityCommand]func(MediaPlayerEntity, map[string]interface{}) int `json:"-"`
 	Options     map[MediaPlayerEntityOption]interface{}                                          `json:"options"`
@@ -177,13 +180,17 @@ func NewMediaPlayerEntity(id string, name LanguageText, area string, deviceClass
 	return &mediaPlayerEntity
 }
 
-func (e *MediaPlayerEntity) UpdateEntity(newEntity MediaPlayerEntity) error {
+func (e *MediaPlayerEntity) UpdateEntity(newEntity interface{}) error {
+	updated, ok := newEntity.(MediaPlayerEntity)
+	if !ok {
+		return fmt.Errorf("cannot update MediaPlayerEntity from %T", newEntity)
+	}
 
-	e.Name = newEntity.Name
-	e.Area = newEntity.Area
-	e.Commands = newEntity.Commands
-	e.Features = newEntity.Features
-	e.Attributes = newEntity.Attributes
+	e.Name = updated.Name
+	e.Area = updated.Area
+	e.Commands = updated.Commands
+	e.Features = updated.Features
+	e.Attributes = updated.Attributes
 
 	return nil
 }
