@@ -313,7 +313,7 @@ func (d *DeconzDevice) setState() error {
 		return d.setGroupState()
 	}
 
-	return fmt.Errorf("Device Type not found")
+	return fmt.Errorf("device type not found")
 
 }
 

@@ -89,7 +89,7 @@ func NewTasmotaClient(i *integration.Integration) *TasmotaClient {
 		SetupDataSchema: integration.SetupDataSchema{
 			Title: integration.LanguageText{
 				En: "Configuration",
-				De: "Konfiguration",
+				De: "Konfiguration", //nolint:misspell // German for "Configuration", not a typo
 			},
 			Settings: []integration.SetupDataSchemaSettings{ipaddr, port, username, password},
 		},

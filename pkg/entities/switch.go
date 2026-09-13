@@ -37,7 +37,7 @@ func NewSwitchEntity(id string, name LanguageText, area string) *SwitchsEntity {
 	switchEntity.Name = name
 	switchEntity.Area = area
 
-	switchEntity.EntityType.Type = "switch"
+	switchEntity.Type = "switch"
 
 	switchEntity.Commands = make(map[SwitchEntityCommand]func(SwitchsEntity, map[string]interface{}) int)
 	switchEntity.Attributes = make(map[string]interface{})

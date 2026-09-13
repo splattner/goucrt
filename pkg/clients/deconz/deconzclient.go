@@ -76,7 +76,7 @@ func NewDeconzClient(i *integration.Integration) *DeconzClient {
 		SetupDataSchema: integration.SetupDataSchema{
 			Title: integration.LanguageText{
 				En: "Configuration",
-				De: "Konfiguration",
+				De: "Konfiguration", //nolint:misspell // German for "Configuration", not a typo
 			},
 			Settings: []integration.SetupDataSchemaSettings{ipaddr, port, websocketport},
 		},

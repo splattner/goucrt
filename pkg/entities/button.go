@@ -33,7 +33,7 @@ func NewButtonEntity(id string, name LanguageText, area string) *ButtonEntity {
 	buttonEntity.Name = name
 	buttonEntity.Area = area
 
-	buttonEntity.EntityType.Type = "button"
+	buttonEntity.Type = "button"
 
 	buttonEntity.Commands = make(map[ButtonEntityCommand]func(ButtonEntity) int)
 	buttonEntity.Attributes = make(map[string]interface{})

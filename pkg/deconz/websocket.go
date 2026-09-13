@@ -51,7 +51,9 @@ func (d *Deconz) StartandListenLoop() {
 
 	defer func() {
 		log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Closing Websocket")
-		ws.Close()
+		if err := ws.Close(); err != nil {
+			log.WithError(err).Error("Cannot close websocket")
+		}
 		ticker.Stop()
 	}()
 
@@ -97,8 +99,10 @@ func (d *Deconz) websocketReceiveHandler(ws *websocket.Conn) {
 
 	defer func() {
 		log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Closing Websocket, not able to read message anymore")
-		ws.Close()
-		// Notify Write looü
+		if err := ws.Close(); err != nil {
+			log.WithError(err).Error("Cannot close websocket")
+		}
+		// Notify Write loop
 		d.controlChannel <- ws.RemoteAddr().String()
 	}()
 

@@ -52,7 +52,7 @@ func NewRemoteEntity(id string, name LanguageText, area string) *RemoteEntity {
 	remoteEntity.Name = name
 	remoteEntity.Area = area
 
-	remoteEntity.EntityType.Type = "remote"
+	remoteEntity.Type = "remote"
 
 	remoteEntity.Commands = make(map[RemoteEntityCommand]func(RemoteEntity, map[string]interface{}) int)
 	remoteEntity.Attributes = make(map[string]interface{})
