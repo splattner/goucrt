@@ -257,3 +257,61 @@ func TestSetDriverSetupState_UpdatesSetupState(t *testing.T) {
 		t.Errorf("SetupState = %q, want %q", i.SetupState, OkState)
 	}
 }
+
+// TestHandleEntityCommandRequest_NewEntityTypesDispatchCorrectly exists specifically to prove the
+// Phase 3 interface refactor's whole point: adding select and ir_emitter (Phase 6) required zero
+// changes anywhere in this package - both satisfy entities.Entity purely by embedding BaseEntity
+// and providing their own HandleCommand/UpdateEntity, so the dispatch path below (unchanged since
+// before either type existed) already handles them correctly.
+func TestHandleEntityCommandRequest_NewEntityTypesDispatchCorrectly(t *testing.T) {
+	i := newTestIntegration(t)
+
+	sel := entities.NewSelectEntity("select-1", entities.LanguageText{En: "Input"}, "", []string{"HDMI1", "HDMI2"})
+	selected := ""
+	sel.MapCommandWithParams(entities.SelectOptionSelectEntityCommand, func(params map[string]interface{}) error {
+		selected, _ = params["option"].(string)
+		return nil
+	})
+
+	ir := entities.NewIrEmitterEntity("ir-1", entities.LanguageText{En: "Blaster"}, "")
+	sentCode := ""
+	ir.MapCommandWithParams(entities.SendIrEmitterEntityCommand, func(params map[string]interface{}) error {
+		sentCode, _ = params["code"].(string)
+		return nil
+	})
+
+	i.Entities = append(i.Entities, sel, ir)
+
+	selRaw, err := json.Marshal(EntityCommandReq{
+		CommonReq: CommonReq{Kind: "req", Id: 10, Msg: "entity_command"},
+		MsgData:   EntityCommandData{EntityId: "select-1", CmdId: "select_option", Params: map[string]interface{}{"option": "HDMI2"}},
+	})
+	if err != nil {
+		t.Fatalf("marshal select request: %v", err)
+	}
+	resp := awaitOneMessage(i)
+	i.handleRequest(&RequestMessage{CommonReq: CommonReq{Kind: "req", Id: 10, Msg: "entity_command"}}, selRaw)
+	if res := decodeResponse(t, <-resp); res.Code != 200 {
+		t.Errorf("select_option response code = %d, want 200", res.Code)
+	}
+	if selected != "HDMI2" {
+		t.Errorf("selected option = %q, want \"HDMI2\"", selected)
+	}
+
+	irRaw, err := json.Marshal(EntityCommandReq{
+		CommonReq: CommonReq{Kind: "req", Id: 11, Msg: "entity_command"},
+		MsgData:   EntityCommandData{EntityId: "ir-1", CmdId: "send_ir", Params: map[string]interface{}{"code": "0000 006D"}},
+	})
+	if err != nil {
+		t.Fatalf("marshal send_ir request: %v", err)
+	}
+	resp = awaitOneMessage(i)
+	i.handleRequest(&RequestMessage{CommonReq: CommonReq{Kind: "req", Id: 11, Msg: "entity_command"}}, irRaw)
+	if res := decodeResponse(t, <-resp); res.Code != 200 {
+		t.Errorf("send_ir response code = %d, want 200", res.Code)
+	}
+	if sentCode != "0000 006D" {
+		t.Errorf("sent IR code = %q, want \"0000 006D\"", sentCode)
+	}
+}
+

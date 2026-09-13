@@ -1,0 +1,13 @@
+{
+  "id": 124,
+  "kind": "req",
+  "msg": "entity_command",
+  "msg_data": {
+    "cmd_id": "stop_ir",
+    "entity_id": "emitter-2",
+    "entity_type": "ir_emitter",
+    "params": {
+      "port": "port1"
+    }
+  }
+}

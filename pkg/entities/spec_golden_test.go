@@ -120,6 +120,17 @@ var knownCommands = map[string][]string{
 		string(SendCmdRemoteEntityCommand),
 		string(SendCmdSequenceRemoteEntityCommand),
 	},
+	"select": {
+		string(SelectOptionSelectEntityCommand),
+		string(SelectFirstSelectEntityCommand),
+		string(SelectLastSelectEntityCommand),
+		string(SelectNextSelectEntityCommand),
+		string(SelectPreviousSelectEntityCommand),
+	},
+	"ir_emitter": {
+		string(SendIrEmitterEntityCommand),
+		string(StopIrEmitterEntityCommand),
+	},
 }
 
 var knownAttributes = map[string][]string{
@@ -168,6 +179,12 @@ var knownAttributes = map[string][]string{
 		string(UnitSSensorntityyAttribute),
 	},
 	"remote": {string(StateRemoteEntityAttribute)},
+	"select": {
+		string(StateSelectEntityAttribute),
+		string(CurrentOptionSelectEntityAttribute),
+		string(OptionsSelectEntityAttribute),
+	},
+	"ir_emitter": {string(StateIrEmitterEntityAttribute)},
 }
 
 func TestGoldenExamplesMatchSpec(t *testing.T) {

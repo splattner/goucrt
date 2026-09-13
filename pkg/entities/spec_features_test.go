@@ -145,6 +145,16 @@ func TestFeaturesAndDeviceClassMatchSpec(t *testing.T) {
 				string(ToggleRemoteEntityFeatures),
 			},
 		},
+		{
+			// select has no features and no device_class per the spec.
+			entityType: "select",
+		},
+		{
+			entityType: "ir_emitter",
+			features: []string{
+				string(SendIrEmitterEntityFeatures),
+			},
+		},
 	}
 
 	for _, c := range cases {
