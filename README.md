@@ -98,11 +98,43 @@ To keep the setup data persistet mount a volume to `/app/ucconfig`:
 docker run -v ./localdir:/app/ucconfig ghcr.io/splattner/goucrt:v0.1.7 denonavr
 ```
 
-For the mDNS adventisement to work correctly I suggest starting the integration in the `host` network. And you can set your websocket listening port with the environment variable `UC_INTEGRATION_LISTEN_PORT`:
+For the mDNS adventisement to work correctly I suggest starting the integration in the `host` network. And you can set your websocket listening port with the environment variable `UC_INTEGRATION_HTTP_PORT`:
 
 ```bash
-docker run --net=host -e UC_INTEGRATION_LISTEN_PORT=10000 -v ./localdir:/app/ucconfig ghcr.io/splattner/goucrt:v0.1.7 denonavr
+docker run --net=host -e UC_INTEGRATION_HTTP_PORT=10000 -v ./localdir:/app/ucconfig ghcr.io/splattner/goucrt:v0.1.7 denonavr
 ```
+
+### As a custom-installed driver on the Remote
+
+Since firmware v1.9.0, the remote can install an integration driver directly as a `.tar.gz` archive - no
+separate host needed. goucrt's deCONZ, Shelly and Tasmota clients each build as their own installable
+archive; see the [Core-API's custom driver installation docs](https://github.com/unfoldedcircle/core-api/blob/main/doc/integration-driver/driver-installation.md)
+for the full format and the remote's sandbox environment.
+
+Build all three archives:
+
+```bash
+make custom-driver-archives
+```
+
+This produces `custom-driver-dist/{deconz,shelly,tasmota}-custom-driver.tar.gz`, each a statically linked
+`linux/arm64` binary at `bin/driver` plus a generated `driver.json` and the client's icon at the archive
+root. Released versions are attached to each [GitHub release](https://github.com/splattner/goucrt/releases)
+alongside the container images.
+
+Install one in the remote's web-configurator: integrations, _Add new_, _Install custom_, and upload the
+archive. Or via the REST API:
+
+```bash
+curl --location 'http://$REMOTE_IP/api/intg/install' \
+  --user 'web-configurator:$PIN' \
+  --form 'file=@"deconz-custom-driver.tar.gz"'
+```
+
+Setup data persists across restarts in the remote-managed `$UC_CONFIG_HOME`/`$UC_DATA_HOME` directories -
+nothing to mount, unlike the container image. mDNS advertisement and self-registration are disabled
+automatically in this mode (see [Environment Variables](#environment-variables) below): the remote already
+knows how to reach the driver from the installation itself.
 
 ### Configuration
 
@@ -113,14 +145,22 @@ The following environment variables exist in addition to the configuration file:
 | Variable                     | Values               |Description |
 |------------------------------|----------------------|--------------------------------------------------------------------------------|
 | UC_CONFIG_HOME               | _directory path_     | Configuration directory to save the user configuration from the driver setup.<br>Default: `./ucconfig/` |
+| UC_DATA_HOME                  | _directory path_     | Directory for a driver's own application data, separate from user setup data.<br>Default: same as `UC_CONFIG_HOME`. goucrt itself doesn't write anything here yet; it's exposed for driver code to use. |
 | UC_DISABLE_MDNS_PUBLISH      | `true` / `false`     | Disables mDNS service advertisement.<br>Default: `false` |
-| UC_INTEGRATION_LISTEN_PORT | `int` | The port this integration is listening for websocket connection from the remote.<br> Default: `8080` |
+| UC_INTEGRATION_HTTP_PORT | `int` | The port this integration is listening for websocket connections from the remote. Set automatically by the remote when running as a [custom-installed driver](#as-a-custom-installed-driver-on-the-remote); always takes precedence over `UC_INTEGRATION_LISTEN_PORT`/`--listenPort` when set.<br> Default: `8080` |
+| UC_INTEGRATION_LISTEN_PORT | `int` | Same as `UC_INTEGRATION_HTTP_PORT` above, kept for backwards compatibility. Use `UC_INTEGRATION_HTTP_PORT` if you can - it's the name the remote itself uses. |
+| UC_INTEGRATION_INTERFACE | _host/IP_ | Host/IP address to listen on. Set automatically by the remote when running as a custom-installed driver.<br> Default: all interfaces (`0.0.0.0`) |
 | UC_INTEGRATION_WEBSOCKET_PATH | `string` | Path where this integration is available for websocket connections.<br> Default: `/ws` |
 | UC_RT_HOST | `string` | IP Address of your Remote Two instance (disables Remote Two discovery via mDNS for registration) |
 | UC_RT_PORT | `int` | Port of your Remote Two instance (disables Remote Two discovery via mDNS for registration) |
 | UC_ENABLE_REGISTRATION | `string` | Enable driver registration on the Remote Two instead of mDNS advertisement.<br> Default: `false` |
 | UC_REGISTRATION_USERNAME | `string` | Username of the RemoteTwo for driver registration.<br> Default: `web-configurator` |
 | UC_REGISTRATION_PIN | `string` | Pin of the RemoteTwo for driver registration |
+
+When running as a [custom-installed driver](#as-a-custom-installed-driver-on-the-remote), mDNS advertisement
+and self-registration are disabled automatically (there's no way for the sandboxed process to receive CLI
+flags, so `UC_DISABLE_MDNS_PUBLISH`/`UC_ENABLE_REGISTRATION` can't be set either) - neither serves a purpose
+there, since the remote already knows about the driver from the installation archive.
 
 ## Development
 
