@@ -148,7 +148,7 @@ func (d *Deconz) removeDevice(allDevices interface{}) {
 		}
 	}
 
-	// Finaly remote thos who are not needed anymore and call device removed handler
+	// Finally remove those who are not needed anymore and call device removed handler
 	for ix, device := range toRemove {
 		d.allDeconzDevices[ix] = d.allDeconzDevices[len(d.allDeconzDevices)-1] // Copy last element to index i.
 		d.allDeconzDevices[len(d.allDeconzDevices)-1] = nil                    // Erase last element (write zero value).
@@ -170,5 +170,5 @@ func (d *Deconz) GetDeviceByID(id int) (*DeconzDevice, error) {
 
 	}
 
-	return nil, fmt.Errorf("Device not found")
+	return nil, fmt.Errorf("device not found")
 }

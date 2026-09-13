@@ -57,7 +57,7 @@ func (d *Deconz) GetAllGroups() ([]DeconzGroup, error) {
 		return nil, err
 	}
 	groupsMap := map[string]DeconzGroup{}
-	if err := json.Unmarshal(contents, &groupsMap); err != nil {
+	if err = json.Unmarshal(contents, &groupsMap); err != nil {
 		log.WithError(err).Error("Cannon unmarshall data into map[string]DeconzGroup")
 	}
 	groups := make([]DeconzGroup, 0, len(groupsMap))
@@ -72,14 +72,14 @@ func (d *Deconz) GetAllGroups() ([]DeconzGroup, error) {
 		group.Lights = make([]*DeconzDevice, len(group.LightIDs))
 		for i, id := range group.LightIDs {
 			lightid, _ := strconv.Atoi(id)
-			light, err := d.GetLight(lightid)
+			light, lightErr := d.GetLight(lightid)
 
-			if err != nil {
-				return nil, err
+			if lightErr != nil {
+				return nil, lightErr
 			}
-			lightDevice, err := d.GetDeviceByID(light.ID)
-			if err != nil {
-				return nil, err
+			lightDevice, deviceErr := d.GetDeviceByID(light.ID)
+			if deviceErr != nil {
+				return nil, deviceErr
 			}
 			group.Lights[i] = lightDevice
 		}
@@ -142,7 +142,7 @@ func (d *DeconzDevice) SetGroupAttrs() ([]ApiResponse, error) {
 	if err != nil {
 		return apiResponse, err
 	}
-	if err := json.Unmarshal(contents, &apiResponse); err != nil {
+	if err = json.Unmarshal(contents, &apiResponse); err != nil {
 		log.WithError(err).Error("Cannon unmarshall data into []ApiResponse")
 	}
 	return apiResponse, err

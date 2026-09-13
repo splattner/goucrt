@@ -21,7 +21,7 @@ type Entity struct {
 	Id string `json:"entity_id"`
 	EntityType
 	DeviceId                string                                     `json:"device_id,omitempty"`
-	Features                []interface{}                              `json:"features"`
+	Features                []interface{}                              `json:"features,omitempty"`
 	Name                    LanguageText                               `json:"name"`
 	Area                    string                                     `json:"area,omitempty"`
 	DeviceClass             string                                     `json:"-"`

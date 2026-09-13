@@ -408,8 +408,8 @@ func (i *Integration) callUnubscribeCallback(entity interface{}) {
 		}
 
 	case *entities.CoverEntity:
-		if e.SubscribeCallbackFunc != nil {
-			e.SubscribeCallbackFunc()
+		if e.UnsubscribeCallbackFunc != nil {
+			e.UnsubscribeCallbackFunc()
 		}
 
 	case *entities.SensorEntity:

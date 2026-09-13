@@ -68,13 +68,13 @@ func (s *Shelly) mqttDiscoverCallback() mqtt.MessageHandler {
 	var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 
 		log.WithFields(log.Fields{
-			"Topic": string(msg.Topic()),
+			"Topic": msg.Topic(),
 			"Msg":   string(msg.Payload()),
 		}).Trace("MQTT Mesage for Shelly Device discovery")
 
 		if strings.Contains(msg.Topic(), "announce") {
 			log.WithFields(log.Fields{
-				"Topic": string(msg.Topic()),
+				"Topic": msg.Topic(),
 				"Msg":   string(msg.Payload()),
 			}).Trace("Announce MQTT Mesage for Shelly Device discovery")
 

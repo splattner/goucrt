@@ -64,13 +64,13 @@ func (s *Tasmota) mqttDiscoverCallback() mqtt.MessageHandler {
 	var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 
 		log.WithFields(log.Fields{
-			"Topic": string(msg.Topic()),
+			"Topic": msg.Topic(),
 			"Msg":   string(msg.Payload()),
 		}).Trace("MQTT Mesage for Tasmota Device discovery")
 
 		if strings.Contains(msg.Topic(), "config") {
 			log.WithFields(log.Fields{
-				"Topic": string(msg.Topic()),
+				"Topic": msg.Topic(),
 				"Msg":   string(msg.Payload()),
 			}).Trace("MQTT Mesage for Tasmota Device discovery")
 

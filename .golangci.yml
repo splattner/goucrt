@@ -1,0 +1,28 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: standard
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - unused
+    - misspell
+    - unconvert
+  settings:
+    govet:
+      enable:
+        - shadow
+    errcheck:
+      # Ignore Close() error checks on deferred cleanup calls; every other
+      # unchecked error should be caught.
+      exclude-functions:
+        - (io.Closer).Close
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

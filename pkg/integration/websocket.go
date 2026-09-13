@@ -22,7 +22,10 @@ const (
 	pingPeriod = (pongWait * 9) / 10
 
 	// Maximum message size allowed from peer.
-	maxMessageSize = 512
+	// setup_driver messages can carry a base64-encoded confirmation image (up to 32 KB
+	// per the Core-API spec) plus setup form data, so the limit needs real headroom
+	// beyond a bare command frame.
+	maxMessageSize = 65536
 )
 
 var upgrader = websocket.Upgrader{
@@ -65,7 +68,9 @@ func (i *Integration) wsReader(ws *websocket.Conn) {
 
 	defer func() {
 		log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Closing Websocket, not able to read message anymore")
-		ws.Close()
+		if err := ws.Close(); err != nil {
+			log.WithError(err).Error("Cannot close websocket")
+		}
 
 		// Close Write loop also
 		i.Remote.controlChannel <- ws.RemoteAddr().String()
@@ -112,7 +117,9 @@ func (i *Integration) wsWriter(ws *websocket.Conn) {
 
 	defer func() {
 		log.WithField("RemoteAddr", ws.RemoteAddr().String()).Info("Closing Websocket")
-		ws.Close()
+		if err := ws.Close(); err != nil {
+			log.WithError(err).Error("Cannot close websocket")
+		}
 		ticker.Stop()
 		// Close Read loop
 		i.Remote.controlChannel <- ws.RemoteAddr().String()

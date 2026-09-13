@@ -11,7 +11,7 @@ func (d *Deconz) StartDiscovery(enableGroups bool) {
 	log.WithField("DeCONZ Host", d.host).Info("Starting Deconz device discovery")
 
 	if d.apikey == "" {
-		log.Fatal("API Key is not set, you first need to aquire a API Key")
+		log.Fatal("API Key is not set, you first need to acquire an API Key")
 		return
 	}
 
@@ -29,9 +29,9 @@ func (d *Deconz) StartDiscovery(enableGroups bool) {
 
 	// Groups
 	if enableGroups {
-		allGroups, err := d.GetAllGroups()
-		if err != nil {
-			log.WithError(err).Error("Error getting all Groups from Deconz")
+		allGroups, groupsErr := d.GetAllGroups()
+		if groupsErr != nil {
+			log.WithError(groupsErr).Error("Error getting all Groups from Deconz")
 		}
 		log.WithField("groups", allGroups).Trace("Deconz Discovery")
 		for _, group := range allGroups {

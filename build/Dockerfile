@@ -3,7 +3,7 @@ FROM alpine:3
 ARG UCRT_BIN=ucrt
 
 LABEL maintainer "Sebastian Plattner"
-LABEL org.opencontainers.image.title "Unfolded Cirrle Remote Two Integraton Driber"
+LABEL org.opencontainers.image.title "Unfolded Circle Remote Two Integration Driver"
 LABEL org.opencontainers.image.description "Golang based integration driver for a Unfolded Circle Remote Two"
 LABEL org.opencontainers.image.authors "Sebastian Plattner"
 LABEL org.opencontainers.image.source https://github.com/splattner/goucrt

@@ -51,7 +51,7 @@ func NewCoverEntity(id string, name LanguageText, area string) *CoverEntity {
 	coverEntity.Name = name
 	coverEntity.Area = area
 
-	coverEntity.EntityType.Type = "cover"
+	coverEntity.Type = "cover"
 
 	coverEntity.Commands = make(map[CoverEntityCommand]func(CoverEntity, map[string]interface{}) int)
 	coverEntity.Attributes = make(map[string]interface{})

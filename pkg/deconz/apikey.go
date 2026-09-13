@@ -60,7 +60,7 @@ func (d *Deconz) GetNewAPIKey(devicetype string) (string, error) {
 
 	switch statusCode {
 	case http.StatusForbidden:
-		return "", fmt.Errorf("Make sure your Gateway is unlocked by pressing the link button")
+		return "", fmt.Errorf("make sure your gateway is unlocked by pressing the link button")
 
 	case http.StatusOK:
 		var response []DeconzAPIKeyReqResponse

@@ -8,8 +8,8 @@ type SettingTypeNumberDefinition struct {
 	Value    float64      `json:"value"`
 	Min      float64      `json:"min,omitempty"`
 	Max      float64      `json:"max,omitempty"`
-	Step     float64      `json:"step,omitempty"`
-	Decimals int          `json:"decimal,omitempty"`
+	Steps    float64      `json:"steps,omitempty"`
+	Decimals int          `json:"decimals,omitempty"`
 	Unit     LanguageText `json:"unit"`
 }
 

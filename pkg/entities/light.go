@@ -55,7 +55,7 @@ func NewLightEntity(id string, name LanguageText, area string) *LightEntity {
 	lightEntity.Name = name
 	lightEntity.Area = area
 
-	lightEntity.EntityType.Type = "light"
+	lightEntity.Type = "light"
 
 	lightEntity.Commands = make(map[LightEntityCommand]func(LightEntity, map[string]interface{}) int)
 	lightEntity.Attributes = make(map[string]interface{})
