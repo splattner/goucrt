@@ -1,0 +1,13 @@
+{
+  "id": 123,
+  "kind": "req",
+  "msg": "entity_command",
+  "msg_data": {
+    "cmd_id": "target_temperature",
+    "entity_id": "climate-1",
+    "entity_type": "climate",
+    "params": {
+      "temperature": 23
+    }
+  }
+}

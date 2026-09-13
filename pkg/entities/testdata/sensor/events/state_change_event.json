@@ -1,0 +1,13 @@
+{
+  "cat": "ENTITY",
+  "kind": "event",
+  "msg": "entity_change",
+  "msg_data": {
+    "attributes": {
+      "unit": "°C",
+      "value": 21.2
+    },
+    "entity_id": "sensor-1",
+    "entity_type": "sensor"
+  }
+}

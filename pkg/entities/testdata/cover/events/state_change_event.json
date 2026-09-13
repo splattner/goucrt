@@ -1,0 +1,13 @@
+{
+  "cat": "ENTITY",
+  "kind": "event",
+  "msg": "entity_change",
+  "msg_data": {
+    "attributes": {
+      "position": 72,
+      "state": "OPENING"
+    },
+    "entity_id": "blind-1",
+    "entity_type": "cover"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "cat": "ENTITY",
+  "kind": "event",
+  "msg": "entity_change",
+  "msg_data": {
+    "attributes": {
+      "state": "ON",
+      "unit": "running",
+      "value": "off"
+    },
+    "entity_id": "sensor-bin1",
+    "entity_type": "sensor"
+  }
+}

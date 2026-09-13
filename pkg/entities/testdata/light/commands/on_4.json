@@ -1,0 +1,14 @@
+{
+  "id": 123,
+  "kind": "req",
+  "msg": "entity_command",
+  "msg_data": {
+    "cmd_id": "on",
+    "entity_id": "light-1",
+    "entity_type": "light",
+    "params": {
+      "hue": 180,
+      "saturation": 200
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "cat": "ENTITY",
+  "kind": "event",
+  "msg": "entity_change",
+  "msg_data": {
+    "attributes": {
+      "brightness": 180,
+      "hue": 180,
+      "saturation": 150,
+      "state": "ON"
+    },
+    "entity_id": "light-1",
+    "entity_type": "light"
+  }
+}

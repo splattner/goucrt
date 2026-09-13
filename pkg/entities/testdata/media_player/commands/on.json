@@ -1,0 +1,10 @@
+{
+  "id": 123,
+  "kind": "req",
+  "msg": "entity_command",
+  "msg_data": {
+    "cmd_id": "on",
+    "entity_id": "media-1",
+    "entity_type": "media_player"
+  }
+}

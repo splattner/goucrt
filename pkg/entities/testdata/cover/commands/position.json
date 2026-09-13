@@ -1,0 +1,13 @@
+{
+  "id": 123,
+  "kind": "req",
+  "msg": "entity_command",
+  "msg_data": {
+    "cmd_id": "position",
+    "entity_id": "blind-1",
+    "entity_type": "cover",
+    "params": {
+      "position": 70
+    }
+  }
+}

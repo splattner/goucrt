@@ -1,0 +1,19 @@
+{
+  "id": 124,
+  "kind": "req",
+  "msg": "entity_command",
+  "msg_data": {
+    "cmd_id": "send_cmd_sequence",
+    "entity_id": "remote-1",
+    "entity_type": "remote",
+    "params": {
+      "delay": 100,
+      "sequence": [
+        "1",
+        "2",
+        "3",
+        "ENTER"
+      ]
+    }
+  }
+}
