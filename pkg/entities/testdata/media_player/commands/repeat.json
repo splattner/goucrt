@@ -1,0 +1,13 @@
+{
+  "id": 123,
+  "kind": "req",
+  "msg": "entity_command",
+  "msg_data": {
+    "cmd_id": "repeat",
+    "entity_id": "media-1",
+    "entity_type": "media_player",
+    "params": {
+      "repeat": "ALL"
+    }
+  }
+}

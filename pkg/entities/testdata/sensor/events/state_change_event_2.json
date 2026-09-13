@@ -1,0 +1,13 @@
+{
+  "cat": "ENTITY",
+  "kind": "event",
+  "msg": "entity_change",
+  "msg_data": {
+    "attributes": {
+      "unit": "V",
+      "value": "231"
+    },
+    "entity_id": "sensor-2",
+    "entity_type": "sensor"
+  }
+}

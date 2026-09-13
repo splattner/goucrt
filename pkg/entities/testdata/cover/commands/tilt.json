@@ -1,0 +1,13 @@
+{
+  "id": 123,
+  "kind": "req",
+  "msg": "entity_command",
+  "msg_data": {
+    "cmd_id": "tilt",
+    "entity_id": "blind-1",
+    "entity_type": "cover",
+    "params": {
+      "tilt_position": 45
+    }
+  }
+}

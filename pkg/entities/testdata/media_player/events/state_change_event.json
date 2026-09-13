@@ -1,0 +1,21 @@
+{
+  "cat": "ENTITY",
+  "kind": "event",
+  "msg": "entity_change",
+  "msg_data": {
+    "attributes": {
+      "media_album": "Best of",
+      "media_artist": "My artist",
+      "media_duration": 245,
+      "media_image_url_large": "http://192.168.1.100/player/current/album_l.png",
+      "media_image_url_medium": "http://192.168.1.100/player/current/album_m.png",
+      "media_image_url_small": "http://192.168.1.100/player/current/album_s.png",
+      "media_position": 1,
+      "media_position_updated_at": "2025-03-18T07:30:00.000Z",
+      "media_title": "Some title",
+      "state": "PLAYING"
+    },
+    "entity_id": "media-1",
+    "entity_type": "media_player"
+  }
+}

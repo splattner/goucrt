@@ -1,0 +1,10 @@
+{
+  "id": 123,
+  "kind": "req",
+  "msg": "entity_command",
+  "msg_data": {
+    "cmd_id": "close",
+    "entity_id": "blind-1",
+    "entity_type": "cover"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": 123,
+  "kind": "req",
+  "msg": "entity_command",
+  "msg_data": {
+    "command_id": "push",
+    "entity_id": "button-1",
+    "entity_type": "button"
+  }
+}

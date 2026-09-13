@@ -1,0 +1,10 @@
+{
+  "id": 123,
+  "kind": "req",
+  "msg": "entity_command",
+  "msg_data": {
+    "cmd_id": "tilt_down",
+    "entity_id": "blind-1",
+    "entity_type": "cover"
+  }
+}

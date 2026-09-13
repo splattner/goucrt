@@ -1,0 +1,14 @@
+{
+  "id": 124,
+  "kind": "req",
+  "msg": "entity_command",
+  "msg_data": {
+    "cmd_id": "send_cmd",
+    "entity_id": "remote-1",
+    "entity_type": "remote",
+    "params": {
+      "command": "CURSOR_ENTER",
+      "hold": 800
+    }
+  }
+}

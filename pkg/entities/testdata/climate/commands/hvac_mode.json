@@ -1,0 +1,13 @@
+{
+  "id": 123,
+  "kind": "req",
+  "msg": "entity_command",
+  "msg_data": {
+    "cmd_id": "hvac_mode",
+    "entity_id": "climate-1",
+    "entity_type": "climate",
+    "params": {
+      "hvac_mode": "COOL"
+    }
+  }
+}

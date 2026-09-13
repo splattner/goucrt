@@ -26,6 +26,23 @@ go_build_arm64 ?= go build -o $(BIN_FILENAME_ARM64) $(GOUCRT_MAIN_GO)
 test: ## Run tests
 	go test -race ./... -coverprofile cover.out
 
+.PHONY: check-spec-freshness
+check-spec-freshness: ## Check if the vendored Core-API spec (internal/spec/core-api) is behind upstream main
+	@vendored=$$(cut -d'|' -f1 internal/spec/core-api/VENDORED_COMMIT.txt); \
+	latest=$$(git ls-remote https://github.com/unfoldedcircle/core-api.git main | cut -f1); \
+	if [ -z "$$latest" ]; then \
+		echo "Could not determine the latest core-api commit (network issue?)"; exit 1; \
+	fi; \
+	if [ "$$vendored" = "$$latest" ]; then \
+		echo "internal/spec/core-api is up to date ($$vendored)"; \
+	else \
+		echo "internal/spec/core-api is behind core-api main:"; \
+		echo "  vendored: $$vendored"; \
+		echo "  latest:   $$latest"; \
+		echo "See internal/spec/core-api/README.md for how to update it."; \
+		exit 1; \
+	fi
+
 .PHONY: build
 build: fmt vet $(BIN_FILENAME)
 
