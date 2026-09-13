@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/websocket"
+	"github.com/splattner/goucrt/pkg/entities"
 	"k8s.io/utils/strings/slices"
 )
 
@@ -96,15 +97,15 @@ func (i *Integration) handleEvent(req *RequestMessage, p []byte) interface{} {
 
 }
 
-func (i *Integration) sendEntityRemoved(e interface{}) {
+func (i *Integration) sendEntityRemoved(e entities.Entity) {
 
 	var res interface{}
 	now := time.Now()
 
 	msg_data := EntityRemovedEventData{
-		DeviceId:   i.getDeviceId(e),
-		EntityType: i.getEntityType(e).Type,
-		EntityId:   i.getEntityId(e),
+		DeviceId:   e.GetDeviceID(),
+		EntityType: e.GetEntityType().Type,
+		EntityId:   e.GetID(),
 	}
 
 	res = EntityRemovedEvent{
@@ -122,7 +123,7 @@ func (i *Integration) sendEntityRemoved(e interface{}) {
 	}
 }
 
-func (i *Integration) sendEntityAvailable(e interface{}) {
+func (i *Integration) sendEntityAvailable(e entities.Entity) {
 
 	var res interface{}
 	now := time.Now()
@@ -214,15 +215,18 @@ func (i *Integration) handleAbortDriverSetupEvent(e *AbortDriverSetupEvent) {
 // Emitted when an attribute of an entity changes, e.g. is switched off.
 // Either after an entity_command or if the entity is updated manually through a user or an external system.
 // This keeps the Remote Two in sync with the real state of the entity without the need of constant polling.
-func (i *Integration) SendEntityChangeEvent(e interface{}, a *map[string]interface{}) {
+func (i *Integration) SendEntityChangeEvent(e entities.EntityInfo, a *map[string]interface{}) {
 
-	entity_id := i.getEntityId(e)
+	entity_id := e.GetID()
 
+	i.entitiesMu.RLock()
+	subscribed := i.Config.IgnoreEntitySubscription || slices.Contains(i.SubscribedEntities, entity_id)
 	log.WithField("entity_id", entity_id).Debug("Send Entity Change Event if subscribed")
 	log.WithField("subscribedEtities", i.SubscribedEntities).Debug("Currently subscribed entities")
+	i.entitiesMu.RUnlock()
 
 	// Only send the event when remote is subscribed to
-	if i.Config.IgnoreEntitySubscription || slices.Contains(i.SubscribedEntities, entity_id) {
+	if subscribed {
 
 		var res interface{}
 
@@ -231,14 +235,14 @@ func (i *Integration) SendEntityChangeEvent(e interface{}, a *map[string]interfa
 		now := time.Now().In(loc)
 		timeformat := "2006-01-02T15:04:05.999999999Z"
 
-		device_id := i.getDeviceId(e)
+		device_id := e.GetDeviceID()
 
-		entity_type := i.getEntityType(e)
+		entity_type := e.GetEntityType()
 
 		var attributes map[string]interface{}
 		//if attributes is set, only send thos
 		if a == nil {
-			attributes = i.getEntityAttributes(e)
+			attributes = e.GetAttribute()
 		} else {
 			attributes = *a
 		}

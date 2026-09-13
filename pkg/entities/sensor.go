@@ -1,5 +1,7 @@
 package entities
 
+import "fmt"
+
 type SensorEntityState EntityState
 type SensorEntityFeatures EntityFeature
 type SensorEntityAttributes EntityAttribute
@@ -28,7 +30,7 @@ const (
 )
 
 type SensorEntity struct {
-	Entity
+	BaseEntity
 	DeviceClass SensorDeviceClass `json:"device_class,omitempty"`
 }
 
@@ -70,11 +72,21 @@ func NewSensorEntity(id string, name LanguageText, area string, deviceClass Sens
 	return &sensorEntity
 }
 
-func (e *SensorEntity) UpdateEntity(newEntity SensorEntity) error {
+func (e *SensorEntity) UpdateEntity(newEntity interface{}) error {
+	updated, ok := newEntity.(SensorEntity)
+	if !ok {
+		return fmt.Errorf("cannot update SensorEntity from %T", newEntity)
+	}
 
-	e.Name = newEntity.Name
-	e.Area = newEntity.Area
-	e.Attributes["unit"] = newEntity.Attributes["unit"]
+	e.Name = updated.Name
+	e.Area = updated.Area
+	e.Attributes["unit"] = updated.Attributes["unit"]
 
 	return nil
+}
+
+// A sensor has no commands; HandleCommand always reports the command as unrecognized. Exists only
+// to satisfy the Entity interface.
+func (e *SensorEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
+	return 404
 }

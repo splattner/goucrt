@@ -1,5 +1,7 @@
 package entities
 
+import "fmt"
+
 type SwitchEntityState EntityState
 type SwitchEntityFeatures EntityFeature
 type SwitchEntityAttributes EntityAttribute
@@ -26,7 +28,7 @@ const (
 )
 
 type SwitchsEntity struct {
-	Entity
+	BaseEntity
 	Commands map[SwitchEntityCommand]func(SwitchsEntity, map[string]interface{}) int `json:"-"`
 }
 
@@ -45,13 +47,17 @@ func NewSwitchEntity(id string, name LanguageText, area string) *SwitchsEntity {
 	return &switchEntity
 }
 
-func (e *SwitchsEntity) UpdateEntity(newEntity SwitchsEntity) error {
+func (e *SwitchsEntity) UpdateEntity(newEntity interface{}) error {
+	updated, ok := newEntity.(SwitchsEntity)
+	if !ok {
+		return fmt.Errorf("cannot update SwitchsEntity from %T", newEntity)
+	}
 
-	e.Name = newEntity.Name
-	e.Area = newEntity.Area
-	e.Commands = newEntity.Commands
-	e.Features = newEntity.Features
-	e.Attributes = newEntity.Attributes
+	e.Name = updated.Name
+	e.Area = updated.Area
+	e.Commands = updated.Commands
+	e.Features = updated.Features
+	e.Attributes = updated.Attributes
 
 	return nil
 }

@@ -1,6 +1,8 @@
 package entities
 
 import (
+	"fmt"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -39,7 +41,7 @@ const (
 )
 
 type LightEntity struct {
-	Entity
+	BaseEntity
 	Commands map[LightEntityCommand]func(LightEntity, map[string]interface{}) int `json:"-"`
 }
 
@@ -63,13 +65,17 @@ func NewLightEntity(id string, name LanguageText, area string) *LightEntity {
 	return &lightEntity
 }
 
-func (e *LightEntity) UpdateEntity(newEntity LightEntity) error {
+func (e *LightEntity) UpdateEntity(newEntity interface{}) error {
+	updated, ok := newEntity.(LightEntity)
+	if !ok {
+		return fmt.Errorf("cannot update LightEntity from %T", newEntity)
+	}
 
-	e.Name = newEntity.Name
-	e.Area = newEntity.Area
-	e.Commands = newEntity.Commands
-	e.Features = newEntity.Features
-	e.Attributes = newEntity.Attributes
+	e.Name = updated.Name
+	e.Area = updated.Area
+	e.Commands = updated.Commands
+	e.Features = updated.Features
+	e.Attributes = updated.Attributes
 
 	return nil
 }

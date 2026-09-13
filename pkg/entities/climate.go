@@ -1,5 +1,7 @@
 package entities
 
+import "fmt"
+
 type ClimateEntityState EntityState
 type ClimateEntityFeatures EntityFeature
 type ClimateEntityAttributes EntityAttribute
@@ -43,7 +45,7 @@ const (
 )
 
 type ClimateEntity struct {
-	Entity
+	BaseEntity
 	Commands map[ClimateEntityCommand]func(ClimateEntity, map[string]interface{}) int `json:"-"`
 }
 
@@ -62,13 +64,17 @@ func NewClimateEntity(id string, name LanguageText, area string) *ClimateEntity 
 	return &climateEntity
 }
 
-func (e *ClimateEntity) UpdateEntity(newEntity ClimateEntity) error {
+func (e *ClimateEntity) UpdateEntity(newEntity interface{}) error {
+	updated, ok := newEntity.(ClimateEntity)
+	if !ok {
+		return fmt.Errorf("cannot update ClimateEntity from %T", newEntity)
+	}
 
-	e.Name = newEntity.Name
-	e.Area = newEntity.Area
-	e.Commands = newEntity.Commands
-	e.Features = newEntity.Features
-	e.Attributes = newEntity.Attributes
+	e.Name = updated.Name
+	e.Area = updated.Area
+	e.Commands = updated.Commands
+	e.Features = updated.Features
+	e.Attributes = updated.Attributes
 
 	return nil
 }
