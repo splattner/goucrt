@@ -24,7 +24,7 @@ go_build_arm64 ?= go build -o $(BIN_FILENAME_ARM64) $(GOUCRT_MAIN_GO)
 
 .PHONY: test
 test: ## Run tests
-	go test ./... -coverprofile cover.out
+	go test -race ./... -coverprofile cover.out
 
 .PHONY: build
 build: fmt vet $(BIN_FILENAME)
@@ -45,7 +45,7 @@ lint: fmt vet golangci-lint ## Invokes all linting targets
 
 .PHONY: golangci-lint
 golangci-lint: $(golangci_bin) ## Run golangci linters
-	$(golangci_bin) run --timeout 5m --out-format colored-line-number ./...
+	$(golangci_bin) run --timeout 5m --output.text.path stdout --output.text.colors ./...
 
 .PHONY: docker-build
 docker-build: docker-build-amd64  docker-build-arm64
@@ -111,4 +111,4 @@ $(BIN_FILENAME_ARM64):
 	$(go_build_arm64)
 
 $(golangci_bin): | $(go_bin)
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$(go_bin)"
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$(go_bin)" $(golangci_version)
