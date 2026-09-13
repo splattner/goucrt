@@ -85,6 +85,9 @@ func NewTasmotaClient(i *integration.Integration) *TasmotaClient {
 		Name: integration.LanguageText{
 			En: "Tasmota",
 		},
+		Description: integration.LanguageText{
+			En: "Control Tasmota-flashed devices discovered over MQTT.",
+		},
 		Version: "0.2.0",
 		SetupDataSchema: integration.SetupDataSchema{
 			Title: integration.LanguageText{

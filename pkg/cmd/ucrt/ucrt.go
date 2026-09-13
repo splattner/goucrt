@@ -78,7 +78,7 @@ func NewCommand(name string) *cobra.Command {
 	if err := viper.BindPFlag("registrationPin", rootCmd.PersistentFlags().Lookup("registrationPin")); err != nil {
 		log.WithError(err).Error(("Cannot bindPFplag"))
 	}
-	if err := viper.BindEnv("registrationUsername", "UC_REGISTRATION_PIN"); err != nil {
+	if err := viper.BindEnv("registrationPin", "UC_REGISTRATION_PIN"); err != nil {
 		log.WithError(err).Error(("Cannot BindEnv"))
 	}
 
@@ -93,6 +93,19 @@ func NewCommand(name string) *cobra.Command {
 	}
 	if err := viper.BindEnv("ucconfighome", "UC_CONFIG_HOME"); err != nil {
 		log.WithError(err).Error(("Cannot BindEnv"))
+	}
+
+	rootCmd.PersistentFlags().String("datahome", "", "Directory for a driver's own application data; defaults to ucconfighome if unset")
+	if err := viper.BindPFlag("datahome", rootCmd.PersistentFlags().Lookup("datahome")); err != nil {
+		log.WithError(err).Error(("Cannot bindPFplag"))
+	}
+	if err := viper.BindEnv("datahome", "UC_DATA_HOME"); err != nil {
+		log.WithError(err).Error(("Cannot BindEnv"))
+	}
+
+	rootCmd.PersistentFlags().String("bindInterface", "", "Host/IP address to listen on (default: all interfaces). Overridden by UC_INTEGRATION_INTERFACE when set.")
+	if err := viper.BindPFlag("bindInterface", rootCmd.PersistentFlags().Lookup("bindInterface")); err != nil {
+		log.WithError(err).Error(("Cannot bindPFplag"))
 	}
 
 	rootCmd.AddCommand(

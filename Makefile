@@ -102,8 +102,32 @@ docker-push: ## Push the docker image
 	docker push $(GOUCRT_GHCR_IMG)-amd64
 	docker push $(GOUCRT_GHCR_IMG)-arm64
 
+###
+### Custom driver installation archives
+### See doc/integration-driver/custom-installation.md and
+### internal/spec/core-api/doc/integration-driver/driver-installation.md
+###
+
+CUSTOM_DRIVERS := deconz shelly tasmota
+# Deliberately not under dist/: `goreleaser release` cleans that directory at the start of a run,
+# which would delete these archives before goreleaser's own release step could pick them up via
+# release.extra_files in .goreleaser.yaml.
+CUSTOM_DRIVER_DIST_DIR ?= custom-driver-dist
+
+.PHONY: custom-driver-archives
+custom-driver-archives: $(addprefix custom-driver-archive-,$(CUSTOM_DRIVERS)) ## Build all custom-installable driver archives
+
+.PHONY: custom-driver-archive-%
+custom-driver-archive-%: ## Build a custom-installable driver archive for % (deconz, shelly or tasmota)
+	@mkdir -p $(WORK_DIR)/custom-drivers/$*/bin
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o $(WORK_DIR)/custom-drivers/$*/bin/driver ./cmd/$*-driver
+	go run ./tools/gendriverjson -client $* -out $(WORK_DIR)/custom-drivers/$*/driver.json
+	cp assets/$*.png $(WORK_DIR)/custom-drivers/$*/$*.png
+	@mkdir -p $(CUSTOM_DRIVER_DIST_DIR)
+	tar -czf $(CUSTOM_DRIVER_DIST_DIR)/$*-custom-driver.tar.gz -C $(WORK_DIR)/custom-drivers/$* driver.json $*.png bin
+
 build-clean:
-	rm -rf dist/ bin/ cover.out $(BIN_FILENAME) $(BIN_FILENAME_ARM64) $(WORK_DIR)
+	rm -rf dist/ bin/ cover.out $(BIN_FILENAME) $(BIN_FILENAME_ARM64) $(WORK_DIR) $(CUSTOM_DRIVER_DIST_DIR)
 
 clean: $(clean_targets) ## Cleans up all the locally generated resources
 

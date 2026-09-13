@@ -145,7 +145,9 @@ func (c *Client) ClientLoop() {
 func (c *Client) FinishIntegrationSetup() {
 
 	c.IntegrationDriver.SetupData["integrationSetupFinished"] = "true"
-	c.IntegrationDriver.PersistSetupData()
+	if err := c.IntegrationDriver.PersistSetupData(); err != nil {
+		log.WithError(err).Error("Cannot persist setup data")
+	}
 
 	log.Debug("Integration Setup finished")
 
