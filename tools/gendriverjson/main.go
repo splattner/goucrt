@@ -1,12 +1,6 @@
 // Command gendriverjson writes the driver.json metadata file a custom-installed driver archive
-// needs at its root (see doc/integration-driver/driver-installation.md), generated from the exact
-// same DriverMetadata the corresponding client sets on its Integration at runtime - so the two
-// can never drift apart. It works by constructing a throwaway Integration and calling the client's
-// own NewXClient constructor, the same call every driver binary makes at startup, then reading
-// back the DriverMetadata that call set and marshalling it directly: DriverMetadata's fields and
-// JSON tags already match driver.json's schema (the connection-only fields it doesn't need -
-// driver_url, auth_method - are never set by any client here, so they're simply absent via
-// omitempty).
+// needs at its root, using integration.GenerateDriverJSON - see that function's doc comment for
+// how and why.
 //
 // Run from the repository root:
 //
@@ -14,7 +8,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -30,33 +23,22 @@ func main() {
 	out := flag.String("out", "driver.json", "output file path")
 	flag.Parse()
 
-	i, err := integration.NewIntegration(integration.Config{})
-	if err != nil {
-		fatalf("NewIntegration: %v", err)
-	}
-
-	// Each NewXClient constructor only builds its DriverMetadata and registers function pointers -
-	// it doesn't start any network activity, so it's safe to call here without InitClient/Run.
+	var newClient func(*integration.Integration)
 	switch *client {
 	case "deconz":
-		deconzclient.NewDeconzClient(i)
+		newClient = func(i *integration.Integration) { deconzclient.NewDeconzClient(i) }
 	case "shelly":
-		shellyclient.NewShellyClient(i)
+		newClient = func(i *integration.Integration) { shellyclient.NewShellyClient(i) }
 	case "tasmota":
-		tasmotaclient.NewTasmotaClient(i)
+		newClient = func(i *integration.Integration) { tasmotaclient.NewTasmotaClient(i) }
 	default:
 		fatalf("unknown -client %q: must be deconz, shelly, or tasmota", *client)
 	}
 
-	if i.Metadata == nil {
-		fatalf("%s's client constructor didn't set driver metadata", *client)
-	}
-
-	data, err := json.MarshalIndent(i.Metadata, "", "  ")
+	data, err := integration.GenerateDriverJSON(newClient)
 	if err != nil {
-		fatalf("marshal driver metadata: %v", err)
+		fatalf("%s: %v", *client, err)
 	}
-	data = append(data, '\n')
 
 	if err := os.WriteFile(*out, data, 0o644); err != nil {
 		fatalf("write %s: %v", *out, err)
