@@ -235,17 +235,20 @@ func (c *TasmotaClient) handleNewDeviceDiscovered(device *tasmota.TasmotaDevice)
 
 		// Add commands
 		lightEntity_rgb.AddCommand(entities.OnLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
+			p := entities.CommandParams(params)
 
 			// NO param set, so just turn on
-			if len(params) == 0 {
+			if len(p) == 0 {
 				if err := device.TurnOn(); err != nil {
 					return 404
 				}
 			} else {
-				if params["saturation"] != nil && params["hue"] != nil {
+				hueVal, hasHue := p.Float64("hue")
+				satVal, hasSat := p.Float64("saturation")
+				if hasHue && hasSat {
 
-					hue := float32(params["hue"].(float64))
-					sat := float32(params["saturation"].(float64) / 255 * 100)
+					hue := float32(hueVal)
+					sat := float32(satVal / 255 * 100)
 
 					// Color Light
 					if err := device.SetHue(hue); err != nil {
@@ -257,8 +260,8 @@ func (c *TasmotaClient) handleNewDeviceDiscovered(device *tasmota.TasmotaDevice)
 
 				}
 
-				if params["brightness"] != nil {
-					bri := int(params["brightness"].(float64) / 255 * 100)
+				if brightness, ok := p.Float64("brightness"); ok {
+					bri := int(brightness / 255 * 100)
 					if bri > 0 && device.LocalState.White == 0 {
 						// Set Brightness if not in White mode
 						if err := device.SetBrightness(bri); err != nil {

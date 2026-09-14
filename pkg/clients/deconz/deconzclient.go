@@ -276,40 +276,35 @@ func (c *DeconzClient) handleNewLightDeviceDiscovered(device *deconz.DeconzDevic
 
 	// Add commands
 	light.AddCommand(entities.OnLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
+		p := entities.CommandParams(params)
 
 		// NO param set, so just turn on
-		if len(params) == 0 {
+		if len(p) == 0 {
 			if err := device.TurnOn(); err != nil {
 				return 404
 			}
 		} else {
 
-			if params["brightness"] != nil {
-
-				if err := device.SetBrightness(float32(params["brightness"].(uint))); err != nil {
+			if brightness, ok := p.Float64("brightness"); ok {
+				if err := device.SetBrightness(float32(brightness)); err != nil {
 					return 404
 				}
 			}
 
-			if params["hue"] != nil {
-				hue := params["hue"].(float64) / 360 * 65535
-				if err := device.SetHue(float32(hue)); err != nil {
+			if hue, ok := p.Float64("hue"); ok {
+				if err := device.SetHue(float32(hue / 360 * 65535)); err != nil {
 					return 404
 				}
 			}
 
-			if params["saturation"] != nil {
-				if err := device.SetSaturation(float32(params["saturation"].(uint))); err != nil {
+			if saturation, ok := p.Float64("saturation"); ok {
+				if err := device.SetSaturation(float32(saturation)); err != nil {
 					return 404
 				}
 			}
 
-			if params["color_temperature"] != nil {
-
-				raw_ct := params["color_temperature"].(float64)
-				ct := raw_ct/100*(500-153) + 153
-
-				if err := device.SetColorTemp(float32(ct)); err != nil {
+			if ct, ok := p.Float64("color_temperature"); ok {
+				if err := device.SetColorTemp(float32(ct/100*(500-153) + 153)); err != nil {
 					return 404
 				}
 			}
@@ -405,39 +400,35 @@ func (c *DeconzClient) handleNewGroupDeviceDiscovered(device *deconz.DeconzDevic
 
 	// Commands
 	group.AddCommand(entities.OnLightEntityCommand, func(entity entities.LightEntity, params map[string]interface{}) int {
+		p := entities.CommandParams(params)
 
 		// NO param set, so just turn on
-		if len(params) == 0 {
+		if len(p) == 0 {
 			if err := device.TurnOn(); err != nil {
 				return 404
 			}
 		} else {
 
-			if params["brightness"] != nil {
-				//bri, _ := strconv.ParseFloat(params["brightness"].(string), 32)
-				if err := device.SetBrightness(float32(params["brightness"].(float64))); err != nil {
+			if brightness, ok := p.Float64("brightness"); ok {
+				if err := device.SetBrightness(float32(brightness)); err != nil {
 					return 404
 				}
 			}
 
-			if params["hue"] != nil {
-				hue := params["hue"].(float64) / 360 * 65535
-				if err := device.SetHue(float32(hue)); err != nil {
+			if hue, ok := p.Float64("hue"); ok {
+				if err := device.SetHue(float32(hue / 360 * 65535)); err != nil {
 					return 404
 				}
 			}
 
-			if params["saturation"] != nil {
-				if err := device.SetSaturation(float32(params["saturation"].(float64))); err != nil {
+			if saturation, ok := p.Float64("saturation"); ok {
+				if err := device.SetSaturation(float32(saturation)); err != nil {
 					return 404
 				}
 			}
 
-			if params["color_temperature"] != nil {
-				raw_ct := params["color_temperature"].(float64)
-				ct := raw_ct/100*(500-153) + 153
-
-				if err := device.SetColorTemp(float32(ct)); err != nil {
+			if ct, ok := p.Float64("color_temperature"); ok {
+				if err := device.SetColorTemp(float32(ct/100*(500-153) + 153)); err != nil {
 					return 404
 				}
 			}
