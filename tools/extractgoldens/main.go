@@ -30,16 +30,17 @@ import (
 // output directory name under pkg/entities/testdata. Only entity types goucrt actually implements are
 // listed; add a type here once pkg/entities gains a constructor for it.
 var implementedEntities = map[string]string{
-	"button":       "button",
-	"switch":       "switch",
-	"light":        "light",
-	"cover":        "cover",
-	"media_player": "media_player",
-	"climate":      "climate",
-	"sensor":       "sensor",
-	"remote":       "remote",
-	"select":       "select",
-	"ir_emitter":   "ir_emitter",
+	"button":          "button",
+	"switch":          "switch",
+	"light":           "light",
+	"cover":           "cover",
+	"media_player":    "media_player",
+	"climate":         "climate",
+	"sensor":          "sensor",
+	"remote":          "remote",
+	"select":          "select",
+	"ir_emitter":      "ir_emitter",
+	"voice_assistant": "voice_assistant",
 }
 
 var (

@@ -494,6 +494,67 @@ type RequireUserAction struct {
 	Confirmation interface{} `json:"confirmation,omitempty"`
 }
 
+// AssistantEventType is the "type" discriminator of an assistant_event message's msg_data - see
+// Integration.sendAssistantEvent and its SendVoiceAssistant* wrappers in voice_assistant_events.go.
+type AssistantEventType string
+
+const (
+	ReadyAssistantEventType          AssistantEventType = "ready"
+	SttResponseAssistantEventType    AssistantEventType = "stt_response"
+	TextResponseAssistantEventType   AssistantEventType = "text_response"
+	SpeechResponseAssistantEventType AssistantEventType = "speech_response"
+	FinishedAssistantEventType       AssistantEventType = "finished"
+	ErrorAssistantEventType          AssistantEventType = "error"
+)
+
+// AssistantErrorCode is the assistant_event error event's "code" field.
+type AssistantErrorCode string
+
+const (
+	ServiceUnavailableAssistantErrorCode AssistantErrorCode = "SERVICE_UNAVAILABLE"
+	InvalidAudioAssistantErrorCode       AssistantErrorCode = "INVALID_AUDIO"
+	NoTextRecognizedAssistantErrorCode   AssistantErrorCode = "NO_TEXT_RECOGNIZED"
+	IntentFailedAssistantErrorCode       AssistantErrorCode = "INTENT_FAILED"
+	TtsFailedAssistantErrorCode          AssistantErrorCode = "TTS_FAILED"
+	TimeoutAssistantErrorCode            AssistantErrorCode = "TIMEOUT"
+	UnexpectedErrorAssistantErrorCode    AssistantErrorCode = "UNEXPECTED_ERROR"
+)
+
+type AssistantEventMessage struct {
+	CommonEvent
+	MsgData AssistantEventData `json:"msg_data"`
+}
+
+type AssistantEventData struct {
+	Type      AssistantEventType `json:"type"`
+	EntityId  string             `json:"entity_id"`
+	SessionId int                `json:"session_id"`
+	// Data carries the event-specific payload: AssistantSttResponseData, AssistantTextResponseData,
+	// AssistantSpeechResponseData or AssistantErrorData, depending on Type. Omitted for ready/finished.
+	Data interface{} `json:"data,omitempty"`
+}
+
+type AssistantSttResponseData struct {
+	Text string `json:"text"`
+}
+
+type AssistantTextResponseData struct {
+	Success bool   `json:"success"`
+	Text    string `json:"text"`
+}
+
+type AssistantSpeechResponseData struct {
+	Url string `json:"url"`
+	// MimeType: one of audio/mpeg, audio/mp3, audio/wav, audio/x-wav, audio/ogg, audio/opus,
+	// audio/webm, audio/flac, audio/aac. Other types are ignored by the Remote's UI.
+	MimeType string `json:"mime_type,omitempty"`
+}
+
+type AssistantErrorData struct {
+	Code    AssistantErrorCode `json:"code"`
+	Message string             `json:"message"`
+}
+
 type ButtonMapping struct {
 	Button     string  `json:"string"`
 	ShortPress Command `json:"short_press,omitempty"`

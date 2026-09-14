@@ -11,6 +11,7 @@ package spec
 import (
 	_ "embed"
 	"fmt"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -63,8 +64,8 @@ func EntityTypeSchema(entityType string) (EntitySchema, error) {
 	props, _ := ext["properties"].(map[string]interface{})
 
 	return EntitySchema{
-		Features:    enumAt(props, "features", "items", "enum"),
-		DeviceClass: enumAt(props, "device_class", "enum"),
+		Features:    enumAt(schemas, props, "features", "items", "enum"),
+		DeviceClass: enumAt(schemas, props, "device_class", "enum"),
 	}, nil
 }
 
@@ -110,13 +111,17 @@ func mapAt(doc map[string]interface{}, path ...string) (map[string]interface{}, 
 
 // enumAt walks props[path[0]][path[1]]...["enum"] and returns the enum's string values, or nil if
 // any step along the way is absent (a property with no enum, e.g. an entity with no device_class).
-func enumAt(props map[string]interface{}, path ...string) []string {
+// Resolves a `$ref: '#/components/schemas/X'` into schemas[X] before indexing into it at each step -
+// e.g. voice_assistant's `features` property is itself a $ref (to VoiceAssistantFeatures, an array
+// of a further $ref to the VoiceAssistantFeature enum) rather than the inline
+// `items: {enum: [...]}` every other entity type uses.
+func enumAt(schemas map[string]interface{}, props map[string]interface{}, path ...string) []string {
 	if props == nil {
 		return nil
 	}
 	var cur interface{} = props
 	for _, key := range path {
-		m, ok := cur.(map[string]interface{})
+		m, ok := resolveRef(schemas, cur).(map[string]interface{})
 		if !ok {
 			return nil
 		}
@@ -136,4 +141,33 @@ func enumAt(props map[string]interface{}, path ...string) []string {
 		}
 	}
 	return out
+}
+
+// resolveRef returns schemas[X] if node is a map whose only relevant content is a
+// `$ref: '#/components/schemas/X'`, following further refs up to a small hop limit (in case the
+// referenced schema is itself just another ref) in case of a cycle in the vendored spec. Any other
+// node - including a map with a $ref pointing outside components/schemas, which the vendored spec
+// never does - is returned unchanged.
+func resolveRef(schemas map[string]interface{}, node interface{}) interface{} {
+	const prefix = "#/components/schemas/"
+	for range 10 {
+		m, ok := node.(map[string]interface{})
+		if !ok {
+			return node
+		}
+		ref, ok := m["$ref"].(string)
+		if !ok {
+			return node
+		}
+		name, ok := strings.CutPrefix(ref, prefix)
+		if !ok {
+			return node
+		}
+		next, ok := schemas[name]
+		if !ok {
+			return node
+		}
+		node = next
+	}
+	return node
 }

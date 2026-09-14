@@ -23,6 +23,12 @@ func TestEntityTypeSchema_KnownEntities(t *testing.T) {
 		{"climate", "target_temperature", ""},
 		{"sensor", "", "temperature"},
 		{"remote", "send_cmd", ""},
+		{"select", "", ""},
+		{"ir_emitter", "send_ir", ""},
+		// voice_assistant's `features` property is a $ref (to VoiceAssistantFeatures, an array of a
+		// further $ref to the VoiceAssistantFeature enum) rather than every other entity's inline
+		// `items: {enum: [...]}` - the regression case for enumAt's $ref resolution.
+		{"voice_assistant", "transcription", ""},
 	}
 
 	for _, c := range cases {
