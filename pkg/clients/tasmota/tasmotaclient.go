@@ -197,8 +197,8 @@ func (c *TasmotaClient) handleNewDeviceDiscovered(device *tasmota.TasmotaDevice)
 		switchEntity.SubscribeCallbackFunc = device.Subscribe
 		switchEntity.UnsubscribeCallbackFunc = device.Unsubscribe
 
-		switchEntity.AddFeature(entities.OnOffSwitchEntityyFeatures)
-		switchEntity.AddFeature(entities.ToggleSwitchEntityyFeatures)
+		switchEntity.AddFeature(entities.OnOffSwitchEntityFeatures)
+		switchEntity.AddFeature(entities.ToggleSwitchEntityFeatures)
 
 		switchEntity.MapCommand(entities.OnSwitchEntityCommand, device.TurnOn)
 		switchEntity.MapCommand(entities.OffSwitchEntityCommand, device.TurnOff)

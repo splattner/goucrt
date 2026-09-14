@@ -184,8 +184,8 @@ func (c *ShellyClient) handleNewDeviceDiscovered(device *shelly.ShellyDevice) {
 	shellySwitch.SubscribeCallbackFunc = device.Subscribe
 	shellySwitch.UnsubscribeCallbackFunc = device.Unsubscribe
 
-	shellySwitch.AddFeature(entities.OnOffSwitchEntityyFeatures)
-	shellySwitch.AddFeature(entities.ToggleSwitchEntityyFeatures)
+	shellySwitch.AddFeature(entities.OnOffSwitchEntityFeatures)
+	shellySwitch.AddFeature(entities.ToggleSwitchEntityFeatures)
 
 	shellySwitch.MapCommand(entities.OnSwitchEntityCommand, device.TurnOn)
 	shellySwitch.MapCommand(entities.OffSwitchEntityCommand, device.TurnOff)
@@ -197,9 +197,9 @@ func (c *ShellyClient) handleNewDeviceDiscovered(device *shelly.ShellyDevice) {
 
 		switch string(msg) {
 		case "on":
-			attributes[string(entities.StateSwitchEntityyAttribute)] = entities.OnSwitchtEntityState
+			attributes[string(entities.StateSwitchEntityAttribute)] = entities.OnSwitchEntityState
 		case "off":
-			attributes[string(entities.StateSwitchEntityyAttribute)] = entities.OffSwitchtEntityState
+			attributes[string(entities.StateSwitchEntityAttribute)] = entities.OffSwitchEntityState
 		}
 
 		shellySwitch.SetAttributes(attributes)

@@ -57,7 +57,7 @@ var knownCommands = map[string][]string{
 	"cover": {
 		string(OpenCoverEntityCommand),
 		string(CloseCoverEntityCommand),
-		string(StopCoverEntityyommand),
+		string(StopCoverEntityCommand),
 		string(PositionCoverEntityCommand),
 		string(TiltCoverEntityCommand),
 		string(TiltUpCoverEntityCommand),
@@ -70,7 +70,7 @@ var knownCommands = map[string][]string{
 		string(ToggleMediaPlayerEntityCommand),
 		string(PlayPauseMediaPlayerEntityCommand),
 		string(StopMediaPlayerEntityCommand),
-		string(PreviusMediaPlayerEntityCommand),
+		string(PreviousMediaPlayerEntityCommand),
 		string(NextMediaPlayerEntityCommand),
 		string(FastForwardMediaPlayerEntityCommand),
 		string(RewindMediaPlayerEntityCommand),
@@ -96,7 +96,7 @@ var knownCommands = map[string][]string{
 		string(GuideMediaPlayerEntityCommand),
 		string(InfoMediaPlayerEntityCommand),
 		string(BackMediaPlayerEntityCommand),
-		string(SelectSourcMediaPlayerEntityCommand),
+		string(SelectSourceMediaPlayerEntityCommand),
 		string(SelectSoundModeMediaPlayerEntityCommand),
 		string(RecordMediaPlayerEntityCommand),
 		string(EjectMediaPlayerEntityCommand),
@@ -134,7 +134,7 @@ var knownCommands = map[string][]string{
 }
 
 var knownAttributes = map[string][]string{
-	"switch": {string(StateSwitchEntityyAttribute)},
+	"switch": {string(StateSwitchEntityAttribute)},
 	"light": {
 		string(StateLightEntityAttribute),
 		string(HueLightEntityAttribute),
@@ -150,7 +150,7 @@ var knownAttributes = map[string][]string{
 	"media_player": {
 		string(StateMediaPlayerEntityAttribute),
 		string(VolumeMediaPlayerEntityAttribute),
-		string(MutedMediaPlayeEntityAttribute),
+		string(MutedMediaPlayerEntityAttribute),
 		string(MediaDurationMediaPlayerEntityAttribute),
 		string(MediaPositionMediaPlayerEntityAttribute),
 		string(MediaTypeMediaPlayerEntityAttribute),
@@ -174,9 +174,9 @@ var knownAttributes = map[string][]string{
 		string(FanModeClimateEntityAttribute),
 	},
 	"sensor": {
-		string(StateSensorEntityyAttribute),
-		string(ValueSensortEntityyAttribute),
-		string(UnitSSensorntityyAttribute),
+		string(StateSensorEntityAttribute),
+		string(ValueSensorEntityAttribute),
+		string(UnitSensorEntityAttribute),
 	},
 	"remote": {string(StateRemoteEntityAttribute)},
 	"select": {

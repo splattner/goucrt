@@ -23,8 +23,8 @@ const (
 
 const (
 	OnOffMediaPlayerEntityFeatures                  MediaPlayerEntityFeatures = "on_off"
-	ToggleMediaPlayerEntityyFeatures                MediaPlayerEntityFeatures = "toggle"
-	VolumeMediaPlayerEntityyFeatures                MediaPlayerEntityFeatures = "volume"
+	ToggleMediaPlayerEntityFeatures                 MediaPlayerEntityFeatures = "toggle"
+	VolumeMediaPlayerEntityFeatures                 MediaPlayerEntityFeatures = "volume"
 	VolumeUpDownMediaPlayerEntityFeatures           MediaPlayerEntityFeatures = "volume_up_down"
 	MuteToggleMediaPlayerEntityFeatures             MediaPlayerEntityFeatures = "mute_toggle"
 	MuteMediaPlayerEntityFeatures                   MediaPlayerEntityFeatures = "mute"
@@ -32,7 +32,7 @@ const (
 	PlayPauseMediaPlayerEntityFeatures              MediaPlayerEntityFeatures = "play_pause"
 	StopMediaPlayerEntityFeatures                   MediaPlayerEntityFeatures = "stop"
 	NextMediaPlayerEntityFeatures                   MediaPlayerEntityFeatures = "next"
-	PreviusMediaPlayerEntityFeatures                MediaPlayerEntityFeatures = "previous"
+	PreviousMediaPlayerEntityFeatures               MediaPlayerEntityFeatures = "previous"
 	FastForwardMediaPlayerEntityFeatures            MediaPlayerEntityFeatures = "fast_forward"
 	RewindMediaPlayerEntityFeatures                 MediaPlayerEntityFeatures = "rewind"
 	RepeatMediaPlayerEntityFeatures                 MediaPlayerEntityFeatures = "repeat"
@@ -71,10 +71,20 @@ const (
 	SearchMediaMediaPlayerEntityFeatures MediaPlayerEntityFeatures = "search_media"
 )
 
+// Deprecated: misspelled aliases kept for backward compatibility, will be removed in a future release.
+const (
+	// Deprecated: use ToggleMediaPlayerEntityFeatures instead.
+	ToggleMediaPlayerEntityyFeatures = ToggleMediaPlayerEntityFeatures
+	// Deprecated: use VolumeMediaPlayerEntityFeatures instead.
+	VolumeMediaPlayerEntityyFeatures = VolumeMediaPlayerEntityFeatures
+	// Deprecated: use PreviousMediaPlayerEntityFeatures instead.
+	PreviusMediaPlayerEntityFeatures = PreviousMediaPlayerEntityFeatures
+)
+
 const (
 	StateMediaPlayerEntityAttribute         MediaPlayerEntityAttributes = "state"
 	VolumeMediaPlayerEntityAttribute        MediaPlayerEntityAttributes = "volume"
-	MutedMediaPlayeEntityAttribute          MediaPlayerEntityAttributes = "muted"
+	MutedMediaPlayerEntityAttribute         MediaPlayerEntityAttributes = "muted"
 	MediaDurationMediaPlayerEntityAttribute MediaPlayerEntityAttributes = "media_duration"
 	MediaPositionMediaPlayerEntityAttribute MediaPlayerEntityAttributes = "media_position"
 	// MediaPositionUpdatedAtMediaPlayerEntityAttribute: string, ISO 8601 datetime. Optional
@@ -93,13 +103,16 @@ const (
 	SoundModeListMediaPlayerEntityAttribute          MediaPlayerEntityAttributes = "sound_mode_list"
 )
 
+// Deprecated: use MutedMediaPlayerEntityAttribute instead.
+const MutedMediaPlayeEntityAttribute = MutedMediaPlayerEntityAttribute
+
 const (
 	OnMediaPlayerEntityCommand               MediaPlayerEntityCommand = "on"
 	OffMediaPlayerEntityCommand              MediaPlayerEntityCommand = "off"
 	ToggleMediaPlayerEntityCommand           MediaPlayerEntityCommand = "toggle"
 	PlayPauseMediaPlayerEntityCommand        MediaPlayerEntityCommand = "play_pause"
 	StopMediaPlayerEntityCommand             MediaPlayerEntityCommand = "stop"
-	PreviusMediaPlayerEntityCommand          MediaPlayerEntityCommand = "previous"
+	PreviousMediaPlayerEntityCommand         MediaPlayerEntityCommand = "previous"
 	NextMediaPlayerEntityCommand             MediaPlayerEntityCommand = "next"
 	FastForwardMediaPlayerEntityCommand      MediaPlayerEntityCommand = "fast_forward"
 	RewindMediaPlayerEntityCommand           MediaPlayerEntityCommand = "rewind"
@@ -139,7 +152,7 @@ const (
 	GuideMediaPlayerEntityCommand            MediaPlayerEntityCommand = "guide"
 	InfoMediaPlayerEntityCommand             MediaPlayerEntityCommand = "info"
 	BackMediaPlayerEntityCommand             MediaPlayerEntityCommand = "back"
-	SelectSourcMediaPlayerEntityCommand      MediaPlayerEntityCommand = "select_source"
+	SelectSourceMediaPlayerEntityCommand     MediaPlayerEntityCommand = "select_source"
 	SelectSoundModeMediaPlayerEntityCommand  MediaPlayerEntityCommand = "select_sound_mode"
 	RecordMediaPlayerEntityCommand           MediaPlayerEntityCommand = "record"
 	MyRecordingsMenuMediaPlayerEntityCommand MediaPlayerEntityCommand = "my_recordings"
@@ -152,13 +165,24 @@ const (
 	SearchMediaPlayerEntityCommand           MediaPlayerEntityCommand = "search"
 )
 
+// Deprecated: misspelled aliases kept for backward compatibility, will be removed in a future release.
 const (
-	ReceiverMediaPlayerDeviceClass      MediaPlayerDeviceClass = "receiver"
-	SetTopBoxMediaPlayerDeviceClass     MediaPlayerDeviceClass = "set_top_box"
-	SpeakerMediaPlayerDeviceClass       MediaPlayerDeviceClass = "speaker"
-	StreamingBoxMMediaPlayerDeviceClass MediaPlayerDeviceClass = "streaming_box"
-	TVMediaPlayerDeviceClass            MediaPlayerDeviceClass = "tv"
+	// Deprecated: use PreviousMediaPlayerEntityCommand instead.
+	PreviusMediaPlayerEntityCommand = PreviousMediaPlayerEntityCommand
+	// Deprecated: use SelectSourceMediaPlayerEntityCommand instead.
+	SelectSourcMediaPlayerEntityCommand = SelectSourceMediaPlayerEntityCommand
 )
+
+const (
+	ReceiverMediaPlayerDeviceClass     MediaPlayerDeviceClass = "receiver"
+	SetTopBoxMediaPlayerDeviceClass    MediaPlayerDeviceClass = "set_top_box"
+	SpeakerMediaPlayerDeviceClass      MediaPlayerDeviceClass = "speaker"
+	StreamingBoxMediaPlayerDeviceClass MediaPlayerDeviceClass = "streaming_box"
+	TVMediaPlayerDeviceClass           MediaPlayerDeviceClass = "tv"
+)
+
+// Deprecated: use StreamingBoxMediaPlayerDeviceClass instead.
+const StreamingBoxMMediaPlayerDeviceClass = StreamingBoxMediaPlayerDeviceClass
 
 const (
 	SimpleCommandsMediaPlayerEntityOption MediaPlayerEntityOption = "simple_commands"
@@ -224,7 +248,7 @@ func (e *MediaPlayerEntity) AddFeature(feature MediaPlayerEntityFeatures) {
 	case OnOffMediaPlayerEntityFeatures:
 		e.AddAttribute(string(StateMediaPlayerEntityAttribute), OffMediaPlayerEntityState)
 
-	case ToggleMediaPlayerEntityyFeatures:
+	case ToggleMediaPlayerEntityFeatures:
 		e.AddAttribute(string(StateMediaPlayerEntityAttribute), OffMediaPlayerEntityState)
 
 	case PlayPauseMediaPlayerEntityFeatures:
@@ -239,20 +263,20 @@ func (e *MediaPlayerEntity) AddFeature(feature MediaPlayerEntityFeatures) {
 		e.AddAttribute(string(StateMediaPlayerEntityAttribute), OffMediaPlayerEntityState)
 		e.AddAttribute(string(MediaPositionMediaPlayerEntityAttribute), 0)
 
-	case VolumeMediaPlayerEntityyFeatures:
+	case VolumeMediaPlayerEntityFeatures:
 		e.AddAttribute(string(VolumeMediaPlayerEntityAttribute), 0)
 
 	case VolumeUpDownMediaPlayerEntityFeatures:
 		e.AddAttribute(string(VolumeMediaPlayerEntityAttribute), 0)
 
 	case MuteToggleMediaPlayerEntityFeatures:
-		e.AddAttribute(string(MutedMediaPlayeEntityAttribute), false)
+		e.AddAttribute(string(MutedMediaPlayerEntityAttribute), false)
 
 	case MuteMediaPlayerEntityFeatures:
-		e.AddAttribute(string(MutedMediaPlayeEntityAttribute), false)
+		e.AddAttribute(string(MutedMediaPlayerEntityAttribute), false)
 
 	case UnmuteMediaPlayerEntityFeatures:
-		e.AddAttribute(string(MutedMediaPlayeEntityAttribute), false)
+		e.AddAttribute(string(MutedMediaPlayerEntityAttribute), false)
 
 	case MediaDurationMediaPlayerEntityFeatures:
 		e.AddAttribute(string(MediaDurationMediaPlayerEntityAttribute), 0)
@@ -284,7 +308,7 @@ func (e *MediaPlayerEntity) AddFeature(feature MediaPlayerEntityFeatures) {
 		e.AddAttribute(string(MediaArtistMediaPlayerEntityAttribute), "")
 		e.AddAttribute(string(MediaAlbumMediaPlayerEntityAttribute), "")
 
-	case PreviusMediaPlayerEntityFeatures:
+	case PreviousMediaPlayerEntityFeatures:
 		e.AddAttribute(string(MediaImageUrlMediaPlayerEntityAttribute), "")
 		e.AddAttribute(string(MediaTitleMediaPlayerEntityAttribute), "")
 		e.AddAttribute(string(MediaArtistMediaPlayerEntityAttribute), "")
