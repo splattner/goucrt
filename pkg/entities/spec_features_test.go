@@ -157,6 +157,17 @@ func TestFeaturesAndDeviceClassMatchSpec(t *testing.T) {
 				string(SendIrEmitterEntityFeatures),
 			},
 		},
+		{
+			// voice_assistant has no device_class. Its `features` property is a $ref rather than
+			// every other entity's inline `items: {enum: [...]}` (see internal/spec's enumAt/
+			// resolveRef), so this case doubles as that resolution's regression test.
+			entityType: "voice_assistant",
+			features: []string{
+				string(TranscriptionVoiceAssistantEntityFeatures),
+				string(ResponseTextVoiceAssistantEntityFeatures),
+				string(ResponseSpeechVoiceAssistantEntityFeatures),
+			},
+		},
 	}
 
 	for _, c := range cases {
