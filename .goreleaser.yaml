@@ -95,6 +95,12 @@ signs:
     - sign-blob
     - '--output-certificate=${certificate}'
     - '--output-signature=${signature}'
+    # cosign v3 (pulled in by a sigstore/cosign-installer bump) defaults sign-blob to its new
+    # bundle format, under which --output-certificate/--output-signature are silently ignored and
+    # nothing is written to --bundle (unset here), so cosign errors trying to open "" as the
+    # bundle path. Force the legacy separate .pem/.sig layout goreleaser's `certificate`/
+    # `signature` template fields (and this project's released asset names) expect.
+    - '--new-bundle-format=false'
     - '${artifact}'
     - "--yes" # needed on cosign 2.0.0+
   artifacts: checksum
