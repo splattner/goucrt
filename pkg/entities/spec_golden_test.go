@@ -105,6 +105,8 @@ var knownCommands = map[string][]string{
 		string(SubtitleMediaPlayerEntityCommand),
 		string(SettingsMediaPlayerEntityCommand),
 		string(SearchMediaPlayerEntityCommand),
+		string(PlayMediaMediaPlayerEntityCommand),
+		string(ClearPlaylistMediaPlayerEntityCommand),
 	},
 	"climate": {
 		string(OnClimateEntityCommand),
@@ -164,6 +166,10 @@ var knownAttributes = map[string][]string{
 		string(SourceListMediaPlayerEntityAttribute),
 		string(SoundModeMediaPlayerEntityAttribute),
 		string(SoundModeListMediaPlayerEntityAttribute),
+		string(MediaIdMediaPlayerEntityAttribute),
+		string(MediaPlaylistMediaPlayerEntityAttribute),
+		string(PlayMediaActionMediaPlayerEntityAttribute),
+		string(SearchMediaClassesMediaPlayerEntityAttribute),
 	},
 	"climate": {
 		string(StateClimateEntityAttribute),

@@ -69,6 +69,16 @@ const (
 	// SearchMediaMediaPlayerEntityFeatures: the entity supports the search_media request. See
 	// SetSearchFunc.
 	SearchMediaMediaPlayerEntityFeatures MediaPlayerEntityFeatures = "search_media"
+	// PlayMediaMediaPlayerEntityFeatures: the entity supports the play_media command.
+	PlayMediaMediaPlayerEntityFeatures MediaPlayerEntityFeatures = "play_media"
+	// PlayMediaActionMediaPlayerEntityFeatures: the entity supports play_media's optional "action"
+	// parameter to play now, play next or enqueue. See MediaPlayAction.
+	PlayMediaActionMediaPlayerEntityFeatures MediaPlayerEntityFeatures = "play_media_action"
+	// ClearPlaylistMediaPlayerEntityFeatures: the entity supports the clear_playlist command.
+	ClearPlaylistMediaPlayerEntityFeatures MediaPlayerEntityFeatures = "clear_playlist"
+	// SearchMediaClassesMediaPlayerEntityFeatures: the entity provides a list of MediaClass values
+	// (in the search_media_classes attribute) to use as a filter for search_media.
+	SearchMediaClassesMediaPlayerEntityFeatures MediaPlayerEntityFeatures = "search_media_classes"
 )
 
 // Deprecated: misspelled aliases kept for backward compatibility, will be removed in a future release.
@@ -101,6 +111,18 @@ const (
 	SourceListMediaPlayerEntityAttribute             MediaPlayerEntityAttributes = "source_list"
 	SoundModeMediaPlayerEntityAttribute              MediaPlayerEntityAttributes = "sound_mode"
 	SoundModeListMediaPlayerEntityAttribute          MediaPlayerEntityAttributes = "sound_mode_list"
+	// MediaIdMediaPlayerEntityAttribute: the content ID of the media being played. Enabled by the
+	// media_type feature, same as MediaTypeMediaPlayerEntityAttribute.
+	MediaIdMediaPlayerEntityAttribute MediaPlayerEntityAttributes = "media_id"
+	// MediaPlaylistMediaPlayerEntityAttribute: title of the playlist currently playing. Enabled by
+	// play_pause, next or previous, same as the other now-playing attributes.
+	MediaPlaylistMediaPlayerEntityAttribute MediaPlayerEntityAttributes = "media_playlist"
+	// PlayMediaActionMediaPlayerEntityAttribute: the MediaPlayAction values this entity supports
+	// for play_media's optional "action" parameter.
+	PlayMediaActionMediaPlayerEntityAttribute MediaPlayerEntityAttributes = "play_media_action"
+	// SearchMediaClassesMediaPlayerEntityAttribute: the MediaClass values this entity accepts as a
+	// search_media filter.
+	SearchMediaClassesMediaPlayerEntityAttribute MediaPlayerEntityAttributes = "search_media_classes"
 )
 
 // Deprecated: use MutedMediaPlayerEntityAttribute instead.
@@ -163,6 +185,25 @@ const (
 	SubtitleMediaPlayerEntityCommand         MediaPlayerEntityCommand = "subtitle"
 	SettingsMediaPlayerEntityCommand         MediaPlayerEntityCommand = "settings"
 	SearchMediaPlayerEntityCommand           MediaPlayerEntityCommand = "search"
+	// PlayMediaMediaPlayerEntityCommand: play or enqueue a media item. Takes required "media_id"
+	// and "media_type" params, plus an optional "action" (MediaPlayAction) param if the
+	// PlayMediaActionMediaPlayerEntityFeatures feature is supported - PlayNowMediaPlayAction is the
+	// default if omitted.
+	PlayMediaMediaPlayerEntityCommand MediaPlayerEntityCommand = "play_media"
+	// ClearPlaylistMediaPlayerEntityCommand: remove all items from the playback queue. What happens
+	// to the currently playing item (kept playing or also cleared) is integration-dependent.
+	ClearPlaylistMediaPlayerEntityCommand MediaPlayerEntityCommand = "clear_playlist"
+)
+
+// MediaPlayAction is play_media's optional "action" parameter: how to handle a newly played item
+// relative to whatever's already in the queue. An integration may use its own values beyond the
+// three predefined here, though the UI may not have locale-aware labels for them.
+type MediaPlayAction string
+
+const (
+	PlayNowMediaPlayAction    MediaPlayAction = "PLAY_NOW"
+	PlayNextMediaPlayAction   MediaPlayAction = "PLAY_NEXT"
+	AddToQueueMediaPlayAction MediaPlayAction = "ADD_TO_QUEUE"
 )
 
 // Deprecated: misspelled aliases kept for backward compatibility, will be removed in a future release.
@@ -258,6 +299,7 @@ func (e *MediaPlayerEntity) AddFeature(feature MediaPlayerEntityFeatures) {
 		e.AddAttribute(string(MediaTitleMediaPlayerEntityAttribute), "")
 		e.AddAttribute(string(MediaArtistMediaPlayerEntityAttribute), "")
 		e.AddAttribute(string(MediaAlbumMediaPlayerEntityAttribute), "")
+		e.AddAttribute(string(MediaPlaylistMediaPlayerEntityAttribute), "")
 
 	case StopMediaPlayerEntityFeatures:
 		e.AddAttribute(string(StateMediaPlayerEntityAttribute), OffMediaPlayerEntityState)
@@ -297,7 +339,12 @@ func (e *MediaPlayerEntity) AddFeature(feature MediaPlayerEntityFeatures) {
 		e.AddAttribute(string(MediaPositionMediaPlayerEntityAttribute), 0)
 
 	case MediaTypeMediaPlayerEntityFeatures:
-		e.AddAttribute(string(MediaTypeMediaPlayerEntityAttribute), 0)
+		// media_id shares this feature (see the spec's Attributes table: both media_id and
+		// media_type list "media_type" as their enabling feature, there's no separate media_id
+		// feature). media_type's default was previously the int 0 rather than a string, which
+		// doesn't match its spec type (string, one of the Media Content Types).
+		e.AddAttribute(string(MediaTypeMediaPlayerEntityAttribute), "")
+		e.AddAttribute(string(MediaIdMediaPlayerEntityAttribute), "")
 
 	case MediaImageUrlMediaPlayerEntityFeatures:
 		e.AddAttribute(string(MediaImageUrlMediaPlayerEntityAttribute), "")
@@ -307,12 +354,14 @@ func (e *MediaPlayerEntity) AddFeature(feature MediaPlayerEntityFeatures) {
 		e.AddAttribute(string(MediaTitleMediaPlayerEntityAttribute), "")
 		e.AddAttribute(string(MediaArtistMediaPlayerEntityAttribute), "")
 		e.AddAttribute(string(MediaAlbumMediaPlayerEntityAttribute), "")
+		e.AddAttribute(string(MediaPlaylistMediaPlayerEntityAttribute), "")
 
 	case PreviousMediaPlayerEntityFeatures:
 		e.AddAttribute(string(MediaImageUrlMediaPlayerEntityAttribute), "")
 		e.AddAttribute(string(MediaTitleMediaPlayerEntityAttribute), "")
 		e.AddAttribute(string(MediaArtistMediaPlayerEntityAttribute), "")
 		e.AddAttribute(string(MediaAlbumMediaPlayerEntityAttribute), "")
+		e.AddAttribute(string(MediaPlaylistMediaPlayerEntityAttribute), "")
 
 	case MediaTitleMediaPlayerEntityFeatures:
 		e.AddAttribute(string(MediaTitleMediaPlayerEntityAttribute), "")
@@ -336,6 +385,12 @@ func (e *MediaPlayerEntity) AddFeature(feature MediaPlayerEntityFeatures) {
 	case SelectSoundModeMediaPlayerEntityFeatures:
 		e.AddAttribute(string(SoundModeMediaPlayerEntityAttribute), "")
 		e.AddAttribute(string(SoundModeListMediaPlayerEntityAttribute), []string{})
+
+	case PlayMediaActionMediaPlayerEntityFeatures:
+		e.AddAttribute(string(PlayMediaActionMediaPlayerEntityAttribute), []MediaPlayAction{})
+
+	case SearchMediaClassesMediaPlayerEntityFeatures:
+		e.AddAttribute(string(SearchMediaClassesMediaPlayerEntityAttribute), []MediaClass{})
 
 	}
 }
