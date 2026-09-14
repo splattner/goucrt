@@ -108,6 +108,11 @@ func (i *Integration) wsReader(ws *websocket.Conn) {
 			i.handleRequest(&req, p)
 		}
 
+		// Response to a driver-initiated request (see metadata_requests.go)
+		if req.Kind == "resp" {
+			i.handleResponse(p)
+		}
+
 	}
 }
 

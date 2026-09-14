@@ -350,6 +350,81 @@ type EntityCommandResponse struct {
 	CommonResp
 }
 
+// Driver-initiated metadata requests (see GetVersion, GetSupportedEntityTypes,
+// GetConfiguredEntities, GetLocalizationCfg, GetRuntimeInfo in metadata_requests.go). Unlike every
+// other request in this file, these are sent BY the driver TO the Remote - the driver asking the
+// Remote about itself, rather than the Remote asking the driver about its entities. The requests
+// carry no msg_data (see the AsyncAPI spec's getVersionMsg/getSupportedEntityTypesMsg/... schemas),
+// so a plain RequestMessage with a nil MsgData is enough to send one; only the responses need their
+// own types.
+
+type VersionInfo struct {
+	// Model: short model identifier of the remote (UCR2 for Remote Two, UCR3 for Remote 3).
+	Model      string `json:"model,omitempty"`
+	DeviceName string `json:"device_name,omitempty"`
+	Hostname   string `json:"hostname,omitempty"`
+	// Address: MAC address of the remote.
+	Address string `json:"address,omitempty"`
+	Api     string `json:"api,omitempty"`
+	Core    string `json:"core,omitempty"`
+	Ui      string `json:"ui,omitempty"`
+	Os      string `json:"os,omitempty"`
+}
+
+type VersionMessage struct {
+	CommonResp
+	MsgData VersionInfo `json:"msg_data"`
+}
+
+type SupportedEntityTypesMessage struct {
+	CommonResp
+	MsgData []string `json:"msg_data"`
+}
+
+type ConfiguredEntitiesMessage struct {
+	CommonResp
+	MsgData []string `json:"msg_data"`
+}
+
+type MeasurementUnit string
+
+const (
+	MetricMeasurementUnit MeasurementUnit = "METRIC"
+	USMeasurementUnit     MeasurementUnit = "US"
+	UKMeasurementUnit     MeasurementUnit = "UK"
+)
+
+type LocalizationSettings struct {
+	// LanguageCode: language culture code, e.g. "en", "en_UK", "de_CH".
+	LanguageCode string `json:"language_code,omitempty"`
+	// CountryCode: two-letter ISO-3166-1-alpha-2 country code.
+	CountryCode string `json:"country_code,omitempty"`
+	// TimeZone: IANA time zone name, e.g. "Europe/Copenhagen".
+	TimeZone        string          `json:"time_zone,omitempty"`
+	TimeFormat24h   bool            `json:"time_format_24h"`
+	MeasurementUnit MeasurementUnit `json:"measurement_unit,omitempty"`
+}
+
+type LocalizationCfgMessage struct {
+	CommonResp
+	MsgData LocalizationSettings `json:"msg_data"`
+}
+
+type RuntimeInfo struct {
+	// DriverId: identifier under which this integration driver is accessible in the Remote.
+	DriverId string `json:"driver_id"`
+	// IntgIds: this driver's configured integration instance identifiers in the Remote. Only
+	// single-device integration drivers are supported at the moment, so there's at most one.
+	IntgIds []string `json:"intg_ids,omitempty"`
+	// LogId: log service identifier for a custom integration driver running on the Remote.
+	LogId string `json:"log_id,omitempty"`
+}
+
+type RuntimeInfoMessage struct {
+	CommonResp
+	MsgData RuntimeInfo `json:"msg_data"`
+}
+
 // Events
 
 type AbortDriverSetupEvent struct {

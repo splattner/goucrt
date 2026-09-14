@@ -59,6 +59,14 @@ type Integration struct {
 
 	SubscribedEntities []string
 
+	// requestsMu guards pendingRequests and nextReqID: sendMetadataRequest (called from a driver's
+	// own goroutine, e.g. calling GetVersion) registers a channel before sending, and the WebSocket
+	// read loop's handleResponse delivers a matching "resp" frame to it by req_id - both run
+	// concurrently with each other and with further sendMetadataRequest calls.
+	requestsMu      sync.Mutex
+	pendingRequests map[int]chan []byte
+	nextReqID       int
+
 	handleSetupFunction             func(SetupData)
 	handleConnectionFunction        func(*ConnectEvent)
 	handleSetDriverUserDataFunction func(map[string]string, bool)
@@ -119,6 +127,7 @@ func NewIntegration(config Config) (*Integration, error) {
 
 	i.Remote.messageChannel = make(chan []byte)
 	i.Remote.controlChannel = make(chan string)
+	i.pendingRequests = make(map[int]chan []byte)
 
 	return &i, nil
 
