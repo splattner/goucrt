@@ -101,6 +101,10 @@ func TestFeaturesAndDeviceClassMatchSpec(t *testing.T) {
 				string(SettingsMediaPlayerEntityFeatures),
 				string(BrowseMediaMediaPlayerEntityFeatures),
 				string(SearchMediaMediaPlayerEntityFeatures),
+				string(PlayMediaMediaPlayerEntityFeatures),
+				string(PlayMediaActionMediaPlayerEntityFeatures),
+				string(ClearPlaylistMediaPlayerEntityFeatures),
+				string(SearchMediaClassesMediaPlayerEntityFeatures),
 			},
 			// media_player's device_class is deliberately not checked here: the vendored YAML's
 			// media_player schema has no device_class property at all (confirmed against the

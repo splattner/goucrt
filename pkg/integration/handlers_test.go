@@ -315,6 +315,71 @@ func TestHandleEntityCommandRequest_NewEntityTypesDispatchCorrectly(t *testing.T
 	}
 }
 
+// TestHandleEntityCommandRequest_MediaPlayerPlayMediaAndClearPlaylist covers the two media_player
+// commands added alongside the play_media/play_media_action/clear_playlist/search_media_classes
+// features: play_media (which, unlike most other media_player commands, carries multiple params:
+// media_id, media_type and the optional action) and clear_playlist (no params).
+func TestHandleEntityCommandRequest_MediaPlayerPlayMediaAndClearPlaylist(t *testing.T) {
+	i := newTestIntegration(t)
+
+	mp := entities.NewMediaPlayerEntity("media_player.test", entities.LanguageText{En: "Player"}, "", "")
+	var gotMediaId, gotMediaType, gotAction string
+	mp.MapCommandWithParams(entities.PlayMediaMediaPlayerEntityCommand, func(params map[string]interface{}) error {
+		gotMediaId, _ = params["media_id"].(string)
+		gotMediaType, _ = params["media_type"].(string)
+		gotAction, _ = params["action"].(string)
+		return nil
+	})
+	playlistCleared := false
+	mp.MapCommand(entities.ClearPlaylistMediaPlayerEntityCommand, func() error {
+		playlistCleared = true
+		return nil
+	})
+
+	i.Entities = append(i.Entities, mp)
+
+	playRaw, err := json.Marshal(EntityCommandReq{
+		CommonReq: CommonReq{Kind: "req", Id: 20, Msg: "entity_command"},
+		MsgData: EntityCommandData{
+			EntityId: "media_player.test",
+			CmdId:    "play_media",
+			Params: map[string]interface{}{
+				"media_id":   "spotify:track:123",
+				"media_type": "MUSIC",
+				"action":     string(entities.PlayNowMediaPlayAction),
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("marshal play_media request: %v", err)
+	}
+	resp := awaitOneMessage(i)
+	i.handleRequest(&RequestMessage{CommonReq: CommonReq{Kind: "req", Id: 20, Msg: "entity_command"}}, playRaw)
+	if res := decodeResponse(t, <-resp); res.Code != 200 {
+		t.Errorf("play_media response code = %d, want 200", res.Code)
+	}
+	if gotMediaId != "spotify:track:123" || gotMediaType != "MUSIC" || gotAction != string(entities.PlayNowMediaPlayAction) {
+		t.Errorf("play_media params = (media_id=%q, media_type=%q, action=%q), want (spotify:track:123, MUSIC, PLAY_NOW)",
+			gotMediaId, gotMediaType, gotAction)
+	}
+
+	clearRaw, err := json.Marshal(EntityCommandReq{
+		CommonReq: CommonReq{Kind: "req", Id: 21, Msg: "entity_command"},
+		MsgData:   EntityCommandData{EntityId: "media_player.test", CmdId: "clear_playlist"},
+	})
+	if err != nil {
+		t.Fatalf("marshal clear_playlist request: %v", err)
+	}
+	resp = awaitOneMessage(i)
+	i.handleRequest(&RequestMessage{CommonReq: CommonReq{Kind: "req", Id: 21, Msg: "entity_command"}}, clearRaw)
+	if res := decodeResponse(t, <-resp); res.Code != 200 {
+		t.Errorf("clear_playlist response code = %d, want 200", res.Code)
+	}
+	if !playlistCleared {
+		t.Error("clear_playlist did not call the registered handler")
+	}
+}
+
 // TestHandleBrowseMediaRequest_MatchesSpecExample drives the exact "browse media at root" request
 // from doc/entities/entity_media_player.md's "Home Assistant Integration Example with Spotify Media
 // Player" section through handleRequest, with a BrowseFunc returning that same example's response
