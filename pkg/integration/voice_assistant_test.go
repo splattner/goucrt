@@ -4,6 +4,18 @@ package integration
 // being a plain JSON command with params, needs no special-case handling in requests.go - it's
 // covered by the same handleEntityCommandRequest path as every other entity) and the
 // assistant_event senders in voice_assistant_events.go.
+//
+// Unlike handleRequest's responses (sendResponseMessage, a plain blocking channel send - see
+// awaitOneMessage in handlers_test.go), sendEventMessage's outbound send is non-blocking with a
+// `default:` branch (events.go): it silently drops the message if nothing is receiving from
+// Remote.messageChannel at that exact instant, rather than waiting. A "start a fresh goroutine to
+// read one message, then call the sender" pattern - safe for the response case - is a real race
+// here: the sender can run before the new goroutine is even scheduled, drop the message, and leave
+// the test blocked forever reading a value that will never arrive (this is exactly what happened in
+// CI: a 10-minute test-binary timeout, not a local flake). The tests below sidestep this
+// entirely by giving the test's own Remote.messageChannel a one-slot buffer, so the non-blocking
+// send always succeeds into the buffer and a synchronous receive after the call can't lose the
+// race - no reader goroutine needed at all.
 
 import (
 	"encoding/json"
@@ -60,6 +72,7 @@ func TestHandleEntityCommandRequest_VoiceAssistantVoiceStart(t *testing.T) {
 
 func TestSendVoiceAssistantEvents(t *testing.T) {
 	i := newTestIntegration(t)
+	i.Remote.messageChannel = make(chan []byte, 1)
 
 	cases := []struct {
 		name     string
@@ -76,13 +89,10 @@ func TestSendVoiceAssistantEvents(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			done := make(chan []byte, 1)
-			go func() { done <- <-i.Remote.messageChannel }()
-
 			c.send()
 
 			var msg AssistantEventMessage
-			if err := json.Unmarshal(<-done, &msg); err != nil {
+			if err := json.Unmarshal(<-i.Remote.messageChannel, &msg); err != nil {
 				t.Fatalf("decode assistant_event: %v", err)
 			}
 
@@ -104,9 +114,7 @@ func TestSendVoiceAssistantEvents(t *testing.T) {
 // say, a bare string (an easy mistake since AssistantEventData.Data is an interface{}).
 func TestSendVoiceAssistantSttResponse_DataMatchesSpecShape(t *testing.T) {
 	i := newTestIntegration(t)
-
-	done := make(chan []byte, 1)
-	go func() { done <- <-i.Remote.messageChannel }()
+	i.Remote.messageChannel = make(chan []byte, 1)
 
 	i.SendVoiceAssistantSttResponse("va-1", 8, "turn off the lights")
 
@@ -117,7 +125,7 @@ func TestSendVoiceAssistantSttResponse_DataMatchesSpecShape(t *testing.T) {
 			} `json:"data"`
 		} `json:"msg_data"`
 	}
-	if err := json.Unmarshal(<-done, &decoded); err != nil {
+	if err := json.Unmarshal(<-i.Remote.messageChannel, &decoded); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
 	if decoded.MsgData.Data.Text != "turn off the lights" {
