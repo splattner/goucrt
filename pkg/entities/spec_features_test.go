@@ -29,8 +29,8 @@ func TestFeaturesAndDeviceClassMatchSpec(t *testing.T) {
 		{
 			entityType: "switch",
 			features: []string{
-				string(OnOffSwitchEntityyFeatures),
-				string(ToggleSwitchEntityyFeatures),
+				string(OnOffSwitchEntityFeatures),
+				string(ToggleSwitchEntityFeatures),
 			},
 		},
 		{
@@ -59,8 +59,8 @@ func TestFeaturesAndDeviceClassMatchSpec(t *testing.T) {
 			entityType: "media_player",
 			features: []string{
 				string(OnOffMediaPlayerEntityFeatures),
-				string(ToggleMediaPlayerEntityyFeatures),
-				string(VolumeMediaPlayerEntityyFeatures),
+				string(ToggleMediaPlayerEntityFeatures),
+				string(VolumeMediaPlayerEntityFeatures),
 				string(VolumeUpDownMediaPlayerEntityFeatures),
 				string(MuteToggleMediaPlayerEntityFeatures),
 				string(MuteMediaPlayerEntityFeatures),
@@ -68,7 +68,7 @@ func TestFeaturesAndDeviceClassMatchSpec(t *testing.T) {
 				string(PlayPauseMediaPlayerEntityFeatures),
 				string(StopMediaPlayerEntityFeatures),
 				string(NextMediaPlayerEntityFeatures),
-				string(PreviusMediaPlayerEntityFeatures),
+				string(PreviousMediaPlayerEntityFeatures),
 				string(FastForwardMediaPlayerEntityFeatures),
 				string(RewindMediaPlayerEntityFeatures),
 				string(RepeatMediaPlayerEntityFeatures),

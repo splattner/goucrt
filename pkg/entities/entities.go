@@ -19,7 +19,7 @@ const (
 // a concrete entity type's own HandleCommand/UpdateEntity. It exists because of a Go embedding
 // wrinkle: BaseEntity.SetAttributes fires its change callback as `e.handleEntityChangeFunc(e, ...)`,
 // where `e` is BaseEntity's own receiver - a promoted method has no way to know or reach whatever
-// concrete type (LightEntity, SwitchsEntity, ...) embeds it. So that callback can only ever be
+// concrete type (LightEntity, SwitchEntity, ...) embeds it. So that callback can only ever be
 // handed something satisfying this narrower interface, never the full Entity below.
 type EntityInfo interface {
 	GetID() string
@@ -28,7 +28,7 @@ type EntityInfo interface {
 	GetAttribute() map[string]interface{}
 }
 
-// Entity is satisfied by every concrete entity type (ButtonEntity, LightEntity, SwitchsEntity, ...).
+// Entity is satisfied by every concrete entity type (ButtonEntity, LightEntity, SwitchEntity, ...).
 // It's what lets package integration dispatch to a concrete entity's behavior - looking up its ID,
 // forwarding a command, firing its subscribe callback - without a type switch listing every entity
 // type by name. Every concrete type gets most of this for free by embedding BaseEntity; each only

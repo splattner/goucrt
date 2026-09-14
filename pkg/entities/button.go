@@ -40,7 +40,7 @@ func NewButtonEntity(id string, name LanguageText, area string) *ButtonEntity {
 	buttonEntity.Commands = make(map[ButtonEntityCommand]func(ButtonEntity) int)
 	buttonEntity.Attributes = make(map[string]interface{})
 
-	// PressButtonEntityyFeatures is always present even if not specified
+	// PressButtonEntityFeatures is always present even if not specified
 	// https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/entity_button.md
 	buttonEntity.AddFeature(PressButtonEntityFeatures)
 

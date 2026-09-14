@@ -27,13 +27,16 @@ const (
 const (
 	OpenCoverEntityCommand     CoverEntityCommand = "open"
 	CloseCoverEntityCommand    CoverEntityCommand = "close"
-	StopCoverEntityyommand     CoverEntityCommand = "stop"
+	StopCoverEntityCommand     CoverEntityCommand = "stop"
 	PositionCoverEntityCommand CoverEntityCommand = "position"
 	TiltCoverEntityCommand     CoverEntityCommand = "tilt"
 	TiltUpCoverEntityCommand   CoverEntityCommand = "tilt_up"
 	TiltDownCoverEntityCommand CoverEntityCommand = "tilt_down"
 	TiltStopCoverEntityCommand CoverEntityCommand = "tilt_stop"
 )
+
+// Deprecated: use StopCoverEntityCommand instead.
+const StopCoverEntityyommand = StopCoverEntityCommand
 
 const (
 	StateCoverEntityAttribute        CoverEntityAttributes = "state"

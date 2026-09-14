@@ -9,18 +9,35 @@ type SwitchEntityCommand EntityCommand
 type SwitchEntityOption EntityOption
 
 const (
-	OnSwitchtEntityState  SwitchEntityState = "ON"
-	OffSwitchtEntityState SwitchEntityState = "OFF"
+	OnSwitchEntityState  SwitchEntityState = "ON"
+	OffSwitchEntityState SwitchEntityState = "OFF"
 )
 
 const (
-	OnOffSwitchEntityyFeatures  SwitchEntityFeatures = "on_off"
-	ToggleSwitchEntityyFeatures SwitchEntityFeatures = "toggle"
+	OnOffSwitchEntityFeatures  SwitchEntityFeatures = "on_off"
+	ToggleSwitchEntityFeatures SwitchEntityFeatures = "toggle"
 )
 
 const (
-	StateSwitchEntityyAttribute SwitchEntityAttributes = "state"
+	StateSwitchEntityAttribute SwitchEntityAttributes = "state"
 )
+
+// Deprecated: misspelled aliases kept for backward compatibility, will be removed in a future release.
+const (
+	// Deprecated: use OnSwitchEntityState instead.
+	OnSwitchtEntityState = OnSwitchEntityState
+	// Deprecated: use OffSwitchEntityState instead.
+	OffSwitchtEntityState = OffSwitchEntityState
+	// Deprecated: use OnOffSwitchEntityFeatures instead.
+	OnOffSwitchEntityyFeatures = OnOffSwitchEntityFeatures
+	// Deprecated: use ToggleSwitchEntityFeatures instead.
+	ToggleSwitchEntityyFeatures = ToggleSwitchEntityFeatures
+	// Deprecated: use StateSwitchEntityAttribute instead.
+	StateSwitchEntityyAttribute = StateSwitchEntityAttribute
+)
+
+// Deprecated: use SwitchEntity instead.
+type SwitchsEntity = SwitchEntity
 
 const (
 	OnSwitchEntityCommand     SwitchEntityCommand = "on"
@@ -34,22 +51,22 @@ const (
 	ReadableSwitchEntityOption SwitchEntityOption = "readable"
 )
 
-type SwitchsEntity struct {
+type SwitchEntity struct {
 	BaseEntity
-	Commands map[SwitchEntityCommand]func(SwitchsEntity, map[string]interface{}) int `json:"-"`
-	Options  map[SwitchEntityOption]interface{}                                      `json:"options,omitempty"`
+	Commands map[SwitchEntityCommand]func(SwitchEntity, map[string]interface{}) int `json:"-"`
+	Options  map[SwitchEntityOption]interface{}                                     `json:"options,omitempty"`
 }
 
-func NewSwitchEntity(id string, name LanguageText, area string) *SwitchsEntity {
+func NewSwitchEntity(id string, name LanguageText, area string) *SwitchEntity {
 
-	switchEntity := SwitchsEntity{}
+	switchEntity := SwitchEntity{}
 	switchEntity.Id = id
 	switchEntity.Name = name
 	switchEntity.Area = area
 
 	switchEntity.Type = "switch"
 
-	switchEntity.Commands = make(map[SwitchEntityCommand]func(SwitchsEntity, map[string]interface{}) int)
+	switchEntity.Commands = make(map[SwitchEntityCommand]func(SwitchEntity, map[string]interface{}) int)
 	switchEntity.Attributes = make(map[string]interface{})
 	switchEntity.Options = make(map[SwitchEntityOption]interface{})
 
@@ -57,14 +74,14 @@ func NewSwitchEntity(id string, name LanguageText, area string) *SwitchsEntity {
 }
 
 // Add an option to the Switch Entity
-func (e *SwitchsEntity) AddOption(option SwitchEntityOption, value interface{}) {
+func (e *SwitchEntity) AddOption(option SwitchEntityOption, value interface{}) {
 	e.Options[option] = value
 }
 
-func (e *SwitchsEntity) UpdateEntity(newEntity interface{}) error {
-	updated, ok := newEntity.(SwitchsEntity)
+func (e *SwitchEntity) UpdateEntity(newEntity interface{}) error {
+	updated, ok := newEntity.(SwitchEntity)
 	if !ok {
-		return fmt.Errorf("cannot update SwitchsEntity from %T", newEntity)
+		return fmt.Errorf("cannot update SwitchEntity from %T", newEntity)
 	}
 
 	e.Name = updated.Name
@@ -79,27 +96,27 @@ func (e *SwitchsEntity) UpdateEntity(newEntity interface{}) error {
 
 // Register a function for the Entity command
 // Based on the Feature, the correct Attributes will be added
-func (e *SwitchsEntity) AddFeature(feature SwitchEntityFeatures) {
+func (e *SwitchEntity) AddFeature(feature SwitchEntityFeatures) {
 	e.Features = append(e.Features, feature)
 
 	// Add Attributes based on enabled features
 	// https://github.com/unfoldedcircle/core-api/blob/main/doc/entities/entity_switch.md
 	switch feature {
-	case OnOffSwitchEntityyFeatures, ToggleSwitchEntityyFeatures:
-		e.AddAttribute(string(StateSwitchEntityyAttribute), OffSwitchtEntityState)
+	case OnOffSwitchEntityFeatures, ToggleSwitchEntityFeatures:
+		e.AddAttribute(string(StateSwitchEntityAttribute), OffSwitchEntityState)
 
 	}
 }
 
 // Register a function for the Entity command
-func (e *SwitchsEntity) AddCommand(command SwitchEntityCommand, function func(SwitchsEntity, map[string]interface{}) int) {
+func (e *SwitchEntity) AddCommand(command SwitchEntityCommand, function func(SwitchEntity, map[string]interface{}) int) {
 	e.Commands[command] = function
 
 }
 
-func (e *SwitchsEntity) MapCommandWithParams(command SwitchEntityCommand, f func(map[string]interface{}) error) {
+func (e *SwitchEntity) MapCommandWithParams(command SwitchEntityCommand, f func(map[string]interface{}) error) {
 
-	e.AddCommand(command, func(entity SwitchsEntity, params map[string]interface{}) int {
+	e.AddCommand(command, func(entity SwitchEntity, params map[string]interface{}) int {
 
 		if err := f(params); err != nil {
 			return 404
@@ -108,9 +125,9 @@ func (e *SwitchsEntity) MapCommandWithParams(command SwitchEntityCommand, f func
 	})
 }
 
-func (e *SwitchsEntity) MapCommand(command SwitchEntityCommand, f func() error) {
+func (e *SwitchEntity) MapCommand(command SwitchEntityCommand, f func() error) {
 
-	e.AddCommand(command, func(entity SwitchsEntity, params map[string]interface{}) int {
+	e.AddCommand(command, func(entity SwitchEntity, params map[string]interface{}) int {
 
 		if err := f(); err != nil {
 			return 404
@@ -121,7 +138,7 @@ func (e *SwitchsEntity) MapCommand(command SwitchEntityCommand, f func() error) 
 }
 
 // Call the registred function for this entity_command
-func (e *SwitchsEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
+func (e *SwitchEntity) HandleCommand(cmd_id string, params map[string]interface{}) int {
 	if e.Commands[SwitchEntityCommand(cmd_id)] != nil {
 		return e.Commands[SwitchEntityCommand(cmd_id)](*e, params)
 	}

@@ -14,9 +14,19 @@ const (
 )
 
 const (
-	StateSensorEntityyAttribute  SensorEntityAttributes = "state"
-	ValueSensortEntityyAttribute SensorEntityAttributes = "value"
-	UnitSSensorntityyAttribute   SensorEntityAttributes = "unit"
+	StateSensorEntityAttribute SensorEntityAttributes = "state"
+	ValueSensorEntityAttribute SensorEntityAttributes = "value"
+	UnitSensorEntityAttribute  SensorEntityAttributes = "unit"
+)
+
+// Deprecated: misspelled aliases kept for backward compatibility, will be removed in a future release.
+const (
+	// Deprecated: use StateSensorEntityAttribute instead.
+	StateSensorEntityyAttribute = StateSensorEntityAttribute
+	// Deprecated: use ValueSensorEntityAttribute instead.
+	ValueSensortEntityyAttribute = ValueSensorEntityAttribute
+	// Deprecated: use UnitSensorEntityAttribute instead.
+	UnitSSensorntityyAttribute = UnitSensorEntityAttribute
 )
 
 const (
