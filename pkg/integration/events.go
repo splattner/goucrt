@@ -162,7 +162,7 @@ func (i *Integration) sendDeviceStateEvent() {
 }
 
 // Emitted for all driver setup flow state changes.
-func (i *Integration) sendDriverSetupChangeEvent(eventType DriverSetupEventType, state DriverSetupState, err DriverSetupError, require_user_action *RequireUserAction) {
+func (i *Integration) sendDriverSetupChangeEvent(eventType DriverSetupEventType, state DriverSetupState, err DriverSetupError, errorMessage *LanguageText, require_user_action *RequireUserAction) {
 	var res interface{}
 
 	now := time.Now()
@@ -170,12 +170,12 @@ func (i *Integration) sendDriverSetupChangeEvent(eventType DriverSetupEventType,
 	if require_user_action == nil {
 		res = DriverSetupChangeEvent{
 			CommonEvent{Kind: "event", Msg: "driver_setup_change", Cat: "DEVICE", Ts: now.Format(time.RFC3339)},
-			DriverSetupChangeData{EventType: eventType, State: state, Error: err},
+			DriverSetupChangeData{EventType: eventType, State: state, Error: err, ErrorMessage: errorMessage},
 		}
 	} else {
 		res = DriverSetupChangeEvent{
 			CommonEvent{Kind: "event", Msg: "driver_setup_change", Cat: "DEVICE", Ts: now.Format(time.RFC3339)},
-			DriverSetupChangeData{EventType: eventType, State: state, Error: err, RequireUserAction: *require_user_action},
+			DriverSetupChangeData{EventType: eventType, State: state, Error: err, ErrorMessage: errorMessage, RequireUserAction: *require_user_action},
 		}
 	}
 
