@@ -85,7 +85,7 @@ func TestDriverSetupChangeData_ErrorMessage(t *testing.T) {
 		t.Fatal(err)
 	}
 	var m map[string]interface{}
-	if err := json.Unmarshal(without, &m); err != nil {
+	if err = json.Unmarshal(without, &m); err != nil {
 		t.Fatal(err)
 	}
 	if _, ok := m["error_message"]; ok {
@@ -102,7 +102,7 @@ func TestDriverSetupChangeData_ErrorMessage(t *testing.T) {
 		t.Fatal(err)
 	}
 	m = nil
-	if err := json.Unmarshal(with, &m); err != nil {
+	if err = json.Unmarshal(with, &m); err != nil {
 		t.Fatal(err)
 	}
 	if got, _ := m["error_message"].(map[string]interface{}); got["en"] != "PIN rejected" {
