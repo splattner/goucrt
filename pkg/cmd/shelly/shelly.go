@@ -16,7 +16,7 @@ func NewCommand(rootCmd *cobra.Command) *cobra.Command {
 
 	var command = &cobra.Command{
 		Use:   "shelly",
-		Short: "Start Shelly Ingegration",
+		Short: "Start Shelly Integration",
 		Long:  "Shelly Integration for a Unfolded Circle Remote Two",
 		Run: func(c *cobra.Command, args []string) {
 

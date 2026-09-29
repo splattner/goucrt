@@ -14,8 +14,8 @@ func NewCommand(name string) *cobra.Command {
 
 	rootCmd := &cobra.Command{
 		Use:   name,
-		Short: "Unfolder Circle Remote Two integration",
-		Long:  `Unfolder Circle Remote Two integration`,
+		Short: "Unfolded Circle Remote Two integration",
+		Long:  `Unfolded Circle Remote Two integration`,
 	}
 
 	if err := cmd.BindStandardFlags(rootCmd); err != nil {

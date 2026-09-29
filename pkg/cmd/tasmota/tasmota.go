@@ -16,7 +16,7 @@ func NewCommand(rootCmd *cobra.Command) *cobra.Command {
 
 	var command = &cobra.Command{
 		Use:   "tasmota",
-		Short: "Start Tasmota Ingegration",
+		Short: "Start Tasmota Integration",
 		Long:  "Tasmota Integration for a Unfolded Circle Remote Two",
 		Run: func(c *cobra.Command, args []string) {
 

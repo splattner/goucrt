@@ -16,7 +16,7 @@ func NewCommand(rootCmd *cobra.Command) *cobra.Command {
 
 	var command = &cobra.Command{
 		Use:   "deconz",
-		Short: "Start Deconz Ingegration",
+		Short: "Start Deconz Integration",
 		Long:  "Deconz Integration for a Unfolded Circle Remote Two",
 		Run: func(c *cobra.Command, args []string) {
 
