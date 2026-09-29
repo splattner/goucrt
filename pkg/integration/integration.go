@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -75,6 +76,9 @@ type Integration struct {
 	SetupState DriverSetupState
 
 	SetupData SetupData
+	// SetupLanguage is the user interface language of the current setup, as sent in setup_driver
+	// (API 0.19.0+). Empty if the Remote didn't send one.
+	SetupLanguage string
 
 	mdns *zeroconf.Server
 }
@@ -198,6 +202,26 @@ func (i *Integration) SetHandleAbortSetupFunction(f func()) {
 
 // Set and then Send the Driver Setup State to Remote two
 func (i *Integration) SetDriverSetupState(event_Type DriverSetupEventType, state DriverSetupState, err DriverSetupError, requireUserAction *RequireUserAction) {
+	i.SetDriverSetupStateWithMessage(event_Type, state, err, nil, requireUserAction)
+}
+
+// SetDriverSetupStateWithMessage is SetDriverSetupState with an additional human-readable
+// errorMessage shown to the user (API 0.19.0+, ignored by older Remotes).
+//
+// To let the user correct rejected input instead of failing the setup, send SetupEvent with
+// InvalidInputError, an errorMessage and the settings page again as requireUserAction.
+func (i *Integration) SetDriverSetupStateWithMessage(event_Type DriverSetupEventType, state DriverSetupState, err DriverSetupError, errorMessage *LanguageText, requireUserAction *RequireUserAction) {
+
+	var minCoreAPI string
+	if i.Metadata != nil {
+		minCoreAPI = i.Metadata.MinCoreAPI
+	}
+	if err.requiresCoreAPI019() && versionLess(minCoreAPI, MinCoreAPI019) {
+		log.WithFields(log.Fields{
+			"Error":      err,
+			"MinCoreAPI": minCoreAPI,
+		}).Warnf("Setup error code requires Remote API %s; declare it as min_core_api in the driver metadata or older Remotes will drop the message", MinCoreAPI019)
+	}
 
 	log.WithFields(log.Fields{
 		"EventType": event_Type,
@@ -212,7 +236,7 @@ func (i *Integration) SetDriverSetupState(event_Type DriverSetupEventType, state
 
 	i.SetupState = state
 
-	i.sendDriverSetupChangeEvent(event_Type, state, err, requireUserAction)
+	i.sendDriverSetupChangeEvent(event_Type, state, err, errorMessage, requireUserAction)
 
 }
 
@@ -255,4 +279,38 @@ func (i *Integration) PersistSetupData() error {
 	}
 
 	return nil
+}
+
+// versionLess reports whether the dotted numeric version a (e.g. "0.18.2", optionally "v"-prefixed
+// or with a "-beta" style suffix) is lower than b. An empty or unparsable a counts as lower.
+func versionLess(a, b string) bool {
+	pa, okA := parseVersion(a)
+	pb, _ := parseVersion(b)
+	if !okA {
+		return true
+	}
+	for k := range pa {
+		if pa[k] != pb[k] {
+			return pa[k] < pb[k]
+		}
+	}
+	return false
+}
+
+func parseVersion(v string) ([3]int, bool) {
+	var out [3]int
+	v = strings.TrimPrefix(v, "v")
+	v, _, _ = strings.Cut(v, "-")
+	parts := strings.Split(v, ".")
+	if v == "" || len(parts) > 3 {
+		return out, false
+	}
+	for k, p := range parts {
+		n, err := strconv.Atoi(p)
+		if err != nil {
+			return out, false
+		}
+		out[k] = n
+	}
+	return out, true
 }

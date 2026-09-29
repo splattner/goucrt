@@ -239,6 +239,7 @@ func (i *Integration) handleGetAvailableEntitiesRequest(req *AvailableEntityMess
 func (i *Integration) handleSetupDriverRequest(req *SetupDriverMessageReq) *ResponseMessage {
 
 	i.SetupData = req.MsgData.Value
+	i.SetupLanguage = req.MsgData.Language
 
 	if err := i.PersistSetupData(); err != nil {
 		log.WithError(err).Error("Cannot persist setup data")

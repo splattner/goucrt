@@ -80,7 +80,34 @@ const (
 	AuthErrorError         DriverSetupError = "AUTHORIZATION_ERROR"
 	TimeoutError           DriverSetupError = "TIMEOUT"
 	OtherError             DriverSetupError = "OTHER"
+
+	// The following codes require a Remote reporting API version 0.19.0 or newer (MinCoreAPI019).
+	// An older Remote cannot deserialize them and drops the whole message, so a driver sending one
+	// of them must declare DriverMetadata.MinCoreAPI of at least that version.
+
+	// DriverUnavailableError is set by the Remote; a driver has no reason to send it.
+	DriverUnavailableError DriverSetupError = "DRIVER_UNAVAILABLE"
+	// InvalidInputError, sent with WaitUserActionState and a RequireUserAction page, asks the user
+	// to correct their input and continues the setup instead of failing it.
+	InvalidInputError DriverSetupError = "INVALID_INPUT"
+	// AbortedError is set by the Remote when a client stops the setup.
+	AbortedError           DriverSetupError = "ABORTED"
+	AlreadyConfiguredError DriverSetupError = "ALREADY_CONFIGURED"
+	NotSupportedError      DriverSetupError = "NOT_SUPPORTED"
 )
+
+// MinCoreAPI019 is the first Remote API version that understands the extended setup error codes,
+// DriverSetupChangeData.ErrorMessage and SetupDataValue.Language.
+const MinCoreAPI019 = "0.19.0"
+
+// requiresCoreAPI019 reports whether err is one of the setup error codes an older Remote rejects.
+func (err DriverSetupError) requiresCoreAPI019() bool {
+	switch err {
+	case DriverUnavailableError, InvalidInputError, AbortedError, AlreadyConfiguredError, NotSupportedError:
+		return true
+	}
+	return false
+}
 
 type AvailableEntityFilter struct {
 	DeviceId
@@ -253,6 +280,10 @@ type SetupDriverMessageReq struct {
 type SetupDataValue struct {
 	Reconfigure bool      `json:"reconfigure,omitempty"`
 	Value       SetupData `json:"setup_data"`
+	// Language of the user interface driving the setup, e.g. "de". Drivers should return their
+	// setup page texts and error messages in this language. Only sent by a Remote reporting API
+	// version 0.19.0 or newer; empty otherwise.
+	Language string `json:"language,omitempty"`
 }
 
 type SetupData map[string]string
@@ -483,10 +514,13 @@ type DriverSetupChangeEvent struct {
 }
 
 type DriverSetupChangeData struct {
-	EventType         DriverSetupEventType `json:"event_type"`
-	State             DriverSetupState     `json:"state"`
-	Error             DriverSetupError     `json:"error,omitempty"`
-	RequireUserAction interface{}          `json:"require_user_action,omitempty"`
+	EventType DriverSetupEventType `json:"event_type"`
+	State     DriverSetupState     `json:"state"`
+	Error     DriverSetupError     `json:"error,omitempty"`
+	// ErrorMessage is an optional human-readable description of Error, shown to the user. Plain
+	// text. Ignored by a Remote reporting an API version below 0.19.0.
+	ErrorMessage      *LanguageText `json:"error_message,omitempty"`
+	RequireUserAction interface{}   `json:"require_user_action,omitempty"`
 }
 
 type RequireUserAction struct {

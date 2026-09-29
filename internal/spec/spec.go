@@ -2,8 +2,8 @@
 // tests can check its hand-maintained protocol constants against the spec instead of relying on
 // someone noticing drift by eye. See spec/core-api/README.md for how the vendored copy is updated.
 //
-// Only `features` and `device_class` are exposed here: they are the only entity properties the spec
-// defines as a structured JSON Schema enum. Attribute names, state values and command identifiers are
+// Exposed here are the entity `features` and `device_class` enums - the only entity properties the
+// spec defines as a structured JSON Schema enum - and the integration setup error codes. Attribute names, state values and command identifiers are
 // not present as schema in the YAML - they only exist in doc/entities/*.md's prose tables and worked
 // examples, which pkg/entities/testdata's golden fixtures are extracted from instead.
 package spec
@@ -67,6 +67,24 @@ func EntityTypeSchema(entityType string) (EntitySchema, error) {
 		Features:    enumAt(schemas, props, "features", "items", "enum"),
 		DeviceClass: enumAt(schemas, props, "device_class", "enum"),
 	}, nil
+}
+
+// SetupErrorCodes returns the integrationSetupError enum (the `error` of driver_setup_change and
+// abort_driver_setup) as defined in the vendored AsyncAPI spec, in spec order.
+func SetupErrorCodes() ([]string, error) {
+	doc, err := document()
+	if err != nil {
+		return nil, err
+	}
+	schemas, err := mapAt(doc, "components", "schemas")
+	if err != nil {
+		return nil, err
+	}
+	codes := enumAt(schemas, schemas, "integrationSetupError", "enum")
+	if len(codes) == 0 {
+		return nil, fmt.Errorf("spec: integrationSetupError has no enum")
+	}
+	return codes, nil
 }
 
 var parsed map[string]interface{}
