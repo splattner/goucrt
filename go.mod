@@ -1,6 +1,6 @@
 module github.com/splattner/goucrt
 
-go 1.24.0
+go 1.26
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.1
@@ -11,7 +11,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/utils v0.0.0-20241210054802-24370beab758
+	k8s.io/utils v0.0.0-20261023123148-ca04ba58ecab
 )
 
 require (
